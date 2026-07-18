@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /recon-notes/
+Disallow: /promo-page/
+Disallow: /invoices/
+Disallow: /secure/
+Disallow: /old-staging-2023/
+Disallow: /internal-qa/

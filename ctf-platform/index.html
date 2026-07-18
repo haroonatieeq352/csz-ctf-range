@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>CSZone Offensive Security Range</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!--
+  TODO @devops: staging build — strip all debug response headers
+  before this goes to prod. Ops keeps complaining, so Kindly review responce headers, Ticket: OPS-4471
+-->
+
+
+
+  <header>
+    <h1>CSZone Offensive Security Range</h1>
+    <span class="tag">Training environment &mdash; not a production system</span>
+  </header>
+
+  <main>
+    <div class="card">
+      <h2>Welcome, Operator</h2>
+      <p>
+        This range hosts a set of deliberately vulnerable web assets built for
+        practicing reconnaissance, web application testing, cryptographic
+        analysis, and offensive tooling. Nothing here is a real client system.
+      </p>
+      <p>
+        There is no navigation menu. Every entry point must be discovered the
+        way you would on a real black-box engagement: passive recon, source
+        review, configuration files, directory enumeration — and don't forget
+        what the server itself tells you before the first byte of HTML arrives.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Rules of Engagement</h2>
+      <ul>
+        <li>Flags follow the format <code>CTF{...}</code></li>
+        <li>Submit flags on the CSZone scoring platform, not here</li>
+        <li>Automated scanners are permitted; denial-of-service is not</li>
+        <li>Difficulty increases as you go &mdash; some flags require chaining
+          multiple findings together</li>
+      </ul>
+    </div>
+  </main>
+
+  <footer>CSZone Pvt. Limited &mdash; Internal Training Range</footer>
+
+  <script src="main.js"></script>
+</body>
+
+</html>
