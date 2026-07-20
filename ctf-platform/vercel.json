@@ -1,0 +1,14 @@
+{
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Powered-By", "value": "CSZone-TrainingRange/0.9.3" },
+        { "key": "X-Build-Env", "value": "staging" },
+        { "key": "X-Debug-Info", "value": "CTF{h34d3r_hunt3r_pr0}" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" }
+      ]
+    }
+  ]
+}

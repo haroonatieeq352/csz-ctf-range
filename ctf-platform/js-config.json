@@ -1,0 +1,12 @@
+{
+  "app": "CSZone-TrainingRange",
+  "build": "1.4.2",
+  "env": "staging",
+  "asset_version": "2024-09-11",
+  "cache_ttl": 3600,
+  "log_level": "warn",
+  "dbg_key": 85,
+  "dbg_enabled": true,
+  "cdn_base": "/static/",
+  "contact": "ops@cszone.internal"
+}

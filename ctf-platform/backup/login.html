@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Backup Service Login</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<header><h1>Backup Service</h1></header>
+<main>
+  <div class="card">
+    <h2>Service Credential Required</h2>
+    <p>
+      This login corresponds to the <code>svc_backup</code> account whose
+      salted hash you may have already located. Enter the recovered
+      password below.
+    </p>
+    <input id="pw" type="text" placeholder="password">
+    <button onclick="attempt()">Authenticate</button>
+    <div id="result" class="flag-box hidden"></div>
+  </div>
+</main>
+
+<script>
+  const SALT = "9c1f7a";
+  const TARGET_HASH =
+    "5269a48d5eb030eee36c71eaa9edbfec94b52cb042ad98cad03bf8e7be20f723";
+
+  async function sha256Hex(message) {
+    const data = new TextEncoder().encode(message);
+    const digest = await crypto.subtle.digest("SHA-256", data);
+    return Array.from(new Uint8Array(digest))
+      .map(b => b.toString(16).padStart(2, "0"))
+      .join("");
+  }
+
+  async function attempt() {
+    const pw = document.getElementById("pw").value;
+    const computed = await sha256Hex(SALT + pw);
+    const box = document.getElementById("result");
+    box.classList.remove("hidden");
+
+    if (computed === TARGET_HASH) {
+      box.innerHTML =
+        "Authenticated.<br>Flag: Q1RGe2g0c2hfY3I0Y2szZF80Y2Mzc3N9<br>" +
+        "<span style='color:#948b93;font-size:0.85rem'>" +
+        "Keep this password on hand &mdash; a later stage in this range " +
+        "may reference it.</span>";
+    } else {
+      box.textContent = "Authentication failed.";
+    }
+  }
+</script>
+</body>
+</html>

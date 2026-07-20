@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Console — CSZone Internal</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    .panel-header {
+      background: linear-gradient(90deg, #0f0c14, #1a0d1a);
+      border-bottom: 2px solid #7b2fff;
+      padding: 18px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .panel-header h1 {
+      margin: 0;
+      color: #c084fc;
+      font-size: 1.2rem;
+      letter-spacing: 1.5px;
+      font-family: 'Courier New', monospace;
+    }
+    .panel-header .env-badge {
+      background: #3b0764;
+      color: #c084fc;
+      font-size: 0.72rem;
+      padding: 3px 10px;
+      border-radius: 3px;
+      border: 1px solid #7b2fff;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 1px;
+    }
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: #151019;
+      border: 1px solid #2a2030;
+      border-top: 3px solid #7b2fff;
+      border-radius: 4px;
+      padding: 16px 18px;
+    }
+    .stat-card .label {
+      color: #6b6275;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-family: 'Courier New', monospace;
+      margin-bottom: 6px;
+    }
+    .stat-card .value {
+      color: #c084fc;
+      font-size: 1.3rem;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+    }
+    .stat-card .value.green { color: #4ade80; }
+    .stat-card .value.amber { color: #d99a3d; }
+    .session-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'Courier New', monospace;
+      font-size: 0.82rem;
+    }
+    .session-table th {
+      text-align: left;
+      color: #6b6275;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 8px 10px;
+      border-bottom: 1px solid #2a2030;
+    }
+    .session-table td {
+      padding: 9px 10px;
+      border-bottom: 1px solid #1a1620;
+      color: #c4bbc8;
+    }
+    .session-table tr:last-child td { border-bottom: none; }
+    .online-dot {
+      display: inline-block;
+      width: 7px; height: 7px;
+      background: #4ade80;
+      border-radius: 50%;
+      margin-right: 6px;
+      box-shadow: 0 0 6px #4ade80;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .notice-bar {
+      background: #1a0d0d;
+      border: 1px solid #4b1010;
+      border-left: 4px solid #b3273f;
+      border-radius: 4px;
+      padding: 12px 16px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.8rem;
+      color: #e07070;
+      margin-bottom: 20px;
+    }
+    .notice-bar strong { color: #e0778a; }
+    .flag-section {
+      background: #0a0810;
+      border: 1px dashed #7b2fff;
+      border-radius: 4px;
+      padding: 20px 22px;
+      margin-top: 8px;
+    }
+    .flag-section .flag-label {
+      color: #6b6275;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-family: 'Courier New', monospace;
+      margin-bottom: 8px;
+    }
+    .flag-section .flag-value {
+      color: #c084fc;
+      font-family: 'Courier New', monospace;
+      font-size: 1.05rem;
+      letter-spacing: 1px;
+      word-break: break-all;
+    }
+    .auth-note {
+      color: #4b3f52;
+      font-size: 0.75rem;
+      font-family: 'Courier New', monospace;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="panel-header">
+  <h1>⬡ ADMIN CONSOLE</h1>
+  <span class="env-badge">ENV: STAGING &nbsp;|&nbsp; v1.4.2</span>
+</div>
+
+<main>
+
+  <div class="notice-bar">
+    <strong>[WARN]</strong> Authentication middleware disabled — migration pending since 2024-09-11.
+    This panel is accessible without credentials. <strong>Ticket: OPS-4471 (unresolved)</strong>
+  </div>
+
+  <div class="status-grid">
+    <div class="stat-card">
+      <div class="label">System Status</div>
+      <div class="value green"><span class="online-dot"></span>ONLINE</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Active Sessions</div>
+      <div class="value amber">3</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Last Auth Check</div>
+      <div class="value" style="font-size:0.9rem;color:#948b93;">2024-09-10 22:41 UTC</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Session Log</h2>
+    <table class="session-table">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Role</th>
+          <th>IP</th>
+          <th>Last Active</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>admin</td>
+          <td>superuser</td>
+          <td>10.0.0.1</td>
+          <td>2024-09-11 08:00</td>
+          <td style="color:#4ade80;"><span class="online-dot"></span>active</td>
+        </tr>
+        <tr>
+          <td>ops-bot</td>
+          <td>automation</td>
+          <td>10.0.0.12</td>
+          <td>2024-09-10 23:55</td>
+          <td style="color:#d99a3d;">idle</td>
+        </tr>
+        <tr>
+          <td>devops-03</td>
+          <td>readonly</td>
+          <td>192.168.4.22</td>
+          <td>2024-09-09 14:30</td>
+          <td style="color:#6b6275;">offline</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Exposed Credential Store</h2>
+    <p style="color:#948b93;font-size:0.85rem;margin-bottom:12px;">
+      Auth tokens and internal keys — visible because panel auth was stripped during migration.
+      Security by obscurity is not security.
+    </p>
+
+    <div class="flag-section">
+      <div class="flag-label">🔓 capture token / internal flag</div>
+      <div class="flag-value">CTF{4dm1n_p4n3l_3xp0s3d}</div>
+    </div>
+
+    <p class="auth-note">
+      [sys] auth_gate = disabled &nbsp;|&nbsp; session_token = null &nbsp;|&nbsp;
+      migration_ref = OPS-4471 &nbsp;|&nbsp; assigned_to = nobody
+    </p>
+  </div>
+
+</main>
+
+<footer>CSZone Pvt. Limited &mdash; Internal Training Range &mdash; Admin Console</footer>
+
+</body>
+</html>
+

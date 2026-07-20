@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1001,
+    "customer": "Guest Account",
+    "amount": "PKR 4,500",
+    "internal_notes": "Standard tier. No follow-up required."
+  },
+  {
+    "id": 1004,
+    "customer": "Retail Partner - North Zone",
+    "amount": "PKR 18,200",
+    "internal_notes": "Late payment last cycle, flagged for review."
+  },
+  {
+    "id": 1007,
+    "customer": "Finance Department (Internal)",
+    "amount": "PKR 92,000",
+    "internal_notes": "Q1RGezFkMHJfMW52MDFjM19sMzRrfQ=="
+  },
+  {
+    "id": 1009,
+    "customer": "Retail Partner - South Zone",
+    "amount": "PKR 11,750",
+    "internal_notes": "Renewal pending confirmation."
+  }
+]

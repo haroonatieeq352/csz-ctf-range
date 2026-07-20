@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Restricted Area</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+<!-- access-control-v2: YWNjZXNzX2xldmVsPWFkbWluLTlmM2E= -->
+
+<header><h1>Restricted Area</h1></header>
+<main>
+  <div class="card">
+    <h2 id="statusHeading">Access Denied</h2>
+    <p id="statusMsg">
+      This section is gated by a client-side access check. If you believe
+      you should have access, verify how your session identifies itself.
+    </p>
+    <div id="payload" class="flag-box hidden"></div>
+  </div>
+</main>
+
+<script>
+  function getCookie(name) {
+    const match = document.cookie
+      .split("; ")
+      .find(row => row.startsWith(name + "="));
+    return match ? match.split("=")[1] : null;
+  }
+
+  function checkAccess() {
+    const level = getCookie("access_level");
+    if (level === "admin-9f3a") {
+      document.getElementById("statusHeading").textContent = "Access Granted";
+      document.getElementById("statusMsg").textContent =
+        "Session recognized. Decode the payload below.";
+      const box = document.getElementById("payload");
+      box.classList.remove("hidden");
+      box.textContent = "Q1RGe2gzNGQzcl9jMDBrMTNfYnlwNHNzfQ==";
+    }
+  }
+
+  checkAccess();
+</script>
+</body>
+</html>

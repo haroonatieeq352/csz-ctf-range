@@ -1,0 +1,25 @@
+==============================================================
+  CSZone Internal Ops — Session Audit Export
+  Generated: 2024-11-03T02:17:44Z
+  Exported by: ops-bot v1.2 (automated)
+==============================================================
+
+[2024-11-03 02:11:02] INFO  Deployment initiated — build staging-0.9.3
+[2024-11-03 02:11:08] INFO  Assets synced to /var/www/html/
+[2024-11-03 02:11:09] WARN  robots.txt contains sensitive path disclosures — flagged for review
+[2024-11-03 02:11:14] INFO  /recon-notes/ directory migrated → /recon-notes/ops-archive/
+[2024-11-03 02:11:19] ERROR Auth token rotation failed — using cached credential
+[2024-11-03 02:11:21] INFO  Debug session token written to environment (temporary)
+[2024-11-03 02:15:33] INFO  Ops verification ping OK
+[2024-11-03 02:17:41] INFO  Archiving session data before teardown
+
+--------------------------------------------------------------
+  session.integrity_token (base64):
+  Q1RGe3IwYjB0c19kMXNjbDBzM19wNHRoc30=
+--------------------------------------------------------------
+
+[2024-11-03 02:17:44] INFO  Export complete. Safe to close session.
+
+==============================================================
+  END OF LOG
+==============================================================

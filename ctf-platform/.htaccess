@@ -1,0 +1,10 @@
+# Apache config — CSZone Training Range
+# Build: staging-0.9.3
+
+Header always set X-Powered-By "CSZone-TrainingRange/0.9.3"
+Header always set X-Build-Env "staging"
+Header always set X-Debug-Info "CTF{h34d3r_hunt3r_pr0}"
+Header always set X-Content-Type-Options "nosniff"
+Header always set X-Frame-Options "DENY"
+
+

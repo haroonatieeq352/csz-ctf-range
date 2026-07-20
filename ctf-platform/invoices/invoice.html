@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Invoice Viewer</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<header><h1>Customer Invoice Portal</h1></header>
+<main>
+  <div class="card">
+    <h2>Your Invoice</h2>
+    <p class="muted">You are viewing invoice <code id="idShown">-</code>.
+      Change the <code>id</code> parameter in the URL to view a different
+      invoice you have permission to access.</p>
+    <div id="result" class="flag-box hidden"></div>
+  </div>
+</main>
+
+<script>
+  function getParam(name) {
+    const url = new URL(window.location.href);
+    return url.searchParams.get(name);
+  }
+
+  async function loadInvoice() {
+    const id = parseInt(getParam("id") || "1001", 10);
+    document.getElementById("idShown").textContent = id;
+
+    const res = await fetch("invoices.json");
+    const invoices = await res.json();
+    const record = invoices.find(inv => inv.id === id);
+
+    const box = document.getElementById("result");
+    box.classList.remove("hidden");
+
+    if (!record) {
+      box.textContent = "No invoice found for id " + id + ".";
+      return;
+    }
+
+    box.innerHTML =
+      "<strong>Customer:</strong> " + record.customer + "<br>" +
+      "<strong>Amount:</strong> " + record.amount + "<br>" +
+      "<strong>Internal notes:</strong> " + record.internal_notes;
+  }
+
+  loadInvoice();
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+[
+  {
+    "username": "svc_backup",
+    "salt": "9c1f7a",
+    "hash_algo": "sha256(salt+password)",
+    "hash": "5269a48d5eb030eee36c71eaa9edbfec94b52cb042ad98cad03bf8e7be20f723",
+    "note": "rotate this credential before promoting to prod - ticket OPS-4471"
+  }
+]

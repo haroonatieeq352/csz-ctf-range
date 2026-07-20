@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Final Checkpoint</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<header><h1>Final Checkpoint</h1></header>
+<main>
+  <div class="card">
+    <h2>Two Artifacts Required</h2>
+    <p>
+      This stage does not accept a fresh login. It expects proof of two
+      things you should already have from earlier in this range:
+    </p>
+    <ul>
+      <li>A recognized session marker</li>
+      <li>A recovered service credential, supplied as a URL parameter
+        named <code>key</code></li>
+    </ul>
+    <p id="statusMsg">Waiting for both conditions...</p>
+    <div id="payload" class="flag-box hidden"></div>
+  </div>
+</main>
+
+<script>
+  function getCookie(name) {
+    const match = document.cookie
+      .split("; ")
+      .find(row => row.startsWith(name + "="));
+    return match ? match.split("=")[1] : null;
+  }
+
+  function getParam(name) {
+    const url = new URL(window.location.href);
+    return url.searchParams.get(name);
+  }
+
+  const SALT = "9c1f7a";
+  const TARGET_HASH =
+    "5269a48d5eb030eee36c71eaa9edbfec94b52cb042ad98cad03bf8e7be20f723";
+
+  async function sha256Hex(message) {
+    const data = new TextEncoder().encode(message);
+    const digest = await crypto.subtle.digest("SHA-256", data);
+    return Array.from(new Uint8Array(digest))
+      .map(b => b.toString(16).padStart(2, "0"))
+      .join("");
+  }
+
+  function xorDecode(b64, key) {
+    const raw = atob(b64);
+    const kb = key;
+    let out = "";
+    for (let i = 0; i < raw.length; i++) {
+      out += String.fromCharCode(raw.charCodeAt(i) ^ kb.charCodeAt(i % kb.length));
+    }
+    return out;
+  }
+
+  async function checkAccess() {
+    const cookieOk = getCookie("access_level") === "admin-9f3a";
+    const key = getParam("key") || "";
+    const keyOk = key.length > 0 && (await sha256Hex(SALT + key)) === TARGET_HASH;
+
+    if (cookieOk && keyOk) {
+      const XORED_B64 = "ECErFgNDXARea0I7QVwDOhECXUJYEidGEA==";
+      const flag = xorDecode(XORED_B64, key);
+      document.getElementById("statusMsg").textContent =
+        "Both conditions met. Final flag decoded below.";
+      const box = document.getElementById("payload");
+      box.classList.remove("hidden");
+      box.textContent = flag;
+    } else {
+      document.getElementById("statusMsg").textContent =
+        "Conditions not met. Session marker present: " + cookieOk +
+        " | Valid credential supplied: " + keyOk;
+    }
+  }
+
+  checkAccess();
+</script>
+</body>
+</html>
