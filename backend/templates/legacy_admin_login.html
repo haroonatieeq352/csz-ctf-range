@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h2>Legacy Admin Portal</h2>
+  <p style="color:#948b93; font-size:0.85rem">This portal predates the
+  current auth system. Marked for decommission in 2023, still live.</p>
+  {% if error %}<div class="msg error">{{ error }}</div>{% endif %}
+  <form method="POST">
+    <label>Username</label>
+    <input type="text" name="username" required>
+    <label>Password</label>
+    <input type="password" name="password" required>
+    <p><button type="submit">Login</button></p>
+  </form>
+</div>
+{% endblock %}

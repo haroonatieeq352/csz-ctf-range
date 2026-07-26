@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h2>Welcome to the Backend Range</h2>
+  <p>This is Phase 2 of the CSZone training range — a real Flask + SQLite
+  backend covering vulnerability classes that need genuine server-side
+  state to be authentic: SQL injection, stored XSS with a real cookie to
+  steal, CSRF against a real endpoint, file upload, SSRF, IDOR, and a real
+  shared cache layer for cache deception and cache poisoning.</p>
+  <p>Register an account to access the session-gated features. Some
+  challenges (guestbook, directory search, legacy admin) don't require
+  login at all — that's part of the design.</p>
+</div>
+<div class="card">
+  <h2>Rules of Engagement</h2>
+  <ul>
+    <li>Everything on this host is in scope. Nothing outside it is.</li>
+    <li>Some flags require chaining more than one finding together.</li>
+    <li>Flags follow the format <code>CTF{ }</code>.</li>
+  </ul>
+</div>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h2>Admin Inbox — Guestbook Review</h2>
+  <p>Internal moderation view. Same guestbook data as the public page.</p>
+</div>
+{% for e in entries %}
+<div class="card">
+  <div class="name" style="color:#d99a3d">{{ e['name'] }} — {{ e['created_at'] }}</div>
+  <div>{{ e['message']|safe }}</div>
+</div>
+{% endfor %}
+{% endblock %}
