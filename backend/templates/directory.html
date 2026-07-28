@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h2>Employee Directory</h2>
+  <form method="GET">
+    <label>Search by name</label>
+    <input type="text" name="q" value="{{ q }}">
+    <p><button type="submit">Search</button></p>
+  </form>
+  {% if error %}<div class="msg error">{{ error }}</div>{% endif %}
+</div>
+{% if results %}
+<div class="card">
+  <table>
+    <tr><th>Name</th><th>Department</th><th>Email</th></tr>
+    {% for r in results %}
+    <tr><td>{{ r[0] }}</td><td>{{ r[1] }}</td><td>{{ r[2] }}</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
+{% endblock %}

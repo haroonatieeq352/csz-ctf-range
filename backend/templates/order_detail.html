@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h2>Order #{{ order['id'] }}</h2>
+  <table>
+    <tr><th>Owner (user_id)</th><td>{{ order['user_id'] }}</td></tr>
+    <tr><th>Item</th><td>{{ order['item'] }}</td></tr>
+    <tr><th>Amount</th><td>{{ order['amount'] }}</td></tr>
+    <tr><th>Notes</th><td>{{ order['notes'] }}</td></tr>
+  </table>
+</div>
+{% endblock %}

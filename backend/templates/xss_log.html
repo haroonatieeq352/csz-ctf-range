@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h2>Captured Beacons (attacker collector log)</h2>
+  <table>
+    <tr><th>Captured At</th><th>Source IP</th><th>Data</th></tr>
+    {% for r in rows %}
+    <tr><td>{{ r['captured_at'] }}</td><td>{{ r['source_ip'] }}</td><td>{{ r['cookie_data'] }}</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}
