@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h2>Import Avatar From URL</h2>
+  <p style="color:#948b93; font-size:0.85rem">The server fetches the URL
+  you provide and shows a preview.</p>
+  {% if error %}<div class="msg error">{{ error }}</div>{% endif %}
+  <form method="POST">
+    <label>Image URL</label>
+    <input type="text" name="url" style="width:100%" placeholder="https://example.com/avatar.png" required>
+    <p><button type="submit">Fetch</button></p>
+  </form>
+  {% if result %}
+  <h3>Fetched content:</h3>
+  <pre>{{ result }}</pre>
+  {% endif %}
+</div>
+{% endblock %}

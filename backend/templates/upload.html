@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h2>Upload Avatar</h2>
+  <p style="color:#948b93; font-size:0.85rem">Executables and scripts
+  (.php, .py, .exe, .sh, .jsp, .asp/.aspx) are blocked.</p>
+  {% if error %}<div class="msg error">{{ error }}</div>{% endif %}
+  {% if uploaded_url %}
+    <div class="msg success">Uploaded. View it at
+      <a href="{{ uploaded_url }}">{{ uploaded_url }}</a></div>
+  {% endif %}
+  <form method="POST" enctype="multipart/form-data">
+    <label>File</label>
+    <input type="file" name="file" required>
+    <p><button type="submit">Upload</button></p>
+  </form>
+</div>
+{% endblock %}
