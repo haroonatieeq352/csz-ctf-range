@@ -1,0 +1,21 @@
+# Example: spin up isolated instances for multiple teams.
+# Each service gets its own container, its own filesystem, its own SQLite
+# DB, and its own in-process cache — no state leaks between teams.
+#
+# Usage: docker compose up --build
+# Team 1: http://localhost:5001
+# Team 2: http://localhost:5002
+# Add more services (or generate this file) for more teams.
+
+services:
+  range-team1:
+    build: .
+    ports:
+      - "5001:5000"
+    restart: unless-stopped
+
+  range-team2:
+    build: .
+    ports:
+      - "5002:5000"
+    restart: unless-stopped
