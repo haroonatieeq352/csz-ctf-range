@@ -49,11 +49,13 @@ class CTFHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=SERVE_DIR, **kwargs)
 
-    # ── Scenario 1: inject debug headers on EVERY response ──────────────────
+    # ── Scenario 1: inject debug headers on HTML responses ──────────────────
     def end_headers(self):
         self.send_header("X-Powered-By",           "CSZone-TrainingRange/0.9.3")
         self.send_header("X-Build-Env",            "staging")
-        self.send_header("X-Debug-Info",           "CTF{h34d3r_hunt3r_pr0}")
+        clean_path = self.path.split("?")[0].rstrip("/")
+        if clean_path in ("", "/index.html") or clean_path.endswith(".html"):
+            self.send_header("X-Debug-Info",       "CTF{h34d3r_hunt3r_pr0}")
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("X-Frame-Options",        "DENY")
         self.send_header("Cache-Control",          "no-store")
@@ -124,10 +126,9 @@ class CTFHandler(http.server.SimpleHTTPRequestHandler):
 def main():
     os.chdir(SERVE_DIR)
 
-    # Allow port reuse so restarting the server doesn't fail
     socketserver.TCPServer.allow_reuse_address = True
 
-    with socketserver.TCPServer(("", PORT), CTFHandler) as httpd:
+    with http.server.ThreadingHTTPServer(("", PORT), CTFHandler) as httpd:
         print(f"\n  CSZone CTF Range - Secure Dev Server")
         print(f"  ----------------------------------------")
         print(f"  URL     : http://localhost:{PORT}")

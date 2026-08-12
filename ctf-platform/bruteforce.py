@@ -28,28 +28,22 @@ except FileNotFoundError:
     print(f"[!] Wordlist not found: {WORDLIST}")
     sys.exit(1)
 
-# Loop through each word entry in the provided wordlist
 for word in words:
     url = TARGET.rstrip("/") + "/" + word + "/"
     try:
-        # Construct HTTP GET request for directory discovery
         req = urllib.request.Request(url, method="GET")
         with urllib.request.urlopen(req, timeout=3) as resp:
             code = resp.getcode()
-            # If server responds with 200 OK, Redirects (301/302), or Forbidden (403), record path
             if code in (200, 301, 302, 403):
                 print(f"  [{code}] FOUND --> {url}")
                 found.append((code, url))
     except urllib.error.HTTPError as e:
-        # 403 Forbidden indicates the directory exists even if access is restricted
         if e.code == 403:
             print(f"  [403] FOUND --> {url}  (forbidden - still exists!)")
             found.append((403, url))
     except Exception:
-        # Silently ignore connection timeouts and unreachable endpoints
         pass
 
-# Display summary report of all discovered endpoints
 print(f"\n[+] Scan complete. {len(found)} path(s) found:")
 for code, url in found:
     print(f"    [{code}] {url}")
