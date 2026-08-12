@@ -1,5 +1,5 @@
 # CSZone Offensive Security Training Range
-
+# python server.py 8080 
 Two independent, complementary phases:
 
 - **`ctf-platform/`** — static frontend range (recon, crypto/encoding,

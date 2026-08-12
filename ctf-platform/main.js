@@ -19,6 +19,9 @@
   // key: see /js-config.json -> dbg_key
   _w.__c = 'FgETLiA7ICZmMQojYSdkYTc5Zgo5ZmE+KA==';
 
+  // Pre-load runtime configuration
+  fetch('/js-config.json').catch(function () {});
+
   _d.addEventListener('DOMContentLoaded', function () {
 
     // Build info
