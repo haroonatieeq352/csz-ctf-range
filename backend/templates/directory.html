@@ -1,22 +1,107 @@
 {% extends "base.html" %}
+{% block title %}Personnel Directory — CSZone Security Range{% endblock %}
 {% block content %}
+
+<!-- ========================================================================= -->
+<!-- [INTERNAL SECURITY NOTICE - ACCESS CONTROL AUDIT]                         -->
+<!-- Protected clearance records are stored in table: 'staff_clearances'       -->
+<!-- Target Table Schema: (officer_name TEXT, clearance_level INT, department_code TEXT, master_flag TEXT) -->
+<!-- Note: Comments using '--' are rejected by the gateway filter. Use '#'     -->
+<!-- ========================================================================= -->
+
 <div class="card">
-  <h2>Employee Directory</h2>
-  <form method="GET">
-    <label>Search by name</label>
-    <input type="text" name="q" value="{{ q }}">
-    <p><button type="submit">Search</button></p>
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+    <h2>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--amber);">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+      </svg>
+      Corporate Staff Directory
+    </h2>
+    <span class="badge-tag" style="border-color: rgba(217, 154, 61, 0.4); color: var(--amber); background: rgba(217, 154, 61, 0.1);">Scenario 10 // Advanced UNION SQLi</span>
+  </div>
+
+  <p>
+    Search active staff members across engineering, IT operations, and executive departments by name.
+  </p>
+
+  <form method="GET" action="/directory" class="search-form-wrapper">
+    <label for="q">Search Employee by Name:</label>
+    <div class="input-row">
+      <input type="text" id="q" name="q" value="{{ q }}" placeholder="e.g. Alice, Bob, or injection test..." autofocus>
+      <button type="submit">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        Search Directory
+      </button>
+    </div>
   </form>
-  {% if error %}<div class="msg error">{{ error }}</div>{% endif %}
+
+  {% if error %}
+  <div class="alert error" style="margin-top: 20px;">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="8" x2="12" y2="12"></line>
+      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </svg>
+    <div>
+      <strong>Security &amp; Database Error:</strong><br>
+      <code>{{ error }}</code>
+    </div>
+  </div>
+  {% endif %}
 </div>
+
 {% if results %}
 <div class="card">
-  <table>
-    <tr><th>Name</th><th>Department</th><th>Email</th></tr>
-    {% for r in results %}
-    <tr><td>{{ r[0] }}</td><td>{{ r[1] }}</td><td>{{ r[2] }}</td></tr>
-    {% endfor %}
-  </table>
+  <h2 style="font-size: 1.1rem; color: var(--amber);">
+    Search Results ({{ results|length }} Record{% if results|length != 1 %}s{% endif %} Found)
+  </h2>
+  
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Employee / Officer Name</th>
+          <th>Badge ID / Level</th>
+          <th>Department / Code</th>
+          <th>Corporate Email / Clearance Token</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in results %}
+        <tr {% if 'CTF{' in r[3]|string or 'CTF{' in r[0]|string %}style="background: rgba(14, 18, 28, 0.95); border-left: 3px solid #00f0ff;"{% endif %}>
+          <td style="font-weight: 600; color: #fff;">{{ r[0] }}</td>
+          <td><span style="font-family: var(--mono); color: #00f0ff; background: rgba(0, 240, 255, 0.1); border: 1px solid rgba(0, 240, 255, 0.2); padding: 3px 10px; border-radius: 4px; font-size: 0.85rem; font-weight: 600;">{{ r[1] }}</span></td>
+          <td><span style="background: rgba(255, 255, 255, 0.05); color: #ccc; border: 1px solid rgba(255, 255, 255, 0.08); padding: 3px 10px; border-radius: 4px; font-size: 0.85rem;">{{ r[2] }}</span></td>
+          <td>
+            {% if 'CTF{' in r[3]|string %}
+            <div style="background: #080c14; border: 1px solid rgba(0, 240, 255, 0.35); border-radius: 6px; padding: 10px 14px; margin: 4px 0; box-shadow: 0 4px 20px rgba(0, 240, 255, 0.07);">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                <span style="background: rgba(0, 240, 255, 0.15); color: #00f0ff; font-size: 0.72rem; font-weight: 700; padding: 2px 6px; border-radius: 3px; letter-spacing: 0.5px;">FLAG CAPTURED</span>
+              </div>
+              <code style="color: #00f0ff; font-size: 0.92rem; font-weight: 700; word-break: break-all; line-height: 1.5; font-family: var(--mono);">{{ r[3] }}</code>
+            </div>
+            {% else %}
+            <code style="color: #74b9ff;">{{ r[3] }}</code>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% elif q and not error %}
+<div class="card" style="text-align: center; padding: 40px 20px;">
+  <p style="color: var(--muted); font-size: 1rem; margin: 0;">
+    No employees found matching query: <code>{{ q }}</code>
+  </p>
 </div>
 {% endif %}
+
 {% endblock %}

@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Enterprise Asset Inventory — CSZone Security Range{% endblock %}
+{% block content %}
+
+<div class="card">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+    <h2>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--cyan);">
+        <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+        <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+        <line x1="6" y1="6" x2="6.01" y2="6"></line>
+        <line x1="6" y1="18" x2="6.01" y2="18"></line>
+      </svg>
+      Enterprise Asset &amp; Infrastructure Inventory
+    </h2>
+    <span class="badge-tag" style="border-color: rgba(0, 240, 255, 0.4); color: var(--cyan); background: rgba(0, 240, 255, 0.1);">Scenario 11 // Asset SQLi</span>
+  </div>
+
+  <p>
+    Query classified enterprise server hardware, cryptographic appliances, and perimeter defense systems.
+  </p>
+
+  <form method="GET" action="/inventory" class="search-form-wrapper">
+    <label for="q">Search Asset by Name / Designation:</label>
+    <div class="input-row">
+      <input type="text" id="q" name="q" value="{{ q }}" placeholder='e.g. Server, Gateway, or injection query...' autofocus>
+      <button type="submit">
+        Search Inventory
+      </button>
+    </div>
+  </form>
+
+  {% if error %}
+  <div class="alert error" style="margin-top: 20px;">
+    <div>
+      <strong>Security &amp; Database Error:</strong><br>
+      <code>{{ error }}</code>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+{% if results %}
+<div class="card">
+  <h2 style="font-size: 1.1rem; color: var(--cyan);">
+    Inventory Results ({{ results|length }} Record{% if results|length != 1 %}s{% endif %} Found)
+  </h2>
+  
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Asset Name / Designation (TEXT)</th>
+          <th>Department / Classification (TEXT)</th>
+          <th>Serial ID # (INTEGER)</th>
+          <th>Clearance Tier (INTEGER)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in results %}
+        <tr {% if 'CTF{' in r[0]|string or 'CTF{' in r[1]|string or 'CTF{' in r[2]|string or 'CTF{' in r[3]|string %}style="background: rgba(14, 25, 38, 0.95); border-left: 3px solid var(--cyan);"{% endif %}>
+          <td style="font-weight: 600; color: #fff;">
+            {% if 'CTF{' in r[0]|string %}
+            <div style="background: #080c14; border: 1px solid rgba(0, 240, 255, 0.4); border-radius: 6px; padding: 8px 12px;">
+              <code style="color: var(--cyan); font-weight: 700; font-family: var(--mono);">{{ r[0] }}</code>
+            </div>
+            {% else %}
+            {{ r[0] }}
+            {% endif %}
+          </td>
+          <td>
+            {% if 'CTF{' in r[1]|string %}
+            <div style="background: #080c14; border: 1px solid rgba(0, 240, 255, 0.4); border-radius: 6px; padding: 8px 12px;">
+              <code style="color: var(--cyan); font-weight: 700; font-family: var(--mono);">{{ r[1] }}</code>
+            </div>
+            {% else %}
+            <code style="color: #74b9ff;">{{ r[1] }}</code>
+            {% endif %}
+          </td>
+          <td>
+            <span style="background: rgba(255, 255, 255, 0.05); color: #ccc; border: 1px solid rgba(255, 255, 255, 0.08); padding: 3px 10px; border-radius: 4px; font-size: 0.85rem; font-family: var(--mono);">{{ r[2] }}</span>
+          </td>
+          <td>
+            <span style="background: rgba(0, 240, 255, 0.08); color: var(--cyan); border: 1px solid rgba(0, 240, 255, 0.2); padding: 3px 10px; border-radius: 4px; font-size: 0.85rem; font-family: var(--mono); font-weight: 600;">Tier {{ r[3] }}</span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% elif q and not error %}
+<div class="card" style="text-align: center; padding: 40px 20px;">
+  <p style="color: var(--muted); font-size: 1rem; margin: 0;">
+    No inventory records found matching query: <code>{{ q }}</code>
+  </p>
+</div>
+{% endif %}
+
+{% endblock %}

@@ -212,63 +212,61 @@ pass).
 
 ---
 
-## H2 — Hash and Seek
-- **Category:** Cryptography + Web | **Difficulty:** Hard
-- **Story:** "There's a backup directory that never made it into the
-  public sitemap or robots.txt. Find it. Then earn your way in."
-- **Where hidden:** `/backup/users.json` is **not linked or disclosed
-  anywhere** in the app and must be found via directory brute-force using
-  the supplied `dir-wordlist.txt` (contains `backup` among ~45 decoys).
-  It holds a salt and a SHA-256 hash (`sha256(salt + password)`).
-  Cracking the hash gives the password, which unlocks
-  `/backup/login.html`, revealing a Base64-encoded flag.
-- **Flag:** `CTF{h4sh_cr4ck3d_4cc3ss}`
-- **Credentials for QA:** salt `9c1f7a`, password `Summer2024!`, hash
-  `5269a48d5eb030eee36c71eaa9edbfec94b52cb042ad98cad03bf8e7be20f723`
-- **Walkthrough:**
-  1. Run `gobuster dir -u https://<host>/ -w dir-wordlist.txt` (or
-     `dirb`) to discover `/backup/`.
-  2. Fetch `/backup/users.json` → note `salt` and `hash`.
-  3. Crack offline using the separate `password-wordlist.txt` (this is
-     a password-candidate list, not the directory list — the two must
-     not be confused or merged). With hashcat:
-     `hashcat -m 1420 -a 0 hash.txt password-wordlist.txt` where
-     `hash.txt` contains `<hash>:<salt>` (hashcat mode 1420 =
-     `sha256($salt.$pass)`).
-  4. With the cracked password, go to `/backup/login.html`, enter it →
-     flag `Q1RGe2g0c2hfY3I0Y2szZF80Y2Mzc3N9` is revealed → decode via
-     Base64.
-- **Tools:** gobuster/dirb, hashcat or John the Ripper, Base64 decode.
-- **QA fix (2026-07-24):** the shipped app previously bundled only one
-  wordlist (directory names), with no realistic path to actually crack
-  `Summer2024!` — the calibration decision this doc used to flag as
-  "undecided" was never resolved before shipping. Fixed by splitting
-  into two files under `participant-tools/`: `dir-wordlist.txt` for
-  directory enumeration, and `password-wordlist.txt` (20 candidates,
-  `Summer2024!` seeded among them) for the offline cracking step. Both
-  live outside the `ctf-platform/` folder — do not copy them into the
-  hosted app directory.
+## H2 — Hash and Seek (Scenario 7: Backup Service Authentication)
+- **Category:** Web / Burp Suite Authentication Brute-Force & Crypto | **Difficulty:** Hard
+- **Story:** "There's a quarantined backup directory that never made it into the
+  public sitemap or robots.txt. Find it, extract the leaked service metadata, and authenticate."
+- **Where hidden:** `/backup/index.html` returns 403 with HTML comments pointing to `/backup/users.json`.
+  `/backup/users.json` leaks the service username `svc_backup`, salt (`9c1f7a`), and SHA-256 target hash (`5269a48d5eb030eee36c71eaa9edbfec94b52cb042ad98cad03bf8e7be20f723`),
+  along with links to the scenario PDF briefing and candidate password list.
+  Authenticating at `/backup/login.html` reveals the flag.
+- **Flag:** `CTF{h4sh_cr4ck3d_4cc3ss}` (Base64: `Q1RGe2g0c2hfY3I0Y2szZF80Y2Mzc3N9`)
+- **Credentials for QA:** username `svc_backup`, salt `9c1f7a`, password `Summer2024!`
+- **Burp Suite Community Edition Walkthrough:**
+  1. **Recon & Discovery:** Discover `/backup/` via wordlist directory search (e.g. `gobuster`, `dirb`, or Burp Intruder).
+  2. **Information Leakage Analysis:** Visit `/backup/` → Inspect response in Burp Proxy / HTTP History to find HTML comments pointing to `/backup/users.json`.
+  3. **Metadata & Credential Schema Extraction:** Fetch `http://<host>/backup/users.json` → Observe `svc_backup`, salt `9c1f7a`, `hash_algo: sha256(salt+password)`, and the cloud/local wordlist link.
+  4. **Burp Decoder / Hash Analysis (Optional):** Inspect and decode any Base64 comments or verify hashes in Burp Decoder.
+  5. **Burp Intruder Brute-Force Attack:**
+     - Open `/backup/login.html` in browser through Burp Proxy.
+     - Send the request to **Burp Intruder** (`Ctrl+I`).
+     - Configure attack position on password: `GET /backup/login.html?username=svc_backup&password=§candidate§`.
+     - Load/paste the 20 password candidates from the provided cloud list (or `participant-tools/password-wordlist.txt`).
+     - Run the attack and sort results by Response Length / look for "Authentication Successful!".
+     - Identify valid password: `Summer2024!`.
+  6. **Authentication & Flag Capture:** Submit `svc_backup` and `Summer2024!` on `/backup/login.html` → Flag `CTF{h4sh_cr4ck3d_4cc3ss}` is displayed.
+- **Tools:** Burp Suite Community Edition (Proxy, HTTP History, Decoder, Intruder Sniper), or Gobuster + Hashcat (offline mode 1420 `sha256($salt.$pass)`).
+- **QA note:** Password `Summer2024!` is required for the final checkpoint (Scenario 8 / H3), preserving 100% full-chain continuity.
 
 ---
 
-## H3 — Full Chain Finale
-- **Category:** Combined (Recon + Web + Crypto) | **Difficulty:** Hard
-- **Story:** "This checkpoint doesn't accept fresh logins. It wants proof
-  you've already been here before — twice."
+## H3 — Full Chain Finale (Scenario 8: Central Security Vault)
+- **Category:** Combined Chained Exploitation & Multi-byte XOR Cryptography | **Difficulty:** Hard
+- **Story:** "This final checkpoint doesn't accept fresh logins. It wants proof
+  you've already been here before — twice: an admin session marker and a recovered service credential."
 - **Where hidden:** `/finale/index.html` requires **both**:
-  (a) the `access_level=admin-9f3a` cookie from H1, and
-  (b) a `?key=<password>` URL parameter equal to the H2 cracked password.
-  When both are correct, client-side JS XORs a stored payload with the
-  key and Base64-decodes the result to reveal the final flag.
+  (a) `Cookie: access_level=admin-9f3a` (recovered from Scenario 6), and
+  (b) `?key=Summer2024!` (recovered password from Scenario 7).
+  When both conditions are met, the vault unlocks and reveals the encrypted vault ciphertext: `ECErFgNDXARea0I7QVwDOhECXUJYEidGEA==`.
 - **Flag:** `CTF{f1n4l_ch41n_c0mpl3t3}`
-- **Walkthrough:**
-  1. Complete H1 → ensure the `access_level=admin-9f3a` cookie is still
-     set in the browser.
-  2. Complete H2 → recover password `Summer2024!`.
-  3. Visit `/finale/index.html?key=Summer2024!` in the same browser
-     session that has the H1 cookie set.
-  4. Page decodes and displays the flag.
-- **Tools:** Everything used in H1 and H2, combined.
+- **Burp Repeater & Chained Exploitation Walkthrough:**
+  1. **Ensure Artifacts are in hand:**
+     - Scenario 6 Cookie: `access_level=admin-9f3a`
+     - Scenario 7 Credential: `Summer2024!`
+  2. **Burp Repeater Request Crafting:**
+     - In Burp Suite Proxy, capture any request to `/finale/index.html`.
+     - Send the request to **Burp Repeater (`Ctrl + R`)**.
+     - Edit the request line to:
+       `GET /finale/index.html?key=Summer2024! HTTP/1.1`
+     - Add the Cookie header:
+       `Cookie: access_level=admin-9f3a`
+     - Send the request (`Ctrl + Space` or Send button).
+     - Response status returns `X-Vault-Status: VAULT_UNLOCKED` and renders the Vault Unlocked section with encrypted token `ECErFgNDXARea0I7QVwDOhECXUJYEidGEA==` and the final flag.
+  3. **Multi-byte XOR Decryption (CyberChef):**
+     - Input: `ECErFgNDXARea0I7QVwDOhECXUJYEidGEA==`
+     - Recipe: `From Base64` ➔ `XOR` (Key: `Summer2024!`, Type: `UTF-8` / `Standard`)
+     - Output: `CTF{f1n4l_ch41n_c0mpl3t3}`
+- **Tools:** Burp Suite Repeater / Browser with DevTools Application Tab + CyberChef.
 
 ---
 

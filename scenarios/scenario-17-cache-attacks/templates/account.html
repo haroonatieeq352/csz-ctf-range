@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h2>User Account Profile</h2>
+  <table>
+    <tr><th style="width: 160px;">Username</th><td>{{ user['username'] }}</td></tr>
+    <tr><th>Email</th><td>{{ user['email'] }}</td></tr>
+    <tr><th>Bio</th><td>{{ user['bio'] }}</td></tr>
+    <tr><th>Confidential Personal Note</th><td><code>{{ user['personal_note'] }}</code></td></tr>
+  </table>
+</div>
+{% endblock %}

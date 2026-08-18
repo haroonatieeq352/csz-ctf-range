@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>403 Forbidden — Backup Archive</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background: radial-gradient(circle at center, #1b161c 0%, #0d0b0e 100%);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .box {
+      text-align: center;
+      background: rgba(28, 25, 31, 0.85);
+      border: 1px solid var(--crimson);
+      border-radius: 8px;
+      padding: 2.5rem 3.5rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(179, 39, 63, 0.15);
+      max-width: 580px;
+    }
+    .icon {
+      font-size: 2.8rem;
+      margin-bottom: 0.5rem;
+      color: var(--crimson);
+    }
+    h1 {
+      color: #e0778a;
+      margin: 0.5rem 0;
+      font-size: 1.8rem;
+      letter-spacing: 1px;
+    }
+    p {
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+    .status-badge {
+      display: inline-block;
+      margin-top: 1.2rem;
+      background: #2a151b;
+      color: #e0778a;
+      border: 1px solid rgba(179, 39, 63, 0.4);
+      padding: 4px 14px;
+      font-size: 0.8rem;
+      font-family: var(--mono);
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ========================================================================= -->
+<!-- [SYSTEM AUDIT NOTICE - TICKET OPS-4471]                                   -->
+<!-- Directory listing disabled by default security policy.                    -->
+<!-- Active Service Config: /backup/users.json                                 -->
+<!-- Service Auth Portal : /backup/login.html                                  -->
+<!-- Recon Hint (B64)    : QXV0aG9yaXplZCBzZXJ2aWNlIGFjY291bnQ6IHN2Y19iYWNrdXAgfCBBdXRoZW50aWNhdGlvbiBwb3J0YWw6IC9iYWNrdXAvbG9naW4uaHRtbCB8IFJlZmVyZW5jZTogdXNlcnMuanNvbg== -->
+<!-- ========================================================================= -->
+
+<div class="box">
+  <div class="icon">&#9888;</div>
+  <h1>403 &mdash; Access Restricted</h1>
+  <p>Direct directory listing and index browsing on this storage node are restricted to authorized personnel only.</p>
+  <div class="status-badge">NODE: BACKUP-STORAGE-01 // STATUS: QUARANTINED</div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Scenario 01 — Target Reconnaissance</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!--
+  TODO @devops: staging build — strip all debug response headers
+  before this goes to prod. Ops keeps complaining, so Kindly review response headers, Ticket: OPS-4471
+  -->
+  <header>
+    <h1>CSZone CTF — Scenario 01</h1>
+    <span class="tag">Target Portal Reconnaissance &bull; Port 8001</span>
+  </header>
+  <main>
+    <div class="card">
+      <span class="badge easy">EASY</span> <span class="badge" style="background:#203545;color:#5dade2;">RECON</span>
+      <h2>Welcome, Operator</h2>
+      <p>
+        Welcome to the CSZone initial reconnaissance challenge. Not everything meant for developers gets removed before launch.
+      </p>
+      <p>
+        Inspect the page carefully and examine how the server communicates with your client before the page is even displayed.
+      </p>
+    </div>
+    <div class="card">
+      <h2>Challenge Objectives</h2>
+      <ul>
+        <li>Inspect the document source for forgotten staging artifacts.</li>
+        <li>Inspect HTTP response headers returned by the server.</li>
+        <li>Submit recovered flags to the scoreboard.</li>
+      </ul>
+    </div>
+  </main>
+  <footer>CSZone CTF Range &bull; Scenario 01 (Port 8001)</footer>
+</body>
+</html>

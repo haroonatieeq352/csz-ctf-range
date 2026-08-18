@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}CSZone — Scenario 15{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header>
+  <a href="/" class="brand-wrapper">
+    <div class="brand-title">CS<span>Zone</span></div>
+    <span class="badge-tag">Scenario 15 &bull; Port 8015</span>
+  </a>
+  <nav>
+    <a href="/avatar-import" class="active">Avatar Import</a>
+    {% if session.get('user_id') %}
+      <span style="color:var(--muted);font-size:0.85rem;margin-left:8px;">({{ session.get('username') }})</span>
+      <a href="/logout" style="color: var(--crimson);">Logout</a>
+    {% else %}
+      <a href="/login">Login</a>
+      <a href="/register" class="btn" style="padding: 5px 14px; font-size: 0.82rem; margin-left: 8px;">Register</a>
+    {% endif %}
+  </nav>
+</header>
+<main>
+{% block content %}{% endblock %}
+</main>
+<footer>
+  CSZone Offensive Security Training Range &copy; 2026 &mdash; Scenario 15 (Port 8015)
+</footer>
+</body>
+</html>

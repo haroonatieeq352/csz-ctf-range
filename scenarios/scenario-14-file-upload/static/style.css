@@ -1,0 +1,182 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  --bg: #0d0b10;
+  --bg-subtle: #141118;
+  --bg-panel: #1a1622;
+  --bg-card: rgba(26, 22, 34, 0.75);
+  --border: #2e2838;
+  --text: #f0ecf4;
+  --muted: #9e95a6;
+  --crimson: #e0314f;
+  --amber: #d99a3d;
+  --mono: 'JetBrains Mono', 'Courier New', monospace;
+  --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --radius: 8px;
+  --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: radial-gradient(circle at 50% 0%, #1c1524 0%, #0d0b10 100%);
+  background-attachment: fixed;
+  color: var(--text);
+  font-family: var(--font-main);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.6;
+}
+
+header {
+  background: rgba(18, 14, 24, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  padding: 14px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.brand-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+.brand-title { color: #fff; font-size: 1.15rem; font-weight: 700; }
+.brand-title span { color: var(--amber); }
+
+.badge-tag {
+  background: rgba(224, 49, 79, 0.15);
+  border: 1px solid rgba(224, 49, 79, 0.4);
+  color: var(--crimson);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 20px;
+  text-transform: uppercase;
+}
+
+nav { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+nav a {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: var(--transition);
+}
+nav a:hover { color: #fff; background: rgba(255, 255, 255, 0.06); }
+nav a.active {
+  color: var(--amber);
+  background: rgba(217, 154, 61, 0.12);
+  border: 1px solid rgba(217, 154, 61, 0.3);
+}
+
+main {
+  max-width: 960px;
+  width: 100%;
+  margin: 36px auto;
+  padding: 0 24px;
+  flex: 1;
+}
+
+.card {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 32px;
+  margin-bottom: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, var(--amber), var(--crimson));
+}
+.card h2 {
+  color: #fff;
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.form-group { margin-bottom: 16px; }
+label {
+  display: block;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+input[type="text"], input[type="password"], input[type="email"], input[type="file"] {
+  width: 100%;
+  background: #0f0d14;
+  border: 1px solid var(--border);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.95rem;
+  padding: 10px 14px;
+  border-radius: 6px;
+}
+
+button, .btn {
+  background: linear-gradient(135deg, #d99a3d, #b37420);
+  color: #0d0b10;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+button:hover, .btn:hover {
+  background: linear-gradient(135deg, #e8ab4f, #c78326);
+}
+
+.alert.error {
+  background: rgba(224, 49, 79, 0.1);
+  border: 1px solid rgba(224, 49, 79, 0.35);
+  color: #ff7b92;
+  padding: 12px;
+  margin-bottom: 15px;
+  border-radius: 4px;
+}
+.alert.success {
+  background: rgba(46, 204, 113, 0.1);
+  border: 1px solid rgba(46, 204, 113, 0.35);
+  color: #58d68d;
+  padding: 12px;
+  margin-bottom: 15px;
+  border-radius: 4px;
+}
+
+footer {
+  text-align: center;
+  color: #6d6477;
+  font-size: 0.82rem;
+  padding: 32px 20px;
+  border-top: 1px solid rgba(46, 40, 56, 0.4);
+  background: rgba(13, 11, 16, 0.8);
+}

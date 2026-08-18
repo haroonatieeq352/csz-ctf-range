@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}CSZone — Scenario 17{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header>
+  <a href="/" class="brand-wrapper">
+    <div class="brand-title">CS<span>Zone</span></div>
+    <span class="badge-tag">Scenario 17 &bull; Port 8017</span>
+  </a>
+  <nav>
+    <a href="/promo/partner-banner" {% if request.path.startswith('/promo') %}class="active"{% endif %}>Partner Banner</a>
+    {% if session.get('user_id') %}
+      <a href="/account" {% if request.path.startswith('/account') %}class="active"{% endif %}>Profile ({{ session.get('username') }})</a>
+      <a href="/logout" style="color: var(--crimson);">Logout</a>
+    {% else %}
+      <a href="/login" {% if request.path == '/login' %}class="active"{% endif %}>Login</a>
+    {% endif %}
+  </nav>
+</header>
+<main>
+{% block content %}{% endblock %}
+</main>
+<footer>
+  CSZone Offensive Security Training Range &copy; 2026 &mdash; Scenario 17 (Port 8017)
+</footer>
+</body>
+</html>

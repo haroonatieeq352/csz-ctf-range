@@ -1,0 +1,52 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environments
+venv/
+.venv/
+ENV/
+env/
+
+# IDE / Editor artifacts
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Runtime / PID tracking files
+.running_scenarios.json
+*.log
+
+# Dynamic runtime test uploads (preserve directory structure via .gitkeep)
+scenarios/scenario-14-file-upload/static/uploads/*
+!scenarios/scenario-14-file-upload/static/uploads/.gitkeep
+backend/static/uploads/*
+!backend/static/uploads/.gitkeep

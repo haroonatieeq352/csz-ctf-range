@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Scenario 07 — Backup Service Authentication</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>CSZone CTF — Scenario 07</h1>
+    <span class="tag">Backup Node & Password Hash Analysis &bull; Port 8007</span>
+  </header>
+  <main>
+    <div class="card">
+      <span class="badge hard">HARD</span> <span class="badge" style="background:#4a2318;color:#f39c12;">AUTH BRUTE-FORCE</span>
+      <h2>Welcome, Operator</h2>
+      <p>
+        There is an unlisted, quarantined backup directory that never made it into the public sitemap or robots.txt.
+      </p>
+      <p>
+        Enumerate endpoints, inspect leaked service schemas, and use Burp Suite Intruder (or Hashcat) to authenticate to the backup portal.
+      </p>
+    </div>
+    <div class="card">
+      <h2>Challenge Objectives</h2>
+      <ul>
+        <li>Discover the hidden backup administrative folder (<code>/backup/</code>).</li>
+        <li>Inspect response metadata to extract service credential hashes and salt (<code>/backup/users.json</code>).</li>
+        <li>Mount a dictionary attack using Burp Suite Intruder against <code>/backup/login.html</code>.</li>
+        <li>Authenticate and capture the service flag token.</li>
+      </ul>
+    </div>
+  </main>
+  <footer>CSZone CTF Range &bull; Scenario 07 (Port 8007)</footer>
+</body>
+</html>

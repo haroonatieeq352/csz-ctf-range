@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Scenario 04 — Broken Access Control</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>CSZone CTF — Scenario 04</h1>
+    <span class="tag">Admin Relocation & Access Control &bull; Port 8004</span>
+  </header>
+  <main>
+    <div class="card">
+      <span class="badge medium">MEDIUM</span> <span class="badge" style="background:#4a2318;color:#f39c12;">ACCESS CONTROL</span>
+      <h2>Welcome, Operator</h2>
+      <p>
+        An admin panel exists somewhere on this range. It has no login page. Find out where it moved.
+      </p>
+    </div>
+    <div class="card">
+      <h2>Challenge Objectives</h2>
+      <ul>
+        <li>Inspect runtime logs in the <strong>Console Tab</strong> or filter for JavaScript assets in the <strong>Network / Sources Tab</strong>.</li>
+        <li>Locate the encoded system reference string in <code>main.js</code>.</li>
+        <li>Decode the Base64 path to uncover the relocated admin endpoint.</li>
+        <li>Navigate to the unprotected admin interface and capture the flag.</li>
+      </ul>
+    </div>
+  </main>
+  <footer>CSZone CTF Range &bull; Scenario 04 (Port 8004)</footer>
+  <script src="main.js"></script>
+</body>
+</html>

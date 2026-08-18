@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}CSZone — Scenario 12{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header>
+  <a href="/" class="brand-wrapper">
+    <div class="brand-title">CS<span>Zone</span></div>
+    <span class="badge-tag">Scenario 12 &bull; Port 8012</span>
+  </a>
+  <nav>
+    <a href="/guestbook" {% if request.path.startswith('/guestbook') %}class="active"{% endif %}>Guestbook</a>
+    <a href="/legacy-admin/login" {% if request.path.startswith('/legacy-admin') %}class="active"{% endif %}>Legacy Admin</a>
+    <a href="/admin/inbox" {% if request.path.startswith('/admin') %}class="active"{% endif %}>Admin Inbox</a>
+    <a href="/xss/collect/log" {% if request.path.startswith('/xss') %}class="active"{% endif %}>Collector Log</a>
+  </nav>
+</header>
+<main>
+{% block content %}{% endblock %}
+</main>
+<footer>
+  CSZone Offensive Security Training Range &copy; 2026 &mdash; Scenario 12 (Port 8012)
+</footer>
+</body>
+</html>

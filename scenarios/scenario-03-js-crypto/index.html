@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Scenario 03 — JavaScript & Cryptography</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <header>
+    <h1>CSZone CTF — Scenario 03</h1>
+    <span class="tag">JavaScript Deobfuscation &bull; Port 8003</span>
+  </header>
+  <main>
+    <div class="card">
+      <span class="badge easy">EASY</span> <span class="badge" style="background:#3a2045;color:#bb86fc;">CRYPTO</span>
+      <h2>Welcome, Operator</h2>
+      <p>
+        The homepage loads a script. Not every variable in that script gets used, and one of them didn't want to be read
+        directly.
+      </p>
+    </div>
+    <div class="card">
+      <h2>Challenge Objectives</h2>
+      <ul>
+        <li>Inspect loaded JavaScript resources and referenced configuration endpoints.</li>
+        <li>Identify XOR-obfuscated diagnostic artifacts.</li>
+        <li>Perform Base64 decoding and single-byte XOR deobfuscation to retrieve the flag.</li>
+      </ul>
+    </div>
+  </main>
+  <footer>CSZone CTF Range &bull; Scenario 03 (Port 8003)</footer>
+  <script src="main.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Scenario 08 — Central Security Vault</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>CSZone CTF — Scenario 08</h1>
+    <span class="tag">Grand Finale &bull; Dual-Key Chained Checkpoint &bull; Port 8008</span>
+  </header>
+  <main>
+    <div class="card">
+      <span class="badge hard">HARD</span> <span class="badge" style="background:#3a2045;color:#bb86fc;">CHAINED CRYPTO</span>
+      <h2>Welcome, Operator</h2>
+      <p>
+        The central security vault checkpoint does not accept normal logins. It requires dual authentication proof: an administrative cookie recovered from the client access control gateway (Scenario 06), and a recovered service credential key (Scenario 07).
+      </p>
+      <p>
+        <a href="/finale/index.html" style="color:var(--amber);font-weight:bold;text-decoration:none;">&rarr; Access Central Vault Gate (/finale/index.html)</a>
+      </p>
+    </div>
+    <div class="card">
+      <h2>Challenge Objectives</h2>
+      <ul>
+        <li>Access the vault gate at <code>/finale/index.html</code>.</li>
+        <li>Present the administrative cookie recovered from <strong>Scenario 06</strong> (<code>access_level=••••••••</code>).</li>
+        <li>Supply the authenticated service password recovered from <strong>Scenario 07</strong> (<code>key=•••••••••••</code>).</li>
+        <li>Decrypt the resulting multi-byte XOR ciphertext payload using the recovered key to capture the Grand Finale flag.</li>
+      </ul>
+    </div>
+  </main>
+  <footer>CSZone CTF Range &bull; Scenario 08 (Port 8008)</footer>
+</body>
+</html>

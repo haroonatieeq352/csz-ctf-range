@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h2>Guestbook</h2>
+  <p>Public board. Anyone can post, no login needed.</p>
+  <form method="POST">
+    <div class="form-group">
+      <label>Name</label>
+      <input type="text" name="name" placeholder="anonymous">
+    </div>
+    <div class="form-group">
+      <label>Message</label>
+      <textarea name="message" rows="3" style="width:100%"></textarea>
+    </div>
+    <button type="submit">Post Entry</button>
+  </form>
+</div>
+<div class="card">
+  <h2>Guestbook Entries</h2>
+  {% for e in entries %}
+  <div style="border-bottom: 1px solid var(--border); padding: 12px 0;">
+    <div style="font-weight: 600; color: var(--amber);">{{ e[0] }} <span style="color: var(--muted); font-weight: normal; font-size: 0.85rem;">— {{ e[2] }}</span></div>
+    <div style="margin-top: 6px;">{{ e[1]|safe }}</div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
