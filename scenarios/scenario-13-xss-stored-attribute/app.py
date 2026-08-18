@@ -65,6 +65,11 @@ def feedback_view():
     formatted_entries = [{"author": r[0], "comment": r[1], "created_at": r[2]} for r in entries]
     return render_template("feedback.html", entries=formatted_entries, flag_secret=FLAG_SECRET)
 
+@app.route("/reset", methods=["GET", "POST"])
+def reset_view():
+    init_db()
+    return redirect(url_for("feedback_view"))
+
 if __name__ == "__main__":
     init_db()
     print(f"[*] Scenario 13 running on http://localhost:{PORT}")

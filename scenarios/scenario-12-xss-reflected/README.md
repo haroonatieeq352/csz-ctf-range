@@ -1,15 +1,18 @@
-# Scenario 12: Reflected XSS into HTML Context
+# Scenario 12: Reflected XSS into HTML Context (Tag Breakout)
 
 - **Port:** `8012`
-- **Vulnerability:** Reflected Cross-Site Scripting (HTML Context)
+- **Vulnerability:** Reflected Cross-Site Scripting (HTML Tag Breakout)
 - **Flag:** `CTF{r3fl3ct3d_xss_b4s1cs}`
+- **Tooling:** Browser URL / Search Input (No Burp Suite required)
 
 ## Exploitation Walkthrough
-1. Access `http://<host>:8012/search?q=test`.
-2. Observe search input reflected in HTML without sanitization.
-3. Inspect DOM to locate hidden session element `<input type="hidden" id="user_token" value="...">`.
-4. Inject XSS payload via URL or Burp Suite:
+1. **Reflection Discovery:** Enter a search query (e.g. `test`) and observe that it is reflected on the page.
+2. **Initial Attempt Trapped:** Submit `<script>alert(1)</script>` in the search box.
+   - The alert does NOT pop up because the input is trapped inside a `<textarea>` tag.
+3. **Source Code Inspection:** Right click and inspect the DOM (`Ctrl + U` / `Ctrl + Shift + I`).
+   - Notice: `<textarea class="query-echo-box" readonly rows="2"><script>alert(1)</script></textarea>`.
+4. **Tag Breakout Execution:** Close the `<textarea>` tag first:
    ```html
-   <script>document.getElementById('vault-display').innerText=document.getElementById('user_token').value;</script>
+   </textarea><script>alert(1)</script>
    ```
-5. Observe execution and capture flag.
+5. **Flag Reveal:** The script executes, the alert pops up, and the page automatically displays the CTF flag!

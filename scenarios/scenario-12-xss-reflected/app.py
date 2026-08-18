@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-CSZone CTF Range — Scenario 12: Reflected XSS into HTML Context
+CSZone CTF Range — Scenario 12: Reflected XSS into HTML Context (Tag Breakout)
 Port: 8012
 """
 import os
@@ -31,8 +31,8 @@ def search_view():
         query_lower = q.lower()
         results = [a for a in ADVISORIES if query_lower in a["title"].lower() or query_lower in a["cve"].lower() or query_lower in a["description"].lower()]
 
-    # VULN: 'q' is passed unescaped to template and marked |safe in search.html
-    return render_template("search.html", q=q, results=results, flag_token=FLAG_SECRET)
+    # VULN: 'q' is passed unescaped to template and marked |safe inside a <textarea> tag
+    return render_template("search.html", q=q, raw_q=q, results=results, flag_token=FLAG_SECRET)
 
 if __name__ == "__main__":
     print(f"[*] Scenario 12 running on http://localhost:{PORT}")

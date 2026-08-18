@@ -5,6 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Knowledgebase Search — Scenario 12{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script>
+    // Global XSS Detection Hook: Loaded BEFORE body/reflection
+    window.__XSS_TRIGGERED = false;
+    const _origAlert = window.alert;
+    window.alert = function(msg) {
+      window.__XSS_TRIGGERED = true;
+      const reveal = () => {
+        const box = document.getElementById("flag-success-box");
+        if (box) {
+          box.style.display = "block";
+        }
+      };
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", reveal);
+      } else {
+        reveal();
+      }
+      setTimeout(reveal, 100);
+      return _origAlert(msg);
+    };
+  </script>
 </head>
 <body>
   <nav class="navbar">

