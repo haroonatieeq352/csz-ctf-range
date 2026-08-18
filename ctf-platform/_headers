@@ -4,3 +4,6 @@
   X-Debug-Info: CTF{h34d3r_hunt3r_pr0}
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
+
+/secure/*
+  X-Auth-Hint: YWNjZXNzX2xldmVsPWFkbWluLTlmM2E=

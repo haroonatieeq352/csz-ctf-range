@@ -108,10 +108,12 @@ def cache_layer_check():
 @app.after_request
 def cache_layer_store(response):
     path = request.path
-    if request.method != "GET":
+    if request.method != "GET" or path.startswith("/static/"):
         return response
     cacheable = bool(_STATIC_LOOKALIKE.search(path)) or path in _EXPLICIT_CACHEABLE_PATHS
     if cacheable and response.status_code == 200:
+        if getattr(response, "direct_passthrough", False):
+            return response
         # VULN (Cache Deception + Cache Poisoning): cache key is the path
         # ONLY. It does not factor in session/auth cookies, so a
         # personalized authenticated response gets cached and served to
@@ -363,7 +365,50 @@ def xss_collect_log():
 
 
 # ─────────────────────────────────────────────────────────────────────────
-# Employee directory — UNION-based SQLi extraction target
+# E-Commerce Product Catalog — UNION-based SQLi Basics target
+# ─────────────────────────────────────────────────────────────────────────
+
+@app.route("/products", methods=["GET"])
+def products():
+    category = request.args.get("category", "").strip()
+    conn = get_conn()
+    error = None
+    products_list = []
+
+    if category:
+        # VULN (SQL Injection — UNION extraction basics):
+        # 2 selected columns (name, description), filterable by category.
+        # String concatenation allows boolean bypass (' OR 1=1 -- -) and UNION injection.
+        query = (
+            "SELECT name, description FROM products "
+            f"WHERE category = '{category}' AND is_released = 1"
+        )
+        try:
+            products_list = conn.execute(query).fetchall()
+        except sqlite3.OperationalError as e:
+            error = f"Database Error: {e}"
+    else:
+        query = "SELECT name, description FROM products WHERE is_released = 1"
+        products_list = conn.execute(query).fetchall()
+
+    categories = ["Hardware", "Software"]
+    status_code = 500 if error else 200
+    resp = make_response(
+        render_template(
+            "products.html",
+            products=products_list,
+            selected_category=category,
+            categories=categories,
+            error=error,
+        ),
+        status_code,
+    )
+    resp.headers["X-Database-Schema-Note"] = "Audit: Confidential flags stored in table 'site_secrets(title, secret_flag)'"
+    return resp
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# Scenario 10: Staff directory — 4-Column UNION SQLi (Strict Type Checking & Hash Comment)
 # ─────────────────────────────────────────────────────────────────────────
 
 @app.route("/directory", methods=["GET"])
@@ -372,18 +417,47 @@ def directory():
     results = []
     error = None
     if q:
-        conn = get_conn()
-        # VULN (SQL Injection — UNION extraction): raw string-built query,
-        # 3 selected columns (name, department, email), searchable by name.
-        query = (
-            "SELECT name, department, email FROM employees "
-            "WHERE name LIKE '%" + q + "%'"
-        )
-        try:
-            results = conn.execute(query).fetchall()
-        except sqlite3.OperationalError as e:
-            error = f"Query error: {e}"
-    return render_template("directory.html", q=q, results=results, error=error)
+        # Security Filter: Block '--' comments to teach comment discovery
+        if "--" in q:
+            error = "WAF Alert: SQL comment syntax '--' is blocked by security filter. Use alternative comment syntax."
+        else:
+            conn = get_conn()
+            # Base query selects 4 columns: name (TEXT), badge_id (INT), department (TEXT), email (TEXT)
+            full_query = (
+                "SELECT name, badge_id, department, email FROM employees "
+                f"WHERE name LIKE '%{q}%'"
+            )
+            # If '#' comment is used, comment out the rest of the query (including the trailing %')
+            query = full_query.split("#")[0]
+            try:
+                raw_rows = conn.execute(query).fetchall()
+                # Strict Data Type Validation: (Col 1: String, Col 2: Integer, Col 3: String, Col 4: String)
+                for row in raw_rows:
+                    col1, col2, col3, col4 = row[0], row[1], row[2], row[3]
+                    if not isinstance(col1, str):
+                        raise sqlite3.OperationalError(
+                            f"DataTypeError: Column 1 (Employee Name) expects TEXT/STRING data type, received incompatible numeric '{col1}'."
+                        )
+                    if not isinstance(col2, int) or isinstance(col2, bool):
+                        raise sqlite3.OperationalError(
+                            f"DataTypeError: Column 2 (Badge ID) expects INTEGER data type, received incompatible string '{col2}'."
+                        )
+                    if not isinstance(col3, str):
+                        raise sqlite3.OperationalError(
+                            f"DataTypeError: Column 3 (Department) expects TEXT/STRING data type, received incompatible numeric '{col3}'."
+                        )
+                    if not isinstance(col4, str):
+                        raise sqlite3.OperationalError(
+                            f"DataTypeError: Column 4 (Corporate Email) expects TEXT/STRING data type, received incompatible numeric '{col4}'."
+                        )
+                results = raw_rows
+            except sqlite3.OperationalError as e:
+                error = f"Database Query Error: {e}"
+
+    status_code = 500 if error else 200
+    resp = make_response(render_template("directory.html", q=q, results=results, error=error), status_code)
+    resp.headers["X-Staff-Database-Hint"] = "Clearances Table: 'staff_clearances(officer_name, clearance_level, department_code, master_flag)'"
+    return resp
 
 
 # ─────────────────────────────────────────────────────────────────────────

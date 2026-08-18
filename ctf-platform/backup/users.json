@@ -1,9 +1,17 @@
 [
   {
     "username": "svc_backup",
+    "service_role": "Automated DB & System Backup Worker",
+    "auth_endpoint": "/backup/login.html",
     "salt": "9c1f7a",
     "hash_algo": "sha256(salt+password)",
     "hash": "5269a48d5eb030eee36c71eaa9edbfec94b52cb042ad98cad03bf8e7be20f723",
-    "note": "rotate this credential before promoting to prod - ticket OPS-4471"
+    "note": "Emergency credential rotation in progress (ticket OPS-4471). Use provided scenario briefing and candidate wordlist document to verify credentials before deployment.",
+    "briefing_doc": "https://docs.google.com/document/d/1_cp5iZpkkaJ24qMluADSPaDGBP5WFFMWEn-F59wIxww/edit?usp=sharing",
+    "cloud_wordlist": "https://docs.google.com/document/d/1_cp5iZpkkaJ24qMluADSPaDGBP5WFFMWEn-F59wIxww/edit?usp=sharing",
+    "backup_nodes": [
+      "storage-node-us-east-1",
+      "storage-node-eu-central-1"
+    ]
   }
 ]

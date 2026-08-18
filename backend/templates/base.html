@@ -2,33 +2,47 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>{% block title %}CSZone Backend Range{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}CSZone Offensive Security Range — Backend{% endblock %}</title>
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
+
 <header>
-  <h1>CSZone Backend Range</h1>
+  <a href="/" class="brand-wrapper">
+    <div class="brand-title">
+      CS<span>Zone</span>
+    </div>
+    <span class="badge-tag">Backend Phase</span>
+  </a>
+
   <nav>
-    <a href="/">Home</a>
-    <a href="/guestbook">Guestbook</a>
-    <a href="/directory">Directory</a>
-    <a href="/orders">Orders</a>
-    <a href="/upload">Upload</a>
-    <a href="/avatar-import">Avatar Import</a>
-    <a href="/promo/partner-banner">Partner Promo</a>
-    <a href="/legacy-admin/login">Legacy Admin</a>
+    <a href="/" {% if request.path == '/' %}class="active"{% endif %}>Home</a>
+    <a href="/products" {% if request.path.startswith('/products') %}class="active"{% endif %}>Store</a>
+    <a href="/directory" {% if request.path.startswith('/directory') %}class="active"{% endif %}>Directory</a>
+    <a href="/guestbook" {% if request.path.startswith('/guestbook') %}class="active"{% endif %}>Guestbook</a>
+    <a href="/orders" {% if request.path.startswith('/orders') %}class="active"{% endif %}>Orders</a>
+    <a href="/upload" {% if request.path.startswith('/upload') %}class="active"{% endif %}>Upload</a>
+    <a href="/avatar-import" {% if request.path.startswith('/avatar-import') %}class="active"{% endif %}>Avatar Import</a>
+    <a href="/promo/partner-banner" {% if request.path.startswith('/promo') %}class="active"{% endif %}>Partner Promo</a>
+    <a href="/legacy-admin/login" {% if request.path.startswith('/legacy-admin') %}class="active"{% endif %}>Legacy Admin</a>
     {% if session.get('user_id') %}
-      <a href="/account">Account ({{ session.get('username') }})</a>
-      <a href="/logout">Logout</a>
+      <a href="/account" class="btn" style="padding: 5px 12px; font-size: 0.82rem; margin-left: 8px;">Account ({{ session.get('username') }})</a>
+      <a href="/logout" style="color: var(--crimson);">Logout</a>
     {% else %}
-      <a href="/login">Login</a>
-      <a href="/register">Register</a>
+      <a href="/login" {% if request.path == '/login' %}class="active"{% endif %}>Login</a>
+      <a href="/register" class="btn" style="padding: 5px 14px; font-size: 0.82rem; margin-left: 8px;">Register</a>
     {% endif %}
   </nav>
 </header>
+
 <main>
 {% block content %}{% endblock %}
 </main>
-<footer>CSZone Pvt. Limited &mdash; Internal Training Range (Backend Phase 1)</footer>
+
+<footer>
+  CSZone Offensive Security Training Range &copy; 2026 &mdash; Enterprise Backend Laboratory
+</footer>
+
 </body>
 </html>
