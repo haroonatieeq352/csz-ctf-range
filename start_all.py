@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 CSZone CTF Range — Master Multi-Scenario Server Runner
-Runs the Central Operations Hub (Port 8000) and all 17 scenario servers (Ports 8001-8017) in parallel.
+Runs the Central Operations Hub (Port 8000) and all 21 scenario servers (Ports 8001-8021) in parallel.
 Usage:
     python start_all.py
 """
@@ -30,12 +30,16 @@ SCENARIO_CONFIGS = [
     {"name": "Scenario 09 (Product Filter SQLi)", "dir": "scenario-09-sqli-products", "script": "app.py", "port": 8009},
     {"name": "Scenario 10 (Personnel UNION SQLi)", "dir": "scenario-10-sqli-directory", "script": "app.py", "port": 8010},
     {"name": "Scenario 11 (Asset Inventory SQLi)", "dir": "scenario-11-sqli-assets", "script": "app.py", "port": 8011},
-    {"name": "Scenario 12 (SQLi + Stored XSS)", "dir": "scenario-12-admin-stored-xss", "script": "app.py", "port": 8012},
-    {"name": "Scenario 13 (CSRF Account Email)", "dir": "scenario-13-csrf-account", "script": "app.py", "port": 8013},
-    {"name": "Scenario 14 (Unrestricted Upload)", "dir": "scenario-14-file-upload", "script": "app.py", "port": 8014},
-    {"name": "Scenario 15 (SSRF Internal Metadata)", "dir": "scenario-15-ssrf-metadata", "script": "app.py", "port": 8015},
-    {"name": "Scenario 16 (Backend IDOR Orders)", "dir": "scenario-16-backend-idor", "script": "app.py", "port": 8016},
-    {"name": "Scenario 17 (Cache Deception & Poison)", "dir": "scenario-17-cache-attacks", "script": "app.py", "port": 8017},
+    {"name": "Scenario 12 (Reflected XSS)", "dir": "scenario-12-xss-reflected", "script": "app.py", "port": 8012},
+    {"name": "Scenario 13 (Stored Attribute XSS)", "dir": "scenario-13-xss-stored-attribute", "script": "app.py", "port": 8013},
+    {"name": "Scenario 14 (DOM-based XSS)", "dir": "scenario-14-xss-dom", "script": "app.py", "port": 8014},
+    {"name": "Scenario 15 (WAF Bypass XSS)", "dir": "scenario-15-xss-waf-bypass", "script": "app.py", "port": 8015},
+    {"name": "Scenario 16 (SQLi + Stored XSS Chain)", "dir": "scenario-16-admin-stored-xss", "script": "app.py", "port": 8016},
+    {"name": "Scenario 17 (CSRF Account Email)", "dir": "scenario-17-csrf-account", "script": "app.py", "port": 8017},
+    {"name": "Scenario 18 (Unrestricted Upload)", "dir": "scenario-18-file-upload", "script": "app.py", "port": 8018},
+    {"name": "Scenario 19 (SSRF Internal Metadata)", "dir": "scenario-19-ssrf-metadata", "script": "app.py", "port": 8019},
+    {"name": "Scenario 20 (Backend IDOR Orders)", "dir": "scenario-20-backend-idor", "script": "app.py", "port": 8020},
+    {"name": "Scenario 21 (Cache Deception & Poison)", "dir": "scenario-21-cache-attacks", "script": "app.py", "port": 8021},
 ]
 
 running_processes = []
@@ -90,7 +94,7 @@ def cleanup():
 
 def main():
     print("=" * 70)
-    print("       CSZone CTF Training Range — Starting All Services")
+    print("       CSZone CTF Training Range — Starting All 21 Services")
     print("=" * 70)
 
     threads = []
@@ -100,13 +104,12 @@ def main():
         threads.append(t)
         time.sleep(0.08)
 
-    # Allow processes a moment to populate PID list and save
-    time.sleep(0.5)
+    time.sleep(0.6)
     save_pids()
 
     print("=" * 70)
     print(f"[*] Central Hub running at: http://localhost:8000")
-    print(f"[*] All {len(SCENARIO_CONFIGS)-1} scenarios active across ports 8001-8017.")
+    print(f"[*] All {len(SCENARIO_CONFIGS)-1} scenarios active across ports 8001-8021.")
     print("[*] Run 'python verify_all_scenarios.py' to run full automated test suite.")
     print("[*] Run 'python stop_all.py' from another terminal to stop all servers.")
     print("[*] Press Ctrl+C to terminate all services.")

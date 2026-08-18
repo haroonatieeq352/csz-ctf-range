@@ -1,13 +1,13 @@
 # CSZone Offensive Security Training Range (Multi-Port Architecture)
 
-Enterprise-grade offensive security and web penetration testing training platform. Features 17 isolated, hands-on vulnerability scenarios mapped across dedicated ports (`8001` to `8017`) and unified through the **Central Operations Hub** on Port `8000`.
+Enterprise-grade offensive security and web penetration testing training platform. Features 21 isolated, hands-on vulnerability scenarios mapped across dedicated ports (`8001` to `8021`) and unified through the **Central Operations Hub** on Port `8000`.
 
 ---
 
 ## 🚀 Quick Start Guide
 
 ### Prerequisites
-- **Python 3.9+** (for native run) OR **Docker & Docker Compose** (for containerized run)
+- **Python 3.9+** (for native execution) OR **Docker & Docker Compose** (for containerized run)
 - Install Python requirements:
   ```bash
   pip install -r requirements.txt
@@ -19,12 +19,12 @@ Enterprise-grade offensive security and web penetration testing training platfor
 ```bash
 python start_all.py
 ```
-This starts in parallel:
+This spawns in parallel:
 - **Central Operations Hub:** `http://localhost:8000` (or `http://<your-vps-ip>:8000`)
-- **17 Isolated Target Scenarios:** Ports `8001` through `8017`
+- **21 Isolated Target Scenarios:** Ports `8001` through `8021`
 
 ### 2. Run Automated Verification Suite
-To verify that all 17 scenarios and the Central Hub are fully operational:
+To verify that all 21 scenarios and the Central Hub are fully operational:
 ```bash
 python verify_all_scenarios.py
 ```
@@ -39,11 +39,11 @@ python stop_all.py
 
 ## 🐳 Docker Deployment (VPS Production)
 
-Deploy the entire suite (Central Hub + 17 Scenarios) with a single command:
+Deploy the entire suite (Central Hub + 21 Scenarios) with a single command:
 ```bash
 docker-compose up -d --build
 ```
-- **Check service status:**
+- **Check container status:**
   ```bash
   docker-compose ps
   ```
@@ -60,9 +60,9 @@ docker-compose up -d --build
 
 ## 🌐 VPS Firewall Configuration (UFW / Security Groups)
 
-If deploying to an Ubuntu/Debian VPS or AWS/DigitalOcean/Hetzner, ensure inbound traffic is allowed on ports `8000` to `8017`:
+If deploying to an Ubuntu/Debian VPS or AWS/DigitalOcean/Hetzner, ensure inbound traffic is allowed on ports `8000` to `8021`:
 ```bash
-sudo ufw allow 8000:8017/tcp
+sudo ufw allow 8000:8021/tcp
 sudo ufw reload
 ```
 
@@ -84,12 +84,16 @@ sudo ufw reload
 | **`8009`** | Scenario 09: Products SQLi | SQL Injection | `CTF{un10n_b4s1cs_m4st3r}` |
 | **`8010`** | Scenario 10: Directory UNION SQLi | SQL Injection | `CTF{un10n_s3l3ct_m4st3r}` |
 | **`8011`** | Scenario 11: Asset Inventory SQLi | SQL Injection | `CTF{sch3m4_3num_d0ubl3_qu0t3_m4st3r}` |
-| **`8012`** | Scenario 12: SQLi & Stored XSS | Chained Exploit | `CTF{st0r3d_c00k13_th3ft}` |
-| **`8013`** | Scenario 13: CSRF Account Email | CSRF | `CTF{csrf_n0_t0k3n_pwn3d}` |
-| **`8014`** | Scenario 14: File Upload & XSS | File Upload | Stored Client Script Execution |
-| **`8015`** | Scenario 15: SSRF Metadata | SSRF | `CTF{ssrf_1nt3rn4l_m3t4d4t4}` |
-| **`8016`** | Scenario 16: Backend IDOR Orders | Access Control | `CTF{b4ck3nd_1d0r_r34l}` |
-| **`8017`** | Scenario 17: Web Cache Attacks | Cache Attacks | `CTF{c4ch3_d3c3pt10n_l34k}` |
+| **`8012`** | Scenario 12: Reflected XSS | Cross-Site Scripting | `CTF{r3fl3ct3d_xss_b4s1cs}` |
+| **`8013`** | Scenario 13: Stored Attribute XSS | Cross-Site Scripting | `CTF{st0r3d_4ttr1but3_br34k0ut}` |
+| **`8014`** | Scenario 14: DOM-based XSS | Cross-Site Scripting | `CTF{d0m_xss_s1nk_m4st3r}` |
+| **`8015`** | Scenario 15: WAF Bypass XSS | Cross-Site Scripting | `CTF{w4f_byp4ss_h5_v3ct0r}` |
+| **`8016`** | Scenario 16: SQLi & Stored XSS | Chained Exploit | `CTF{st0r3d_c00k13_th3ft}` |
+| **`8017`** | Scenario 17: CSRF Account Email | CSRF | `CTF{csrf_n0_t0k3n_pwn3d}` |
+| **`8018`** | Scenario 18: File Upload & XSS | File Upload | Stored Client Script Execution |
+| **`8019`** | Scenario 19: SSRF Metadata | SSRF | `CTF{ssrf_1nt3rn4l_m3t4d4t4}` |
+| **`8020`** | Scenario 20: Backend IDOR Orders | Access Control | `CTF{b4ck3nd_1d0r_r34l}` |
+| **`8021`** | Scenario 21: Web Cache Attacks | Cache Attacks | `CTF{c4ch3_d3c3pt10n_l34k}` |
 
 ---
 

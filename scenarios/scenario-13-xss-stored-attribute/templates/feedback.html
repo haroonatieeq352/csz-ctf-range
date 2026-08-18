@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+  <h2 class="card-title">Submit Community & Codebase Feedback</h2>
+  <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
+    Help our engineering team improve internal libraries and platform documentation.
+  </p>
+
+  <form method="POST" action="/feedback">
+    <div class="form-group">
+      <label class="form-label">Developer Handle / Name:</label>
+      <input type="text" name="author" class="input-field" placeholder="e.g. dev_0x01" required>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Feedback Notes:</label>
+      <textarea name="comment" rows="3" placeholder="Enter feedback details..." required></textarea>
+    </div>
+    <button type="submit" class="btn">Submit Feedback</button>
+  </form>
+</div>
+
+<!-- Secret DOM Vault for Challenge Reward (Target) -->
+<input type="hidden" id="secret-vault-key" value="{{ flag_secret }}">
+
+<div id="reward-box" class="reward-box">
+  <div style="color: var(--success); font-weight: 700; margin-bottom: 6px;">🎉 Attribute Breakout Triggered:</div>
+  <div id="reward-panel" style="font-family: var(--font-mono); font-size: 1.1rem; color: #fff;"></div>
+</div>
+
+<div class="card">
+  <h3 class="card-title" style="margin-bottom: 16px;">Recent Community Feedback Submissions</h3>
+  
+  {% for entry in entries %}
+  <div class="entry-card">
+    <div class="entry-header">
+      <!-- VULN: 'author' is rendered unescaped inside the value attribute. Direct <script> is filtered, but attribute breakout is vulnerable! -->
+      <div>
+        <span style="color: var(--text-muted); font-size: 0.85rem;">Author: </span>
+        <input type="text" class="author-input" value="{{ entry.author|safe }}" readonly>
+      </div>
+      <span style="font-size: 0.8rem; color: var(--text-muted);">{{ entry.created_at }}</span>
+    </div>
+    <div style="color: var(--text-main); font-size: 0.95rem;">{{ entry.comment }}</div>
+  </div>
+  {% endfor %}
+</div>
+
+<script>
+  const obs = new MutationObserver(() => {
+    const rp = document.getElementById("reward-panel");
+    if (rp && rp.innerText.trim() !== "") {
+      document.getElementById("reward-box").style.display = "block";
+    }
+  });
+  const rpEl = document.getElementById("reward-panel");
+  if (rpEl) {
+    obs.observe(rpEl, { childList: true, subtree: true, characterData: true });
+  }
+</script>
+{% endblock %}

@@ -22,11 +22,11 @@
       </div>
       <div class="stats-bar">
         <div class="stat-item">
-          <span class="stat-value" id="targetCount">16</span>
+          <span class="stat-value" id="targetCount">21</span>
           <span class="stat-label">Active Scenarios</span>
         </div>
         <div class="stat-item">
-          <span class="stat-value">4</span>
+          <span class="stat-value">5</span>
           <span class="stat-label">Tactical Tracks</span>
         </div>
         <div class="stat-item">
@@ -43,7 +43,7 @@
       <div class="pill-badge">Multi-Port Enterprise Isolation Engine</div>
       <h2 class="hero-title">Target Operational Console</h2>
       <p class="hero-desc">
-        Welcome to the CSZone hands-on training range. Each scenario operates in its own dedicated, isolated sandbox port (Ports 8001–8016). Select a target below to launch your session.
+        Welcome to the CSZone hands-on training range. Each scenario operates in its own dedicated, isolated sandbox port (Ports 8001–8021). Select a target below to launch your session.
       </p>
       
       <!-- Search & Filters -->
@@ -55,11 +55,12 @@
           <input type="text" id="searchInput" placeholder="Search scenarios by title, vulnerability, or port...">
         </div>
         <div class="filter-pills" id="filterPills">
-          <button class="pill active" data-category="all">All (16)</button>
+          <button class="pill active" data-category="all">All (21)</button>
           <button class="pill" data-category="recon">Reconnaissance</button>
           <button class="pill" data-category="crypto">Cryptography</button>
           <button class="pill" data-category="access">Access Control & IDOR</button>
           <button class="pill" data-category="sqli">SQL Injection</button>
+          <button class="pill" data-category="xss">Cross-Site Scripting</button>
           <button class="pill" data-category="web">Advanced Web</button>
         </div>
       </div>
@@ -70,7 +71,7 @@
   <main class="container">
     <div class="grid-header">
       <h3 id="sectionTitle">Available Target Scenarios</h3>
-      <span class="scenario-counter" id="visibleCounter">Showing 16 of 16 targets</span>
+      <span class="scenario-counter" id="visibleCounter">Showing 21 of 21 targets</span>
     </div>
     
     <div class="scenarios-grid" id="scenariosGrid">
@@ -124,7 +125,7 @@
       </div>
       <div class="footer-links">
         <span>Hub Port: <code>8000</code></span>
-        <span>Isolated Port Range: <code>8001 &ndash; 8016</code></span>
+        <span>Isolated Port Range: <code>8001 &ndash; 8021</code></span>
       </div>
     </div>
   </footer>

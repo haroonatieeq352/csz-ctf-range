@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">Vulnerability & Threat Advisory Database</h2>
+    <p class="card-subtitle">Query our internal security knowledgebase for threat definitions, mitigation guidelines, and internal advisory bulletins.</p>
+  </div>
+
+  <form method="GET" action="/search" class="search-box">
+    <input type="text" name="q" value="{{ q }}" placeholder="Search advisories (e.g. Apache, Log4j, OpenSSL)..." class="input-field" autofocus>
+    <button type="submit" class="btn">Search</button>
+  </form>
+
+  <!-- Simulated Protected Client Session Context Element (Attacker Target) -->
+  <input type="hidden" id="user_token" value="{{ flag_token }}">
+
+  {% if q %}
+  <div class="results-panel">
+    <!-- VULN (Reflected XSS): Raw reflection of user parameter 'q' into HTML without escaping -->
+    <div class="query-echo">
+      Showing advisory lookup results for: <strong>{{ q|safe }}</strong>
+    </div>
+
+    {% if results %}
+      {% for item in results %}
+      <div class="cve-item">
+        <div class="cve-id">{{ item.cve }} — {{ item.title }}</div>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">{{ item.description }}</p>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div style="padding: 20px; color: var(--text-muted); text-align: center;">
+        No public advisories matched your query.
+      </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <div id="vault-display-box" class="vault-box">
+    <div class="vault-title">🔓 Session Token Extracted Via Client Execution:</div>
+    <div id="vault-display" class="flag-text"></div>
+  </div>
+</div>
+
+<script>
+  // Helper to expose extraction box if XSS updates it
+  const observer = new MutationObserver(() => {
+    const vd = document.getElementById("vault-display");
+    if (vd && vd.innerText.trim() !== "") {
+      document.getElementById("vault-display-box").style.display = "block";
+    }
+  });
+  const vdEl = document.getElementById("vault-display");
+  if (vdEl) {
+    observer.observe(vdEl, { childList: true, subtree: true, characterData: true });
+  }
+</script>
+{% endblock %}

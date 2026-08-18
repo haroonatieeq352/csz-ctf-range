@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+  <h2 style="color: #fff; margin-bottom: 8px;">Real-Time Threat Telemetry Console</h2>
+  <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.92rem;">
+    Single Page Application routing telemetry feeds directly in the client DOM.
+  </p>
+
+  <!-- Client Router Tabs -->
+  <div class="nav-tabs">
+    <a href="/analytics?tab=Overview" class="tab-btn" id="tab-overview">Overview</a>
+    <a href="/analytics?tab=Network+Threats" class="tab-btn" id="tab-threats">Network Threats</a>
+    <a href="/analytics?tab=Audit+Logs" class="tab-btn" id="tab-logs">Audit Logs</a>
+    <a href="/analytics?tab=Endpoints" class="tab-btn" id="tab-endpoints">Endpoints</a>
+  </div>
+
+  <div class="telemetry-panel">
+    <!-- Dynamic DOM Sink Target -->
+    <div id="telemetry-content">
+      Loading client analytics...
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div style="font-size: 0.8rem; color: var(--text-muted);">Active Sensors</div>
+        <div class="stat-val">128</div>
+      </div>
+      <div class="stat-item">
+        <div style="font-size: 0.8rem; color: var(--text-muted);">Blocked Probes / Hr</div>
+        <div class="stat-val">1,420</div>
+      </div>
+      <div class="stat-item">
+        <div style="font-size: 0.8rem; color: var(--text-muted);">Threat Severity</div>
+        <div class="stat-val" style="color: #10b981;">LOW</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="vault-box" class="vault-box">
+    <div style="color: var(--success); font-weight: 700; margin-bottom: 6px;">🔓 Client JavaScript Secret Disclosed:</div>
+    <div id="extracted-vault" style="font-family: var(--font-mono); font-size: 1.1rem; color: #fff;"></div>
+  </div>
+</div>
+
+<!-- Simulated Client-Side State & Secret -->
+<script>
+  window.__TELEMETRY_KEY = "{{ flag_secret }}";
+  window.__CLIENT_CONFIG = {
+    env: "production-range",
+    telemetry_scope: "global",
+    internal_auth: "{{ flag_secret }}"
+  };
+
+  // Client-Side Router Logic:
+  // SOURCE: window.location.search (URL parameter 'tab')
+  // SINK: element.innerHTML without sanitization
+  document.addEventListener("DOMContentLoaded", () => {
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get("tab") || "Overview";
+
+    const contentBox = document.getElementById("telemetry-content");
+    
+    // VULNERABLE DOM XSS SINK:
+    contentBox.innerHTML = "<h3 style='color: #fff; margin-bottom: 10px;'>Active Telemetry Feed: " + tabParam + "</h3><p style='color: var(--text-muted); font-size: 0.9rem;'>Telemetry stream is operational and aggregating node data in real-time.</p>";
+  });
+
+  const obs = new MutationObserver(() => {
+    const ev = document.getElementById("extracted-vault");
+    if (ev && ev.innerText.trim() !== "") {
+      document.getElementById("vault-box").style.display = "block";
+    }
+  });
+  const evEl = document.getElementById("extracted-vault");
+  if (evEl) {
+    obs.observe(evEl, { childList: true, subtree: true, characterData: true });
+  }
+</script>
+{% endblock %}
