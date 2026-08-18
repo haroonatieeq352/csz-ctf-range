@@ -1,42 +1,99 @@
-# CSZone Offensive Security Training Range
-# python server.py 8080 
-Two independent, complementary phases:
+# CSZone Offensive Security Training Range (Multi-Port Architecture)
 
-- **`ctf-platform/`** — static frontend range (recon, crypto/encoding,
-  client-side access control). No backend required, deploy anywhere
-  static hosting works. See `ctf-platform/SOLUTIONS-INTERNAL.md`.
-- **`backend/`** — real Flask + SQLite backend (SQLi, stored XSS with a
-  real cookie-theft chain, CSRF, file upload, SSRF, backend IDOR, cache
-  deception, cache poisoning). Needs Python (or Docker). See
-  `backend/README.md` for setup and `backend/SOLUTIONS-INTERNAL-BACKEND.md`
-  for the answer key.
-- **`participant-tools/`** — distribute to participants separately, never
-  deploy alongside either app: `dir-wordlist.txt` (directory
-  brute-forcing), `password-wordlist.txt` (offline hash cracking),
-  `csrf-poc-change-email.html` (host on a different origin than the
-  backend to demonstrate B4).
+Enterprise-grade offensive security and web penetration testing training platform. Features 17 isolated, hands-on vulnerability scenarios mapped across dedicated ports (`8001` to `8017`) and unified through the **Central Operations Hub** on Port `8000`.
 
-## Current flag count
+---
 
-- Frontend (static): **10** flags — E1-E4, M1-M3, H1-H3.
-- Backend (Phase 1): **6** distinct scored flags across 8
-  challenges/domains (two challenges, B1 and B3, share one flag as a
-  chain; B5 and B9 are impact-demonstration challenges without their own
-  flag by design — see the backend solutions doc for the reasoning and
-  how to add flags to them if you want).
-- **Total: 16 distinct flags**, verified end-to-end via
-  `backend/verify_all.py` for all backend challenges and via manual
-  `curl` testing (documented in each solutions doc) for all frontend
-  challenges.
+## 🚀 Quick Start Guide
 
-## Toward the 30-40 flag goal
+### Prerequisites
+- **Python 3.9+** (for native run) OR **Docker & Docker Compose** (for containerized run)
+- Install Python requirements:
+  ```bash
+  pip install -r requirements.txt
+  ```
 
-This gets you roughly halfway. Domains not yet covered, for a future
-phase: authentication/JWT attacks, NoSQL injection, SSTI, prototype
-pollution, business logic flaws, insecure deserialization, GraphQL
-misconfiguration, race conditions, and a second, harder tier of chained
-scenarios that cross between the frontend and backend (e.g. a frontend
-recon step that discloses a backend endpoint). The backend architecture
-now in place (Flask blueprints pattern, shared cache middleware, DB
-schema) is built to extend — new challenge modules can be added as new
-routes + templates without touching the existing ones.
+---
+
+### 1. Launch All Services (Local Machine or VPS)
+```bash
+python start_all.py
+```
+This starts in parallel:
+- **Central Operations Hub:** `http://localhost:8000` (or `http://<your-vps-ip>:8000`)
+- **17 Isolated Target Scenarios:** Ports `8001` through `8017`
+
+### 2. Run Automated Verification Suite
+To verify that all 17 scenarios and the Central Hub are fully operational:
+```bash
+python verify_all_scenarios.py
+```
+*(Optional: pass a custom host/IP: `python verify_all_scenarios.py <vps-ip>`)*
+
+### 3. Stop All Services
+```bash
+python stop_all.py
+```
+
+---
+
+## 🐳 Docker Deployment (VPS Production)
+
+Deploy the entire suite (Central Hub + 17 Scenarios) with a single command:
+```bash
+docker-compose up -d --build
+```
+- **Check service status:**
+  ```bash
+  docker-compose ps
+  ```
+- **View container logs:**
+  ```bash
+  docker-compose logs -f
+  ```
+- **Stop all containers:**
+  ```bash
+  docker-compose down
+  ```
+
+---
+
+## 🌐 VPS Firewall Configuration (UFW / Security Groups)
+
+If deploying to an Ubuntu/Debian VPS or AWS/DigitalOcean/Hetzner, ensure inbound traffic is allowed on ports `8000` to `8017`:
+```bash
+sudo ufw allow 8000:8017/tcp
+sudo ufw reload
+```
+
+---
+
+## 🗺️ Port Architecture & Track Map
+
+| Port | Service Name | Category | Flag / Key Objective |
+|---|---|---|---|
+| **`8000`** | **Central Operations Hub** | Main Portal | Landing UI & Dynamic Scenario Dispatcher |
+| **`8001`** | Scenario 01: Recon & Headers | Reconnaissance | `CTF{h1dd3n_1n_pl41n_s1ght}` / `CTF{h34d3r_hunt3r_pr0}` |
+| **`8002`** | Scenario 02: Robots & Ops Archive | Reconnaissance | `CTF{r0b0ts_d1scl0s3_p4ths}` |
+| **`8003`** | Scenario 03: JS & Crypto XOR | Cryptography | `CTF{unus3d_v4r14bl3_l34k}` |
+| **`8004`** | Scenario 04: Admin Portal Leak | Access Control | `CTF{4dm1n_p4n3l_3xp0s3d}` |
+| **`8005`** | Scenario 05: Frontend IDOR | IDOR | `CTF{1d0r_1nv01c3_l34k}` |
+| **`8006`** | Scenario 06: Promo & Cookie Gate | Access / Crypto | `CTF{b4s364_1s_n0t_3ncrypt10n}` / `CTF{h34d3r_c00k13_byp4ss}` |
+| **`8007`** | Scenario 07: Backup Service Auth | Authentication | `CTF{h4sh_cr4ck3d_4cc3ss}` |
+| **`8008`** | Scenario 08: Central Vault Finale | Chained Crypto | `CTF{f1n4l_ch41n_c0mpl3t3}` |
+| **`8009`** | Scenario 09: Products SQLi | SQL Injection | `CTF{un10n_b4s1cs_m4st3r}` |
+| **`8010`** | Scenario 10: Directory UNION SQLi | SQL Injection | `CTF{un10n_s3l3ct_m4st3r}` |
+| **`8011`** | Scenario 11: Asset Inventory SQLi | SQL Injection | `CTF{sch3m4_3num_d0ubl3_qu0t3_m4st3r}` |
+| **`8012`** | Scenario 12: SQLi & Stored XSS | Chained Exploit | `CTF{st0r3d_c00k13_th3ft}` |
+| **`8013`** | Scenario 13: CSRF Account Email | CSRF | `CTF{csrf_n0_t0k3n_pwn3d}` |
+| **`8014`** | Scenario 14: File Upload & XSS | File Upload | Stored Client Script Execution |
+| **`8015`** | Scenario 15: SSRF Metadata | SSRF | `CTF{ssrf_1nt3rn4l_m3t4d4t4}` |
+| **`8016`** | Scenario 16: Backend IDOR Orders | Access Control | `CTF{b4ck3nd_1d0r_r34l}` |
+| **`8017`** | Scenario 17: Web Cache Attacks | Cache Attacks | `CTF{c4ch3_d3c3pt10n_l34k}` |
+
+---
+
+## 🔒 Security & Sandbox Guarantees
+- **Port & SOP Isolation:** Web browsers strictly isolate cookies, local storage, and DOM contexts per port.
+- **Zero Cross-Contamination:** Exploit payloads in one scenario cannot modify or bleed into other scenarios.
+- **Pure Read-Only Central Hub:** The main dashboard on Port 8000 contains no database, no execution endpoints, and is strictly read-only.

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Restricted Secure Gateway</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    .flag-panel {
+      background: #14201a;
+      border: 1px solid #2e6040;
+      border-radius: 4px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Hint: admin session format: YWNjZXNzX2xldmVsPWFkbWluLTlmM2E= -->
+  <header>
+    <h1>CSZone &bull; Restricted Gateway</h1>
+    <span class="tag">Security Level: High</span>
+  </header>
+  <main>
+    <div class="card" id="status-card">
+      <h2 id="gate-title">Access Verification</h2>
+      <div id="gate-msg">Checking session credentials...</div>
+    </div>
+  </main>
+
+  <script>
+    function getCookie(name) {
+      const v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+      return v ? v[2] : null;
+    }
+
+    const access = getCookie('access_level');
+    const msg = document.getElementById('gate-msg');
+
+    if (access === 'admin-9f3a') {
+      msg.innerHTML = `
+        <div class="flag-panel">
+          <p style="color:#5cdb95;font-weight:bold;margin-top:0;">[+] Access Granted &mdash; Admin Session Active</p>
+          <p>Confidential Flag Token (Base64):</p>
+          <pre><code>Q1RGe2gzNGQzcl9jMDBrMTNfYnlwNHNzfQ==</code></pre>
+        </div>
+      `;
+    } else {
+      msg.innerHTML = `
+        <p style="color:#e0778a;">[-] 403 Access Denied: Missing or invalid <code>access_level</code> admin session cookie.</p>
+      `;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Scenario 05 — Insecure Direct Object Reference</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>CSZone CTF — Scenario 05</h1>
+    <span class="tag">Insecure Direct Object Reference (IDOR) &bull; Port 8005</span>
+  </header>
+  <main>
+    <div class="card">
+      <span class="badge medium">MEDIUM</span> <span class="badge" style="background:#1b3842;color:#3498db;">IDOR</span>
+      <h2>Welcome, Operator</h2>
+      <p>
+        You have been granted access to your personal guest account billing portal.
+      </p>
+      <p>
+        <a href="/invoices/invoice.html?id=1001" style="color:var(--amber);font-weight:bold;text-decoration:none;">&rarr; Access Billing Statement (Invoice #1001)</a>
+      </p>
+    </div>
+    <div class="card">
+      <h2>Challenge Objectives</h2>
+      <ul>
+        <li>Inspect how the application retrieves and renders invoice data records.</li>
+        <li>Manipulate identifiers to test access boundaries.</li>
+        <li>Extract and decode confidential internal finance department notes.</li>
+      </ul>
+    </div>
+  </main>
+  <footer>CSZone CTF Range &bull; Scenario 05 (Port 8005)</footer>
+</body>
+</html>

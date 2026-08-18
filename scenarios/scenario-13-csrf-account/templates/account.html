@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h2>Account Profile</h2>
+  <table>
+    <tr><th style="width: 140px;">Username</th><td>{{ user['username'] }}</td></tr>
+    <tr><th>Email</th><td>{{ user['email'] }}</td></tr>
+  </table>
+</div>
+
+{% if csrf_flag %}
+<div class="flag-box">
+  <strong>[+] CSRF Attack Successful!</strong><br>
+  Flag: <code>{{ csrf_flag }}</code>
+</div>
+{% endif %}
+
+<div class="card">
+  <h2>Update Account Email</h2>
+  <form method="POST" action="/account/email">
+    <div class="form-group">
+      <label>New Email Address</label>
+      <input type="email" name="email" value="{{ user['email'] }}" required>
+    </div>
+    <button type="submit">Update Email</button>
+  </form>
+</div>
+{% endblock %}

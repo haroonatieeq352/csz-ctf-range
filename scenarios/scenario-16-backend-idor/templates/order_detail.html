@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h2>Order #{{ order[0] }} Details</h2>
+  <table>
+    <tr><th style="width: 160px;">Owner Account ID</th><td><code>user_{{ order[1] }}</code></td></tr>
+    <tr><th>Item</th><td>{{ order[2] }}</td></tr>
+    <tr><th>Amount</th><td>{{ order[3] }}</td></tr>
+    <tr><th>Internal Order Notes</th><td><code>{{ order[4] }}</code></td></tr>
+  </table>
+  <div style="margin-top: 20px;">
+    <a href="/orders" class="btn" style="padding: 6px 16px; font-size: 0.85rem;">&larr; Back to Orders</a>
+  </div>
+</div>
+{% endblock %}

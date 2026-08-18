@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h2>Upload File Attachment</h2>
+  <p style="color: var(--muted); font-size: 0.88rem;">
+    Security Policy: Executable server scripts (.php, .py, .exe, .sh, .jsp, .asp) are blocked.
+  </p>
+  {% if error %}<div class="alert error">{{ error }}</div>{% endif %}
+  {% if uploaded_url %}
+    <div class="alert success">File uploaded successfully! View asset: <a href="{{ uploaded_url }}" target="_blank" style="color: #58d68d; font-weight: bold; margin-left: 6px;">{{ uploaded_url }}</a></div>
+  {% endif %}
+  <form method="POST" enctype="multipart/form-data">
+    <div class="form-group">
+      <label>Choose File</label>
+      <input type="file" name="file" required>
+    </div>
+    <button type="submit">Upload File</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Final Checkpoint — Central Security Vault</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    body {
+      background: radial-gradient(circle at top center, #1c141a 0%, #0d0a0e 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    main {
+      max-width: 860px;
+      margin: 30px auto;
+      padding: 0 20px;
+      flex: 1;
+    }
+    .vault-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--amber);
+      border-radius: 6px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    }
+    .vault-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #2e2833;
+      padding-bottom: 15px;
+      margin-bottom: 20px;
+    }
+    .vault-header h2 {
+      margin: 0;
+      color: var(--amber);
+      font-size: 1.25rem;
+      letter-spacing: 1px;
+    }
+    .conditions-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 20px 0;
+    }
+    @media (max-width: 600px) {
+      .conditions-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .condition-box {
+      background: #141117;
+      border: 1px solid #332b38;
+      border-radius: 5px;
+      padding: 16px;
+      transition: all 0.3s ease;
+    }
+    .condition-box.passed {
+      border-color: #2ecc71;
+      background: rgba(46, 204, 113, 0.06);
+    }
+    .condition-box.failed {
+      border-color: var(--crimson);
+      background: rgba(179, 39, 63, 0.06);
+    }
+    .condition-title {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .condition-status {
+      font-family: var(--mono);
+      font-size: 0.95rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .passed .condition-status {
+      color: #2ecc71;
+    }
+    .failed .condition-status {
+      color: #e0778a;
+    }
+    .masked-val {
+      letter-spacing: 2px;
+      font-weight: bold;
+      color: #887b8f;
+    }
+    .key-form {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .key-input {
+      flex: 1;
+      min-width: 280px;
+      background: #0d0b0f;
+      border: 1px solid #3d3540;
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+    .key-input:focus {
+      outline: none;
+      border-color: var(--amber);
+    }
+    .btn-submit {
+      background: linear-gradient(135deg, #d99a3d, #b37420);
+      color: #121014;
+      font-weight: 700;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+    }
+    .btn-submit:hover {
+      background: linear-gradient(135deg, #e8ab4f, #c78326);
+      box-shadow: 0 0 12px rgba(217, 154, 61, 0.4);
+    }
+    .repeater-guidance {
+      margin-top: 25px;
+      background: #141117;
+      border-left: 3px solid #3498db;
+      padding: 16px 20px;
+      border-radius: 0 4px 4px 0;
+      font-size: 0.88rem;
+      color: #bbb;
+    }
+    .repeater-guidance code {
+      color: #74b9ff;
+    }
+    .repeater-guidance ol {
+      margin: 8px 0 0 18px;
+      padding: 0;
+    }
+    .repeater-guidance li {
+      margin-bottom: 6px;
+    }
+    .vault-unlocked {
+      background: rgba(46, 204, 113, 0.08);
+      border: 1px dashed #2ecc71;
+      color: #2ecc71;
+      padding: 20px;
+      border-radius: 6px;
+      margin-top: 25px;
+      font-family: var(--mono);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>CSZone &mdash; Final Checkpoint Gate</h1>
+    <span class="tag">Scenario 8 // Multi-Stage Chained Verification</span>
+  </header>
+
+  <main>
+    <div class="vault-card">
+      <div class="vault-header">
+        <h2>Central Security Checkpoint</h2>
+        <span class="badge hard">CHAINED EXPLOITATION</span>
+      </div>
+
+      <p>
+        This terminal secures the range's core flag vault. It does not accept direct logins.
+        Instead, it requires proof of two artifacts recovered across earlier stages.
+      </p>
+
+      <!-- Condition Meters -->
+      <div class="conditions-grid">
+        <div id="condCookie" class="condition-box failed">
+          <div class="condition-title">Artifact 1 &mdash; Administrative Cookie (Scenario 06)</div>
+          <div id="condCookieStatus" class="condition-status">&#10008; Missing (Cookie: access_level=<span class="masked-val">&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;</span>)</div>
+        </div>
+
+        <div id="condKey" class="condition-box failed">
+          <div class="condition-title">Artifact 2 &mdash; Service Credential Key (Scenario 07)</div>
+          <div id="condKeyStatus" class="condition-status">&#10008; Missing (?key=<span class="masked-val">&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;</span>)</div>
+        </div>
+      </div>
+
+      <!-- Parameter Submission Form -->
+      <form id="keyForm" method="GET" action="index.html" class="key-form">
+        <input id="keyInput" name="key" type="text" class="key-input"
+          placeholder="Enter recovered service credential from Scenario 7" required>
+        <button type="submit" class="btn-submit">Verify &amp; Unlock Vault</button>
+      </form>
+
+      <div id="statusMsg" class="flag-box hidden"></div>
+      <div id="vaultResult" class="vault-unlocked hidden"></div>
+
+      <!-- Burp Suite Repeater Guidance -->
+      <div class="repeater-guidance">
+        <strong style="color: #74b9ff;">&#128737; Burp Suite Repeater &amp; Chained Exploitation Guide:</strong>
+        <ol>
+          <li>Send the request <code>GET /finale/index.html?key=[SCENARIO_07_PASSWORD]</code> to <strong>Burp Repeater (<code>Ctrl + R</code>)</strong>.</li>
+          <li>In Repeater, ensure the request carries the header: <code>Cookie: access_level=[SCENARIO_06_COOKIE]</code>.</li>
+          <li>Send the request to receive the encrypted ciphertext payload or unlocked flag.</li>
+          <li>Open <strong>CyberChef</strong> ➔ apply <strong>From Base64</strong> ➔ apply <strong>XOR</strong> with your recovered Scenario 07 password as the key.</li>
+        </ol>
+      </div>
+
+    </div>
+  </main>
+
+  <footer>
+    CSZone Training Range &copy; 2026 &mdash; Grand Finale Challenge Gate
+  </footer>
+
+  <script>
+    const SALT = "9c1f7a";
+    const TARGET_HASH = "5269a48d5eb030eee36c71eaa9edbfec94b52cb042ad98cad03bf8e7be20f723";
+    const CIPHERTEXT_B64 = "ECErFgNDXARea0I7QVwDOhECXUJYEidGEA==";
+
+    function getCookie(name) {
+      const match = document.cookie
+        .split("; ")
+        .find(row => row.startsWith(name + "="));
+      return match ? match.split("=")[1] : null;
+    }
+
+    function getParam(name) {
+      const url = new URL(window.location.href);
+      return url.searchParams.get(name);
+    }
+
+    async function sha256Hex(message) {
+      const data = new TextEncoder().encode(message);
+      const digest = await crypto.subtle.digest("SHA-256", data);
+      return Array.from(new Uint8Array(digest))
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("");
+    }
+
+    function xorDecode(b64, key) {
+      const raw = atob(b64);
+      let out = "";
+      for (let i = 0; i < raw.length; i++) {
+        out += String.fromCharCode(raw.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+      }
+      return out;
+    }
+
+    async function evaluateCheckpoint() {
+      const cookieBox = document.getElementById("condCookie");
+      const cookieServerVerified = cookieBox && (cookieBox.getAttribute("data-server-verified") === "true");
+      const cookieVal = getCookie("access_level");
+      const cookieOk = (cookieVal === "admin-9f3a") || cookieServerVerified;
+
+      const keyParam = getParam("key") || "";
+      if (keyParam) {
+        document.getElementById("keyInput").value = keyParam;
+      }
+
+      const keyHash = keyParam ? await sha256Hex(SALT + keyParam) : "";
+      const keyOk = (keyHash === TARGET_HASH);
+
+      const cookieStatus = document.getElementById("condCookieStatus");
+      if (cookieOk) {
+        cookieBox.classList.remove("failed");
+        cookieBox.classList.add("passed");
+        cookieStatus.innerHTML = "&#10004; Verified (Admin Session Cookie Active)";
+      } else {
+        cookieBox.classList.remove("passed");
+        cookieBox.classList.add("failed");
+        cookieStatus.innerHTML = '&#10008; Missing (Cookie: access_level=<span class="masked-val">&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;</span>)';
+      }
+
+      const keyBox = document.getElementById("condKey");
+      const keyStatus = document.getElementById("condKeyStatus");
+      if (keyOk) {
+        keyBox.classList.remove("failed");
+        keyBox.classList.add("passed");
+        keyStatus.innerHTML = "&#10004; Verified (Scenario 07 Service Key Validated)";
+      } else if (keyParam) {
+        keyBox.classList.remove("passed");
+        keyBox.classList.add("failed");
+        keyStatus.innerHTML = "&#10008; Invalid Credential Key";
+      } else {
+        keyBox.classList.remove("passed");
+        keyBox.classList.add("failed");
+        keyStatus.innerHTML = '&#10008; Missing (?key=<span class="masked-val">&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;</span>)';
+      }
+
+      const statusMsg = document.getElementById("statusMsg");
+      const vaultResult = document.getElementById("vaultResult");
+
+      if (cookieOk && keyOk) {
+        const decodedFlag = xorDecode(CIPHERTEXT_B64, keyParam);
+        statusMsg.classList.add("hidden");
+        vaultResult.classList.remove("hidden");
+        vaultResult.innerHTML =
+          "<strong>[+] ACCESS GRANTED &mdash; VAULT UNLOCKED!</strong><br><br>" +
+          "<strong>Encrypted Vault Token (Base64):</strong> <code>" + CIPHERTEXT_B64 + "</code><br>" +
+          "<strong>Decryption Key:</strong> <code>" + keyParam + "</code><br><br>" +
+          "<strong>Grand Finale Flag:</strong> <code>" + decodedFlag + "</code><br>";
+      } else {
+        statusMsg.classList.remove("hidden");
+        vaultResult.classList.add("hidden");
+        let missing = [];
+        if (!cookieOk) missing.push("Admin Session Cookie (Scenario 06)");
+        if (!keyOk) missing.push("Service Password Key (Scenario 07)");
+        statusMsg.innerHTML =
+          "<strong>[-] Gate Locked:</strong> Awaiting required chained artifacts: " +
+          missing.join(" + ") + ".";
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", evaluateCheckpoint);
+  </script>
+</body>
+</html>

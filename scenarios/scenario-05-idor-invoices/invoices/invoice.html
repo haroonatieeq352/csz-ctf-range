@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Invoice Viewer</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <header>
+    <h1>CSZone &bull; Billing Portal</h1>
+    <span class="tag">Invoice Viewer</span>
+  </header>
+  <main>
+    <div class="card" id="invoice-card">
+      <h2 id="inv-title">Loading Invoice...</h2>
+      <div id="inv-details"></div>
+    </div>
+  </main>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const invoiceId = parseInt(params.get('id') || '1001', 10);
+
+    fetch('/invoices/invoices.json')
+      .then(res => res.json())
+      .then(invoices => {
+        const inv = invoices.find(i => i.id === invoiceId);
+        const card = document.getElementById('invoice-card');
+        const title = document.getElementById('inv-title');
+        const details = document.getElementById('inv-details');
+
+        if (!inv) {
+          title.textContent = 'Invoice Not Found';
+          details.innerHTML = `<p>No invoice found with ID <code>${invoiceId}</code>.</p>`;
+          return;
+        }
+
+        title.textContent = `Invoice #${inv.id} &mdash; ${inv.recipient}`;
+        let notesHtml = '';
+        if (inv.internal_notes) {
+          notesHtml = `<p style="margin-top:16px;"><strong>Internal Notes:</strong> <code>${inv.internal_notes}</code></p>`;
+        }
+        details.innerHTML = `
+          <p><strong>Date:</strong> ${inv.date}</p>
+          <p><strong>Amount:</strong> ${inv.amount}</p>
+          <p><strong>Status:</strong> <span class="badge ${inv.status === 'Paid' ? 'easy' : 'medium'}">${inv.status}</span></p>
+          <p><strong>Description:</strong> ${inv.description}</p>
+          ${notesHtml}
+        `;
+      })
+      .catch(() => {
+        document.getElementById('inv-title').textContent = 'Error Loading Invoice';
+      });
+  </script>
+</body>
+</html>

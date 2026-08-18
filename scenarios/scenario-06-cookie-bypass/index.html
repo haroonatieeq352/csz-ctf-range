@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Scenario 06 — Crypto & Cookie Guard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <header>
+    <h1>CSZone CTF — Scenario 06</h1>
+    <span class="tag">Partner Promo & Client Session Guard &bull; Port 8006</span>
+  </header>
+  <main>
+    <div class="card">
+      <span class="badge medium">MEDIUM</span> <span class="badge" style="background:#1b3842;color:#3498db;">COOKIE
+        MANIPULATION</span>
+      <h2>Welcome, Operator</h2>
+      <p>
+        A restricted access gateway is guarded by a client-side session check.
+      </p>
+      <p>
+        Search the server for partner authentication material and manipulate your browser cookies to bypass the gateway
+        perimeter.
+      </p>
+    </div>
+    <div class="card">
+      <h2>Challenge Objectives</h2>
+      <ul>
+        <li>Inspect <code>robots.txt</code> to uncover internal application endpoints.</li>
+        <li>Visit the partner portal and extract the encoded session token.</li>
+        <li>Decode the Base64 token to reveal the required cookie key-value pair.</li>
+        <li>Navigate to the restricted <code>/secure/</code> gateway and inject the cookie via Browser DevTools.</li>
+        <li>Bypass the 403 access barrier to unlock the confidential flag.</li>
+      </ul>
+    </div>
+  </main>
+  <footer>CSZone CTF Range &bull; Scenario 06 (Port 8006)</footer>
+</body>
+
+</html>

@@ -1,0 +1,110 @@
+version: '3.8'
+
+services:
+  central-hub:
+    build: ./scenarios/central-hub
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  scenario-01:
+    build: ./scenarios/scenario-01-recon-headers
+    ports:
+      - "8001:8001"
+    restart: unless-stopped
+
+  scenario-02:
+    build: ./scenarios/scenario-02-robots-ops
+    ports:
+      - "8002:8002"
+    restart: unless-stopped
+
+  scenario-03:
+    build: ./scenarios/scenario-03-js-crypto
+    ports:
+      - "8003:8003"
+    restart: unless-stopped
+
+  scenario-04:
+    build: ./scenarios/scenario-04-admin-portal
+    ports:
+      - "8004:8004"
+    restart: unless-stopped
+
+  scenario-05:
+    build: ./scenarios/scenario-05-idor-invoices
+    ports:
+      - "8005:8005"
+    restart: unless-stopped
+
+  scenario-06:
+    build: ./scenarios/scenario-06-cookie-bypass
+    ports:
+      - "8006:8006"
+    restart: unless-stopped
+
+  scenario-07:
+    build: ./scenarios/scenario-07-backup-bruteforce
+    ports:
+      - "8007:8007"
+    restart: unless-stopped
+
+  scenario-08:
+    build: ./scenarios/scenario-08-vault-finale
+    ports:
+      - "8008:8008"
+    restart: unless-stopped
+
+  scenario-09:
+    build: ./scenarios/scenario-09-sqli-products
+    ports:
+      - "8009:8009"
+    restart: unless-stopped
+
+  scenario-10:
+    build: ./scenarios/scenario-10-sqli-directory
+    ports:
+      - "8010:8010"
+    restart: unless-stopped
+
+  scenario-11:
+    build: ./scenarios/scenario-11-sqli-assets
+    ports:
+      - "8011:8011"
+    restart: unless-stopped
+
+  scenario-12:
+    build: ./scenarios/scenario-12-admin-stored-xss
+    ports:
+      - "8012:8012"
+    restart: unless-stopped
+
+  scenario-13:
+    build: ./scenarios/scenario-13-csrf-account
+    ports:
+      - "8013:8013"
+    restart: unless-stopped
+
+  scenario-14:
+    build: ./scenarios/scenario-14-file-upload
+    ports:
+      - "8014:8014"
+    restart: unless-stopped
+
+  scenario-15:
+    build: ./scenarios/scenario-15-ssrf-metadata
+    ports:
+      - "8015:8015"
+    restart: unless-stopped
+
+  scenario-16:
+    build: ./scenarios/scenario-16-backend-idor
+    ports:
+      - "8016:8016"
+    restart: unless-stopped
+
+  scenario-17:
+    build: ./scenarios/scenario-17-cache-attacks
+    ports:
+      - "8017:8017"
+    restart: unless-stopped

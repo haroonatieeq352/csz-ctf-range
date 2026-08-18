@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /recon-notes/
+Disallow: /old-staging-2023/
+Disallow: /internal-qa/

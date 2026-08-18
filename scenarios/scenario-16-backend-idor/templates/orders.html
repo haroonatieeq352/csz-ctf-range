@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h2>Customer Order History</h2>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr><th>Order Reference ID</th><th>Item Description</th><th>Invoiced Amount</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td><code>#{{ r[0] }}</code></td>
+          <td>{{ r[1] }}</td>
+          <td>{{ r[2] }}</td>
+          <td><a href="/orders/{{ r[0] }}" class="btn" style="padding: 4px 12px; font-size: 0.8rem;">View Order</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h2>Legacy Admin Portal</h2>
+  <p style="color: var(--muted); font-size: 0.88rem;">
+    This portal predates the current authentication standard. Marked for decommission in 2023.
+  </p>
+  {% if error %}<div class="alert error">{{ error }}</div>{% endif %}
+  <form method="POST">
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" name="username" required autofocus>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" name="password" required>
+    </div>
+    <button type="submit">Login as Administrator</button>
+  </form>
+</div>
+{% endblock %}

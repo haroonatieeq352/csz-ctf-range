@@ -1,0 +1,35 @@
+[
+  {
+    "id": 1001,
+    "recipient": "Guest Account",
+    "date": "2024-08-01",
+    "amount": "$0.00",
+    "status": "Paid",
+    "description": "Trial tier onboarding package"
+  },
+  {
+    "id": 1004,
+    "recipient": "Beta Testing Team",
+    "date": "2024-08-05",
+    "amount": "$450.00",
+    "status": "Pending",
+    "description": "Range infrastructure load testing"
+  },
+  {
+    "id": 1007,
+    "recipient": "CSZone Finance Department",
+    "date": "2024-08-10",
+    "amount": "$12,800.00",
+    "status": "Paid",
+    "description": "Quarterly offensive tooling license renewal",
+    "internal_notes": "Q1RGezFkMHJfMW52MDFjM19sMzRrfQ=="
+  },
+  {
+    "id": 1009,
+    "recipient": "External Security Auditor",
+    "date": "2024-08-15",
+    "amount": "$3,200.00",
+    "status": "Pending",
+    "description": "Black-box web assessment contract"
+  }
+]

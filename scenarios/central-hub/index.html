@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSZone CTF Training Range — Central Operations Hub</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="brand">
+        <div class="logo-badge">CSZ</div>
+        <div class="brand-text">
+          <h1>CSZone <span>Cyber Range</span></h1>
+          <p class="subtitle">Offensive Security & Web Penetration Testing Arena</p>
+        </div>
+      </div>
+      <div class="stats-bar">
+        <div class="stat-item">
+          <span class="stat-value" id="targetCount">16</span>
+          <span class="stat-label">Active Scenarios</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">4</span>
+          <span class="stat-label">Tactical Tracks</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value status-online">● ONLINE</span>
+          <span class="stat-label">System State</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <div class="pill-badge">Multi-Port Enterprise Isolation Engine</div>
+      <h2 class="hero-title">Target Operational Console</h2>
+      <p class="hero-desc">
+        Welcome to the CSZone hands-on training range. Each scenario operates in its own dedicated, isolated sandbox port (Ports 8001–8016). Select a target below to launch your session.
+      </p>
+      
+      <!-- Search & Filters -->
+      <div class="controls-wrapper">
+        <div class="search-box">
+          <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="searchInput" placeholder="Search scenarios by title, vulnerability, or port...">
+        </div>
+        <div class="filter-pills" id="filterPills">
+          <button class="pill active" data-category="all">All (16)</button>
+          <button class="pill" data-category="recon">Reconnaissance</button>
+          <button class="pill" data-category="crypto">Cryptography</button>
+          <button class="pill" data-category="access">Access Control & IDOR</button>
+          <button class="pill" data-category="sqli">SQL Injection</button>
+          <button class="pill" data-category="web">Advanced Web</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Scenarios Grid -->
+  <main class="container">
+    <div class="grid-header">
+      <h3 id="sectionTitle">Available Target Scenarios</h3>
+      <span class="scenario-counter" id="visibleCounter">Showing 16 of 16 targets</span>
+    </div>
+    
+    <div class="scenarios-grid" id="scenariosGrid">
+      <!-- Dynamic Scenario Cards rendered by app.js -->
+    </div>
+  </main>
+
+  <!-- Participant Guidelines Section -->
+  <section class="rules-section">
+    <div class="container">
+      <div class="rules-card">
+        <div class="rules-header">
+          <div class="rules-icon">📋</div>
+          <div>
+            <h3>Range Operational Guidelines</h3>
+            <p>Rules of engagement for participants and student researchers</p>
+          </div>
+        </div>
+        <div class="rules-grid">
+          <div class="rule-item">
+            <span class="rule-num">01</span>
+            <div>
+              <strong>Port Isolation Rule</strong>
+              <p>Each challenge is hosted on its specific port. Cookies and session tokens do not bleed across ports.</p>
+            </div>
+          </div>
+          <div class="rule-item">
+            <span class="rule-num">02</span>
+            <div>
+              <strong>Legitimate Exploit Paths</strong>
+              <p>Solve each challenge using the intended vulnerability technique. Flag formats follow <code>CTF{...}</code>.</p>
+            </div>
+          </div>
+          <div class="rule-item">
+            <span class="rule-num">03</span>
+            <div>
+              <strong>Self-Contained Sandboxes</strong>
+              <p>All database instances and caches reset automatically. Work at your own pace without interfering with others.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-content">
+      <div>
+        <strong>CSZone Offensive Security Training Range</strong> &copy; 2026. All rights reserved.
+      </div>
+      <div class="footer-links">
+        <span>Hub Port: <code>8000</code></span>
+        <span>Isolated Port Range: <code>8001 &ndash; 8016</code></span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
