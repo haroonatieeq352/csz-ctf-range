@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+  <h2>📡 Enterprise Public Activity &amp; Audit Feed</h2>
+  <p style="color: var(--muted); font-size: 0.92rem; margin-bottom: 20px;">
+    System-wide collaborative audit log and ingestion activity feed. Broadcasts real-time document transactions across departments. Available via REST API at <code>GET /api/public/audit-feed</code>.
+  </p>
+
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Timestamp</th>
+          <th>Actor / User</th>
+          <th>Transaction &amp; Activity Details</th>
+          <th>Leaked Reference UUID</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in activities %}
+        <tr>
+          <td style="font-size: 0.82rem; color: var(--muted); white-space: nowrap;">{{ a[3] }}</td>
+          <td style="font-weight: 600; color: #fff;">{{ a[0] }}</td>
+          <td>{{ a[1] }}</td>
+          <td>
+            {% if a[0] == 'Chief Security Officer' %}
+              <code style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35);">{{ a[2] }}</code>
+            {% else %}
+              <code>{{ a[2] }}</code>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

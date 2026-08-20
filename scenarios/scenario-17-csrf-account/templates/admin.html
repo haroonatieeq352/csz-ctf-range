@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+  <h2>🔐 Executive Security &amp; Organization Master Console</h2>
+  <p style="color: var(--muted); font-size: 0.92rem; margin-bottom: 20px;">
+    Restricted administration console. Authorized access requires an active session with <code>role: 'admin'</code> or VIP clearance.
+  </p>
+
+  {% if error %}
+  <div class="alert error" style="margin-bottom: 20px;">
+    <strong>[Security Policy Enforced]:</strong> {{ error }}
+  </div>
+  <p style="color: var(--muted); font-size: 0.88rem;">
+    Your current account (<code>{{ user[1] if user else 'anonymous' }}</code>) lacks sufficient administrative privileges. Use Mass Assignment or IDOR to elevate your permissions.
+  </p>
+  {% else %}
+  <div class="vault-box" style="display: block; margin-top: 0; margin-bottom: 24px;">
+    <div class="vault-header">
+      <span class="vault-icon">🎉</span>
+      <div>
+        <div class="vault-title">Congratulations, you solved the lab!</div>
+        <div class="vault-desc">Privilege escalation achieved via Mass Assignment &amp; Object Property-Level IDOR.</div>
+      </div>
+    </div>
+    <div class="flag-wrap">
+      <span class="flag-label">Captured CTF Flag:</span>
+      <div id="extracted-vault" class="flag-badge">{{ flag }}</div>
+    </div>
+  </div>
+
+  <div style="background: #110e18; border: 1px solid var(--border); padding: 20px; border-radius: 6px;">
+    <h3 style="color: #fff; font-size: 1rem; margin-bottom: 12px;">Executive Admin Clearance Details</h3>
+    <ul style="list-style: none; color: var(--muted); font-size: 0.88rem; line-height: 1.8;">
+      <li>• Authenticated Account ID: <code>#{{ user[0] }}</code></li>
+      <li>• Active Username: <strong style="color: #fff;">{{ user[1] }}</strong></li>
+      <li>• Verified Role: <span style="background: rgba(239, 68, 68, 0.2); color: #f87171; padding: 2px 8px; border-radius: 4px; font-weight: 700;">{{ user[2]|upper }}</span></li>
+      <li>• Security Status: <span style="color: #34d399;">AUTHORIZATION_LEVEL_1_VERIFIED</span></li>
+    </ul>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

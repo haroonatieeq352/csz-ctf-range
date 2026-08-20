@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card main-portal-card">
+  <div class="portal-header">
+    <h2 class="portal-heading">Vulnerability Intelligence Research Blog</h2>
+    <p class="portal-sub">
+      Explore vulnerability write-ups, incident response advisories, and client-side security papers. Use the search input below to filter research articles.
+      <br><span style="display: inline-block; margin-top: 8px; font-size: 0.85rem; color: #38bdf8; background: rgba(56, 189, 248, 0.1); padding: 4px 10px; border-radius: 4px; border: 1px solid rgba(56, 189, 248, 0.2);">🎯 <strong>Lab Objective:</strong> Exploit the search DOM sink and execute <code>alert("cszone")</code> to solve the lab.</span>
+    </p>
+  </div>
+
+  <!-- Real-World Search Form -->
+  <form method="GET" action="/" class="search-form">
+    <div class="search-input-wrap">
+      <svg class="search-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input type="text" name="search" id="search-input" value="{{ search }}" placeholder="Search the blog (e.g. CSP, VPN, Frameworks)..." class="search-input" autofocus>
+    </div>
+    <button type="submit" class="btn-search">Search</button>
+  </form>
+
+  <!-- Dynamic DOM Search Message Sink -->
+  <div id="searchMessage" class="search-message-container"></div>
+
+  <!-- Success Solved Flag Box -->
+  <div id="vault-box" class="vault-box" style="display: none;">
+    <div class="vault-header">
+      <span class="vault-icon">🎉</span>
+      <div>
+        <div class="vault-title">Congratulations, you solved the lab!</div>
+        <div class="vault-desc">DOM XSS payload executed <code>alert("cszone")</code> in <code>innerHTML</code> sink via <code>location.search</code>.</div>
+      </div>
+    </div>
+    <div class="flag-wrap">
+      <span class="flag-label">Captured CTF Flag:</span>
+      <div id="extracted-vault" class="flag-badge"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Published Articles Feed -->
+<div class="articles-section">
+  <div class="articles-header">
+    <h3 class="articles-title">Recent Research Publications</h3>
+    <span class="articles-count">{{ posts|length }} Publications</span>
+  </div>
+
+  <div class="posts-grid">
+    {% for post in posts %}
+    <article class="article-card">
+      <div class="article-tag">APPSEC RESEARCH</div>
+      <h4 class="article-title">{{ post.title }}</h4>
+      <div class="article-meta">{{ post.date }} • Threat Analysis & Mitigation</div>
+      <p class="article-summary">{{ post.summary }}</p>
+    </article>
+    {% endfor %}
+  </div>
+</div>
+
+<script>
+  function fetchAndShowFlag() {
+    fetch("/api/flag")
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.flag) {
+          const target = document.getElementById("extracted-vault");
+          const box = document.getElementById("vault-box");
+          const statusBadge = document.getElementById("lab-status");
+          if (target) target.innerText = data.flag;
+          if (box) box.style.display = "block";
+          if (statusBadge) {
+            statusBadge.textContent = "SOLVED 🎉";
+            statusBadge.className = "lab-status solved";
+          }
+        }
+      })
+      .catch(() => {});
+  }
+
+  function doSearchQuery(query) {
+    const msgBox = document.getElementById("searchMessage");
+    if (!msgBox) return;
+
+    // Normalizing unquoted event handler double quotes for clean HTML5 DOM execution
+    let normalized = query.replace(/(on\w+)=alert\("([^"]+)"\)/gi, '$1="alert(\'$2\')"');
+
+    // VULNERABLE DOM XSS SINK (PortSwigger Standard Pattern):
+    // Source: location.search ('search' or 'tab' query param)
+    // Sink: innerHTML assignment without escaping
+    msgBox.innerHTML = '<div class="search-result-banner"><span>Search results for:</span> <span class="search-query">' + normalized + '</span></div>';
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const params = new URLSearchParams(window.location.search);
+    const query = params.get("search") || params.get("tab");
+    
+    if (query) {
+      doSearchQuery(query);
+    }
+
+    if (window.__XSS_TRIGGERED) {
+      fetchAndShowFlag();
+    }
+  });
+</script>
+{% endblock %}

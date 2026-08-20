@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+  <h2 class="card-title">CloudShield Custom Rule Syntax & Policy Inspector</h2>
+  <p style="color: var(--text-muted); font-size: 0.92rem; margin-bottom: 20px;">
+    Test security inspection banners and custom threat rule templates. All user inputs are sanitized against active WAF regex filter rules.
+  </p>
+
+  {% if error %}
+  <div class="alert-danger">
+    <strong>[WAF Signature Detected]:</strong> {{ error }}
+  </div>
+  {% endif %}
+
+  <form method="GET" action="/preview">
+    <div class="form-group">
+      <label class="form-label">Custom Rule / Banner Expression:</label>
+      <input type="text" name="rule" value="{{ rule }}" placeholder="e.g. Blocked: Suspicious Traffic Detected" class="input-field" required autofocus>
+    </div>
+    <button type="submit" class="btn">Validate & Preview Rule</button>
+  </form>
+
+  {% if rule and not error %}
+  <div class="preview-box">
+    <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">Rendered Security Banner Output:</div>
+    <!-- VULN: If rule passes WAF filters, it is rendered |safe into DOM -->
+    <div id="banner-output" style="color: #fff; font-size: 1.05rem;">
+      {{ rule|safe }}
+    </div>
+  </div>
+  {% endif %}
+
+  <div id="vault-box" class="vault-box">
+    <div style="color: var(--success); font-weight: 700; margin-bottom: 6px;">🎉 WAF Filter Evasion Succeeded! Flag Captured:</div>
+    <div id="rule-flag" style="font-family: var(--font-mono); font-size: 1.1rem; color: #fff;"></div>
+  </div>
+</div>
+
+<script>
+  function fetchAndShowFlag() {
+    fetch("/api/flag")
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.flag) {
+          const target = document.getElementById("rule-flag");
+          const box = document.getElementById("vault-box");
+          if (target) target.innerText = data.flag;
+          if (box) box.style.display = "block";
+        }
+      })
+      .catch(() => {});
+  }
+
+  if (window.__XSS_TRIGGERED) {
+    fetchAndShowFlag();
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    if (window.__XSS_TRIGGERED) {
+      fetchAndShowFlag();
+    }
+  });
+</script>
+{% endblock %}

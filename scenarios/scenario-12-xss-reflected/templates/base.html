@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Knowledgebase Search — Scenario 12{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script>
+    // Global XSS Detection Hook: Loaded BEFORE body/reflection
+    window.__XSS_TRIGGERED = false;
+    const _origAlert = window.alert;
+    window.alert = function(msg) {
+      window.__XSS_TRIGGERED = true;
+      const reveal = () => {
+        const box = document.getElementById("flag-success-box");
+        const target = document.getElementById("flag-target");
+        if (box && target) {
+          fetch("/api/flag")
+            .then(res => res.json())
+            .then(data => {
+              if (data && data.flag) {
+                target.innerText = data.flag;
+                box.style.display = "block";
+              }
+            })
+            .catch(() => {});
+        }
+      };
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", reveal);
+      } else {
+        reveal();
+      }
+      setTimeout(reveal, 100);
+      return _origAlert(msg);
+    };
+  </script>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/" class="brand">
+      🛡️ CSZone Security Intelligence <span>Scenario 12 (Port 8012)</span>
+    </a>
+    <div style="font-size: 0.85rem; color: var(--text-muted);">Reflected XSS in HTML Context</div>
+  </nav>
+
+  <div class="container">
+    {% block content %}{% endblock %}
+  </div>
+</body>
+</html>

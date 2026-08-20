@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+  <h2>🎫 Enterprise Support &amp; Incident Dispatch</h2>
+  <p style="color: var(--muted); font-size: 0.92rem; margin-bottom: 20px;">
+    Submit security compliance tickets, infrastructure maintenance requests, and vulnerability advisories. All standard tickets are ingested into the database with default low priority for triage.
+  </p>
+
+  <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); padding: 14px 18px; border-radius: 6px; margin-bottom: 22px;">
+    <div style="font-size: 0.88rem; color: #fbbf24; font-weight: 600; margin-bottom: 4px;">
+      🎯 <strong>Lab Objective:</strong>
+    </div>
+    <div style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.5;">
+      Exploit the <code>INSERT</code>-based SQL injection vulnerability in the ticket registration form to poison the database. Escalate your ticket's priority and inject a Stored XSS payload that executes <code>alert("cszone")</code> when the executive compliance officer opens the <strong>Admin Compliance Queue</strong>.
+    </div>
+  </div>
+
+  {% if error %}
+  <div class="alert error" style="margin-bottom: 20px;">
+    <strong>[Database Engine Error]:</strong> {{ error }}
+  </div>
+  {% endif %}
+
+  {% if success %}
+  <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.35); color: #34d399; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px; font-size: 0.9rem;">
+    ✓ {{ success }}
+  </div>
+  {% endif %}
+
+  <form method="POST" action="/tickets">
+    <div class="form-group">
+      <label>Submitter Name / Handle</label>
+      <input type="text" name="submitter" placeholder="e.g. auditor_01" required autofocus>
+    </div>
+
+    <div class="form-group">
+      <label>Department Code / Unit Identifier</label>
+      <input type="text" name="department" placeholder="e.g. SEC-OPS" required>
+      <span style="font-size: 0.78rem; color: var(--muted); display: block; margin-top: 4px;">
+        Internal routing department tag (e.g. <code>IT-INFRA</code>, <code>DEV-OPS</code>, <code>FINANCE</code>).
+      </span>
+    </div>
+
+    <div class="form-group">
+      <label>Issue / Advisory Description</label>
+      <textarea name="issue_desc" rows="3" placeholder="Provide incident details or audit telemetry..." required style="width: 100%;"></textarea>
+    </div>
+
+    <button type="submit" class="btn">Submit Support Ticket</button>
+  </form>
+</div>
+
+<div class="card">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+    <h2 style="margin-bottom: 0;">Public Ticket Status ({{ tickets|length }})</h2>
+    <a href="/reset" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.35); color: #f87171; font-size: 0.8rem; font-weight: 600; padding: 6px 14px; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+      🔄 Reset All Tickets
+    </a>
+  </div>
+  <p style="color: var(--muted); font-size: 0.88rem; margin-bottom: 16px;">
+    Standard ticket log overview. Detailed descriptions and executive audit reviews are strictly restricted to the Compliance Queue.
+  </p>
+
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Submitter</th>
+          <th>Department</th>
+          <th>Assigned Priority</th>
+          <th>Submitted At</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in tickets %}
+        <tr>
+          <td>#{{ t[0] }}</td>
+          <td style="font-weight: 600; color: #fff;">{{ t[1] }}</td>
+          <td><code>{{ t[2] }}</code></td>
+          <td>
+            {% if t[3] == 'CRITICAL' %}
+              <span style="background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">CRITICAL</span>
+            {% elif t[3] == 'NORMAL' %}
+              <span style="background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 0.75rem;">NORMAL</span>
+            {% else %}
+              <span style="background: rgba(148, 163, 184, 0.15); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.3); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">LOW</span>
+            {% endif %}
+          </td>
+          <td style="font-size: 0.82rem; color: var(--muted);">{{ t[4] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -3,8 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>CSZone CTF Training Range — Central Operations Hub</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=2.1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -22,11 +25,11 @@
       </div>
       <div class="stats-bar">
         <div class="stat-item">
-          <span class="stat-value" id="targetCount">16</span>
-          <span class="stat-label">Active Scenarios</span>
+          <span class="stat-value" id="targetCount">24</span>
+          <span class="stat-label">Total Targets</span>
         </div>
         <div class="stat-item">
-          <span class="stat-value">4</span>
+          <span class="stat-value">6</span>
           <span class="stat-label">Tactical Tracks</span>
         </div>
         <div class="stat-item">
@@ -43,7 +46,7 @@
       <div class="pill-badge">Multi-Port Enterprise Isolation Engine</div>
       <h2 class="hero-title">Target Operational Console</h2>
       <p class="hero-desc">
-        Welcome to the CSZone hands-on training range. Each scenario operates in its own dedicated, isolated sandbox port (Ports 8001–8016). Select a target below to launch your session.
+        Welcome to the CSZone hands-on training range. Each scenario operates in its own dedicated, isolated sandbox port (Ports 8001–8024). Select a target below to launch your session.
       </p>
       
       <!-- Search & Filters -->
@@ -55,11 +58,12 @@
           <input type="text" id="searchInput" placeholder="Search scenarios by title, vulnerability, or port...">
         </div>
         <div class="filter-pills" id="filterPills">
-          <button class="pill active" data-category="all">All (16)</button>
+          <button class="pill active" data-category="all">All (24)</button>
           <button class="pill" data-category="recon">Reconnaissance</button>
           <button class="pill" data-category="crypto">Cryptography</button>
           <button class="pill" data-category="access">Access Control & IDOR</button>
           <button class="pill" data-category="sqli">SQL Injection</button>
+          <button class="pill" data-category="xss">Cross-Site Scripting</button>
           <button class="pill" data-category="web">Advanced Web</button>
         </div>
       </div>
@@ -70,7 +74,7 @@
   <main class="container">
     <div class="grid-header">
       <h3 id="sectionTitle">Available Target Scenarios</h3>
-      <span class="scenario-counter" id="visibleCounter">Showing 16 of 16 targets</span>
+      <span class="scenario-counter" id="visibleCounter">Showing 21 of 21 targets</span>
     </div>
     
     <div class="scenarios-grid" id="scenariosGrid">
@@ -124,11 +128,41 @@
       </div>
       <div class="footer-links">
         <span>Hub Port: <code>8000</code></span>
-        <span>Isolated Port Range: <code>8001 &ndash; 8016</code></span>
+        <span>Isolated Port Range: <code>8001 &ndash; 8024</code></span>
       </div>
     </div>
   </footer>
 
-  <script src="app.js"></script>
+  <!-- Professional Coming Soon Modal -->
+  <div id="comingSoonModal" class="cs-modal-backdrop" style="display: none;" onclick="handleBackdropClick(event)">
+    <div class="cs-modal-card">
+      <div class="cs-modal-header">
+        <div class="cs-modal-badge">🚧 UNDER ACTIVE DEVELOPMENT</div>
+        <button class="cs-modal-close" onclick="closeComingSoonModal()">&times;</button>
+      </div>
+      <h3 id="modalTitle" class="cs-modal-title">Scenario Title</h3>
+      <div id="modalMeta" class="cs-modal-meta">
+        <span id="modalPort" class="port-tag">PORT 8022</span>
+        <span id="modalCategory" class="card-cat" style="color: #fbbf24; font-weight: 600;">Category</span>
+      </div>
+      <p id="modalDesc" class="cs-modal-desc">Description of upcoming scenario...</p>
+      
+      <div class="cs-modal-progress-wrap">
+        <div class="cs-modal-progress-label">
+          <span>Development Status</span>
+          <span style="color: #fbbf24; font-weight: 700;">85% Completed</span>
+        </div>
+        <div class="cs-modal-progress-bar">
+          <div class="cs-modal-progress-fill" style="width: 85%;"></div>
+        </div>
+      </div>
+
+      <div class="cs-modal-actions">
+        <button type="button" class="btn cs-modal-btn" onclick="closeComingSoonModal()">Understood &amp; Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js?v=2.2"></script>
 </body>
 </html>

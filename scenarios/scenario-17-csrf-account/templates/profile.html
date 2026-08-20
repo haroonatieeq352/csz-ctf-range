@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+  <h2>👤 Account Profile &amp; Identity Attributes</h2>
+  <p style="color: var(--muted); font-size: 0.92rem; margin-bottom: 20px;">
+    Manage your CloudShield organization profile. Changes are serialized and dispatched via background REST API calls to <code>POST /api/user/profile/update</code>.
+  </p>
+
+  <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); padding: 14px 18px; border-radius: 6px; margin-bottom: 22px;">
+    <div style="font-size: 0.88rem; color: #fbbf24; font-weight: 600; margin-bottom: 4px;">
+      🎯 <strong>Lab Objective:</strong>
+    </div>
+    <div style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.5;">
+      You are authenticated as standard user <strong>Carlos Rivera (ID #102)</strong>. Use <strong>Burp Suite</strong> or <strong>Browser DevTools (Network tab)</strong> to intercept the profile update API request. Exploit Mass Assignment and IDOR to elevate your account to <code>"role": "admin"</code> (or overwrite Admin Sarah's profile #101), then access the <strong>Executive Security Console</strong> to capture the flag.
+    </div>
+  </div>
+
+  <div id="statusAlert" style="display: none; margin-bottom: 20px; padding: 12px 16px; border-radius: 6px; font-size: 0.9rem;"></div>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+    <div style="background: #110e18; border: 1px solid var(--border); padding: 18px; border-radius: 6px;">
+      <div style="font-size: 0.8rem; color: var(--muted); text-transform: uppercase; margin-bottom: 12px; font-weight: 600;">Current Account State</div>
+      <div style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 4px;">{{ user[3] }}</div>
+      <div style="font-size: 0.88rem; color: var(--muted); font-family: var(--mono); margin-bottom: 12px;">{{ user[2] }} (ID #{{ user[0] }})</div>
+      
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <span style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.4); color: #60a5fa; padding: 3px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: 600;">
+          ROLE: {{ user[4]|upper }}
+        </span>
+        {% if user[5] == 1 %}
+          <span style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); color: #34d399; padding: 3px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: 600;">
+            VIP PRIVILEGED: YES
+          </span>
+        {% else %}
+          <span style="background: rgba(148, 163, 184, 0.1); border: 1px solid rgba(148, 163, 184, 0.25); color: #94a3b8; padding: 3px 10px; border-radius: 4px; font-size: 0.8rem;">
+            VIP PRIVILEGED: NO
+          </span>
+        {% endif %}
+      </div>
+    </div>
+
+    <form id="profileForm" onsubmit="handleUpdate(event)">
+      <input type="hidden" name="user_id" value="{{ user[0] }}">
+      
+      <div class="form-group" style="margin-bottom: 14px;">
+        <label>Full Name</label>
+        <input type="text" id="full_name" name="full_name" value="{{ user[3] }}" required>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 14px;">
+        <label>Phone Number</label>
+        <input type="text" id="phone" name="phone" value="{{ user[6] or '' }}">
+      </div>
+
+      <div class="form-group" style="margin-bottom: 16px;">
+        <label>Personal Bio / Notes</label>
+        <textarea id="bio" name="bio" rows="2" style="width: 100%;">{{ user[7] or '' }}</textarea>
+      </div>
+
+      <button type="submit" class="btn" style="width: 100%;">Update Account Profile</button>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <h2>👥 Organization Directory (Audit List)</h2>
+  <p style="color: var(--muted); font-size: 0.88rem; margin-bottom: 16px;">
+    Public enterprise roster visible to all internal personnel.
+  </p>
+
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>User ID</th>
+          <th>Username</th>
+          <th>Full Name</th>
+          <th>Corporate Email</th>
+          <th>Assigned Role</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in team %}
+        <tr>
+          <td><code>#{{ m[0] }}</code></td>
+          <td style="font-weight: 600; color: #fff;">{{ m[1] }}</td>
+          <td>{{ m[3] }}</td>
+          <td style="font-family: var(--mono); font-size: 0.85rem; color: #cbd5e1;">{{ m[2] }}</td>
+          <td>
+            {% if m[4] == 'admin' %}
+              <span style="background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">ADMIN</span>
+            {% else %}
+              <span style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">USER</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  function handleUpdate(e) {
+    e.preventDefault();
+    const payload = {
+      user_id: 102,
+      full_name: document.getElementById("full_name").value,
+      phone: document.getElementById("phone").value,
+      bio: document.getElementById("bio").value
+    };
+
+    fetch("/api/user/profile/update", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+      const alertBox = document.getElementById("statusAlert");
+      alertBox.style.display = "block";
+      if (data.success) {
+        alertBox.style.background = "rgba(16, 185, 129, 0.15)";
+        alertBox.style.border = "1px solid rgba(16, 185, 129, 0.4)";
+        alertBox.style.color = "#34d399";
+        alertBox.innerText = "✓ " + data.message;
+        setTimeout(() => { window.location.reload(); }, 1200);
+      } else {
+        alertBox.style.background = "rgba(239, 68, 68, 0.15)";
+        alertBox.style.border = "1px solid rgba(239, 68, 68, 0.4)";
+        alertBox.style.color = "#f87171";
+        alertBox.innerText = "✗ " + data.error;
+      }
+    })
+    .catch(err => {
+      console.error(err);
+    });
+  }
+</script>
+{% endblock %}

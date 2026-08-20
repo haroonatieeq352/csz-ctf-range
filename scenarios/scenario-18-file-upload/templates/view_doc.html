@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+    <h2>📄 Secure Document Viewer</h2>
+    <a href="/vault" class="btn" style="background: #1e1927; color: #fff; border: 1px solid var(--border); padding: 6px 14px; font-size: 0.82rem;">← Back to Vault</a>
+  </div>
+
+  {% if is_flag_revealed %}
+  <div class="vault-box" style="display: block; margin-top: 0; margin-bottom: 24px;">
+    <div class="vault-header">
+      <span class="vault-icon">🎉</span>
+      <div>
+        <div class="vault-title">Congratulations, you solved the lab!</div>
+        <div class="vault-desc">IDOR successfully exploited via leaked executive UUID parameter substitution.</div>
+      </div>
+    </div>
+    <div class="flag-wrap">
+      <span class="flag-label">Captured CTF Flag:</span>
+      <div id="extracted-vault" class="flag-badge">{{ flag }}</div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div style="background: #110e18; border: 1px solid var(--border); padding: 22px; border-radius: 6px; margin-bottom: 20px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+      <h3 style="color: #fff; font-size: 1.15rem;">{{ doc[2] }}</h3>
+      {% if doc[4] == 1 %}
+        <span style="background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); padding: 3px 10px; border-radius: 4px; font-weight: 700; font-size: 0.8rem;">CLASSIFIED EXECUTIVE</span>
+      {% else %}
+        <span style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); padding: 3px 10px; border-radius: 4px; font-size: 0.8rem;">STANDARD</span>
+      {% endif %}
+    </div>
+
+    <div style="font-size: 0.85rem; color: var(--muted); font-family: var(--mono); margin-bottom: 16px;">
+      UUID: {{ doc[1] }} &bull; Author: <strong style="color: #fff;">{{ doc[3] }}</strong>
+    </div>
+
+    <div style="background: #09070c; border: 1px solid rgba(46, 40, 56, 0.6); padding: 18px; border-radius: 6px; font-family: var(--mono); font-size: 0.95rem; color: #e2c08d; white-space: pre-wrap; line-height: 1.6;">{{ doc[5] }}</div>
+  </div>
+</div>
+{% endblock %}

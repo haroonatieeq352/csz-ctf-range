@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}RESTful HTTP Verb Tampering IDOR — Scenario 19{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <!-- PortSwigger Web Security Academy Style Lab Bar -->
+  <div class="academy-header-strip">
+    <div class="lab-pill-group">
+      <div class="lab-pill-icon">🧪</div>
+      <div class="lab-pill-type">LAB</div>
+    </div>
+    <div class="lab-info-block">
+      <div class="difficulty-tag">ADVANCED</div>
+      <h1 class="lab-title-text">RESTful HTTP Verb Tampering &amp; Multi-Tenant BOLA Bypass</h1>
+    </div>
+    <div class="lab-status-wrapper">
+      <span id="lab-status" class="lab-status unsolved">UNSOLVED</span>
+    </div>
+  </div>
+
+  <header>
+    <a href="/workspaces" class="brand-wrapper">
+      <div class="brand-title">🌐 NexaTenant <span>Multi-Org Cloud</span></div>
+      <span class="badge-tag">Scenario 19 &bull; Port 8019</span>
+    </a>
+    <nav>
+      <a href="/workspaces" class="active">🏢 Workspace Management</a>
+      <a href="/reset" class="nav-reset-btn" title="Reset all workspaces to clean default state">🔄 Reset Lab</a>
+    </nav>
+  </header>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>
+    NexaTenant Cloud Orchestration &copy; 2026 &mdash; Scenario 19 (Port 8019)
+  </footer>
+</body>
+</html>

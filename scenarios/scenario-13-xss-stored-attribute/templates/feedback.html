@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+  <h2 class="card-title">Submit Community & Codebase Feedback</h2>
+  <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
+    Help our engineering team improve internal libraries and platform documentation.
+  </p>
+
+  <form method="POST" action="/feedback">
+    <div class="form-group">
+      <label class="form-label">Developer Handle / Name:</label>
+      <input type="text" name="author" class="input-field" placeholder="e.g. dev_0x01" required>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Feedback Notes:</label>
+      <textarea name="comment" rows="3" placeholder="Enter feedback details..." required></textarea>
+    </div>
+    <button type="submit" class="btn">Submit Feedback</button>
+  </form>
+</div>
+
+<!-- Success / Reward Flag Box -->
+<div id="reward-box" class="reward-box" style="display: none; background: rgba(16, 185, 129, 0.08); border: 1px solid var(--success); padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+  <div style="color: var(--success); font-weight: 700; font-size: 1.15rem; margin-bottom: 8px;">
+    🎉 Congratulations! Stored Attribute Breakout Successful!
+  </div>
+  <div style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 8px;">Captured CTF Flag:</div>
+  <div id="reward-panel" style="font-family: var(--font-mono); font-size: 1.3rem; color: #00ff88; font-weight: 700; background: rgba(0,255,136,0.1); padding: 10px; border-radius: 6px; border: 1px dashed #00ff88; display: inline-block;"></div>
+</div>
+
+<div class="card">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+    <h3 class="card-title" style="margin-bottom: 0;">Recent Community Feedback Submissions</h3>
+    <a href="/reset" style="color: var(--text-muted); font-size: 0.82rem; text-decoration: none; border: 1px solid var(--border); padding: 4px 10px; border-radius: 4px;">Clear / Reset Feedbacks</a>
+  </div>
+  
+  {% for entry in entries %}
+  <div class="entry-card">
+    <div class="entry-header">
+      <!-- VULN: 'author' is rendered unescaped inside the value attribute. Direct <script> is filtered, but attribute breakout is vulnerable! -->
+      <div>
+        <span style="color: var(--text-muted); font-size: 0.85rem;">Author: </span>
+        <input type="text" class="author-input" value="{{ entry.author|safe }}" readonly>
+      </div>
+      <span style="font-size: 0.8rem; color: var(--text-muted);">{{ entry.created_at }}</span>
+    </div>
+    <div style="color: var(--text-main); font-size: 0.95rem;">{{ entry.comment }}</div>
+  </div>
+  {% endfor %}
+</div>
+
+<script>
+  function fetchAndShowFlag() {
+    fetch("/api/flag")
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.flag) {
+          const panel = document.getElementById("reward-panel");
+          const box = document.getElementById("reward-box");
+          if (panel) panel.innerText = data.flag;
+          if (box) box.style.display = "block";
+        }
+      })
+      .catch(() => {});
+  }
+
+  if (window.__XSS_TRIGGERED) {
+    fetchAndShowFlag();
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    if (window.__XSS_TRIGGERED) {
+      fetchAndShowFlag();
+    }
+  });
+</script>
+{% endblock %}

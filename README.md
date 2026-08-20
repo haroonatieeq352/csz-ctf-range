@@ -1,13 +1,13 @@
 # CSZone Offensive Security Training Range (Multi-Port Architecture)
 
-Enterprise-grade offensive security and web penetration testing training platform. Features 17 isolated, hands-on vulnerability scenarios mapped across dedicated ports (`8001` to `8017`) and unified through the **Central Operations Hub** on Port `8000`.
+Enterprise-grade offensive security and web penetration testing training platform. Features 21 isolated, hands-on vulnerability scenarios mapped across dedicated ports (`8001` to `8021`) and unified through the **Central Operations Hub** on Port `8000`.
 
 ---
 
 ## 🚀 Quick Start Guide
 
 ### Prerequisites
-- **Python 3.9+** (for native run) OR **Docker & Docker Compose** (for containerized run)
+- **Python 3.9+** (for native execution) OR **Docker & Docker Compose** (for containerized run)
 - Install Python requirements:
   ```bash
   pip install -r requirements.txt
@@ -19,12 +19,12 @@ Enterprise-grade offensive security and web penetration testing training platfor
 ```bash
 python start_all.py
 ```
-This starts in parallel:
+This spawns in parallel:
 - **Central Operations Hub:** `http://localhost:8000` (or `http://<your-vps-ip>:8000`)
-- **17 Isolated Target Scenarios:** Ports `8001` through `8017`
+- **21 Isolated Target Scenarios:** Ports `8001` through `8021`
 
 ### 2. Run Automated Verification Suite
-To verify that all 17 scenarios and the Central Hub are fully operational:
+To verify that all 21 scenarios and the Central Hub are fully operational:
 ```bash
 python verify_all_scenarios.py
 ```
@@ -39,11 +39,11 @@ python stop_all.py
 
 ## 🐳 Docker Deployment (VPS Production)
 
-Deploy the entire suite (Central Hub + 17 Scenarios) with a single command:
+Deploy the entire suite (Central Hub + 21 Scenarios) with a single command:
 ```bash
 docker-compose up -d --build
 ```
-- **Check service status:**
+- **Check container status:**
   ```bash
   docker-compose ps
   ```
@@ -60,14 +60,40 @@ docker-compose up -d --build
 
 ## 🌐 VPS Firewall Configuration (UFW / Security Groups)
 
-If deploying to an Ubuntu/Debian VPS or AWS/DigitalOcean/Hetzner, ensure inbound traffic is allowed on ports `8000` to `8017`:
+If deploying to an Ubuntu/Debian VPS or AWS/DigitalOcean/Hetzner, ensure inbound traffic is allowed on ports `8000` to `8021`:
 ```bash
-sudo ufw allow 8000:8017/tcp
+sudo ufw allow 8000:8021/tcp
 sudo ufw reload
 ```
 
 ---
 
+## 🗺️ Port Architecture & Track Map
+
+| Port | Service Name | Category | Flag / Key Objective |
+|---|---|---|---|
+| **`8000`** | **Central Operations Hub** | Main Portal | Landing UI & Dynamic Scenario Dispatcher |
+| **`8001`** | Scenario 01: Recon & Headers | Reconnaissance | `CTF{h1dd3n_1n_pl41n_s1ght}` / `CTF{h34d3r_hunt3r_pr0}` |
+| **`8002`** | Scenario 02: Robots & Ops Archive | Reconnaissance | `CTF{r0b0ts_d1scl0s3_p4ths}` |
+| **`8003`** | Scenario 03: JS & Crypto XOR | Cryptography | `CTF{unus3d_v4r14bl3_l34k}` |
+| **`8004`** | Scenario 04: Admin Portal Leak | Access Control | `CTF{4dm1n_p4n3l_3xp0s3d}` |
+| **`8005`** | Scenario 05: Frontend IDOR | IDOR | `CTF{1d0r_1nv01c3_l34k}` |
+| **`8006`** | Scenario 06: Promo & Cookie Gate | Access / Crypto | `CTF{b4s364_1s_n0t_3ncrypt10n}` / `CTF{h34d3r_c00k13_byp4ss}` |
+| **`8007`** | Scenario 07: Backup Service Auth | Authentication | `CTF{h4sh_cr4ck3d_4cc3ss}` |
+| **`8008`** | Scenario 08: Central Vault Finale | Chained Crypto | `CTF{f1n4l_ch41n_c0mpl3t3}` |
+| **`8009`** | Scenario 09: Products SQLi | SQL Injection | `CTF{un10n_b4s1cs_m4st3r}` |
+| **`8010`** | Scenario 10: Directory UNION SQLi | SQL Injection | `CTF{un10n_s3l3ct_m4st3r}` |
+| **`8011`** | Scenario 11: Asset Inventory SQLi | SQL Injection | `CTF{sch3m4_3num_d0ubl3_qu0t3_m4st3r}` |
+| **`8012`** | Scenario 12: Reflected XSS | Cross-Site Scripting | `CTF{r3fl3ct3d_xss_b4s1cs}` |
+| **`8013`** | Scenario 13: Stored Attribute XSS | Cross-Site Scripting | `CTF{st0r3d_4ttr1but3_br34k0ut}` |
+| **`8014`** | Scenario 14: DOM-based XSS | Cross-Site Scripting | `CTF{d0m_xss_s1nk_m4st3r}` |
+| **`8015`** | Scenario 15: WAF Bypass XSS | Cross-Site Scripting | `CTF{w4f_byp4ss_h5_v3ct0r}` |
+| **`8016`** | Scenario 16: INSERT SQLi to Stored XSS Chain | Chained Exploit | `CTF{1ns3rt_sqli_t0_st0r3d_xss_ch41n}` |
+| **`8017`** | Scenario 17: Mass Assignment & Profile IDOR | IDOR / BOPLA | `CTF{m4ss_4ss1gnm3nt_pr0f1l3_0v3rwr1t3}` |
+| **`8018`** | Scenario 18: UUID Identifier Leakage IDOR | IDOR / UUID | `CTF{uu1d_l34k_d0cum3nt_v4ult}` |
+| **`8019`** | Scenario 19: HTTP Verb Tampering Multi-Tenant IDOR | IDOR / Verb Tampering | `CTF{v3rb_t4mp3r1ng_t3n4nt_byp4ss}` |
+| **`8020`** | Scenario 20: BOLA Password Reset ATO | API Security / BOLA | `CTF{b0l4_p4ssw0rd_r3s3t_4cc0unt_t4k30v3r}` |
+| **`8021`** | Scenario 21: Web Cache Attacks | Cache Attacks | `CTF{c4ch3_d3c3pt10n_l34k}` |
 
 ---
 

@@ -123,69 +123,150 @@ const SCENARIOS = [
   },
   {
     id: 12,
-    title: "Scenario 12: SQLi Bypass & Stored XSS Chain",
-    category: "web",
-    categoryLabel: "SQLi + Stored XSS Chain",
-    difficulty: "hard",
-    difficultyLabel: "Hard",
+    title: "Scenario 12: Reflected XSS (HTML Context)",
+    category: "xss",
+    categoryLabel: "Cross-Site Scripting / Reflected",
+    difficulty: "easy",
+    difficultyLabel: "Easy",
     port: 8012,
-    description: "Bypass legacy admin authentication via raw query SQLi and plant stored XSS to hijack session cookies.",
-    tags: ["Stored XSS", "SQLi Auth Bypass", "Cookie Theft"]
+    description: "Identify unsanitized parameter reflection in search results and execute client-side scripts to extract hidden session tokens.",
+    tags: ["Reflected XSS", "DOM Token", "HTML Context"]
   },
   {
     id: 13,
-    title: "Scenario 13: Cross-Site Request Forgery (CSRF)",
-    category: "web",
-    categoryLabel: "CSRF / State Change",
+    title: "Scenario 13: Stored XSS (Attribute & Event Breakout)",
+    category: "xss",
+    categoryLabel: "Cross-Site Scripting / Stored",
     difficulty: "medium",
     difficultyLabel: "Medium",
     port: 8013,
-    description: "Craft cross-site state-changing POST requests against vulnerable account profile endpoints without anti-CSRF tokens.",
-    tags: ["CSRF", "State Change", "Web Security"]
+    description: "Bypass naive tag filters by breaking out of input attributes and leveraging autofocus event handlers to trigger stored payloads.",
+    tags: ["Stored XSS", "Attribute Breakout", "Event Handlers"]
   },
   {
     id: 14,
-    title: "Scenario 14: Unrestricted File Upload & XSS",
-    category: "web",
-    categoryLabel: "File Upload / Stored XSS",
-    difficulty: "medium",
-    difficultyLabel: "Medium",
+    title: "Scenario 14: DOM-based XSS (Source to Sink)",
+    category: "xss",
+    categoryLabel: "Cross-Site Scripting / DOM-based",
+    difficulty: "hard",
+    difficultyLabel: "Hard",
     port: 8014,
-    description: "Bypass server extension blocklists to upload arbitrary HTML files and execute client-side scripts in user context.",
-    tags: ["File Upload", "MIME Bypass", "Stored XSS"]
+    description: "Trace client JavaScript execution from URL parameter sources to innerHTML sinks and dump internal window telemetry secrets.",
+    tags: ["DOM XSS", "Source to Sink", "Client-Side SPA"]
   },
   {
     id: 15,
-    title: "Scenario 15: Server-Side Request Forgery (SSRF)",
-    category: "web",
-    categoryLabel: "SSRF / Metadata Retrieval",
-    difficulty: "medium",
-    difficultyLabel: "Medium",
+    title: "Scenario 15: Advanced WAF & Filter Bypass XSS",
+    category: "xss",
+    categoryLabel: "Cross-Site Scripting / WAF Bypass",
+    difficulty: "hard",
+    difficultyLabel: "Expert",
     port: 8015,
-    description: "Force the remote web backend to fetch loopback internal cloud metadata APIs and bypass IP address access restrictions.",
-    tags: ["SSRF", "Internal Metadata", "Cloud Security"]
+    description: "Evade aggressive WAF regex rules blocking script tags and common handlers using HTML5 SVG animation and toggle vectors.",
+    tags: ["WAF Evasion", "HTML5 Vectors", "SVG Animation"]
   },
   {
     id: 16,
-    title: "Scenario 16: Backend IDOR Orders",
-    category: "access",
-    categoryLabel: "Backend IDOR / Orders",
-    difficulty: "medium",
-    difficultyLabel: "Medium",
+    title: "Scenario 16: INSERT SQLi to Second-Order Stored XSS",
+    category: "web",
+    categoryLabel: "Chained / INSERT SQLi + Stored XSS",
+    difficulty: "hard",
+    difficultyLabel: "Expert",
     port: 8016,
-    description: "Exploit missing object-level authorization checks on backend order endpoints to access confidential customer notes.",
-    tags: ["Backend IDOR", "Authorization", "API Flaws"]
+    description: "Exploit an INSERT-based SQL injection to elevate ticket triage priority and plant a Second-Order Stored XSS payload rendered in the Admin Compliance Queue.",
+    tags: ["INSERT SQLi", "Second-Order XSS", "Privilege Escalation", "Chained"]
   },
   {
     id: 17,
-    title: "Scenario 17: Web Cache Deception & Poisoning",
+    title: "Scenario 17: Mass Assignment & Profile Overwrite IDOR",
+    category: "access",
+    categoryLabel: "BOPLA / Mass Assignment IDOR",
+    difficulty: "medium",
+    difficultyLabel: "Practitioner",
+    port: 8017,
+    description: "Intercept background profile updates to exploit Mass Assignment parameter binding and elevate account role to administrator.",
+    tags: ["Mass Assignment", "BOPLA", "Profile IDOR", "Privilege Escalation"]
+  },
+  {
+    id: 18,
+    title: "Scenario 18: Obfuscated & UUID Leakage IDOR",
+    category: "access",
+    categoryLabel: "UUID Discovery / Vault IDOR",
+    difficulty: "medium",
+    difficultyLabel: "Intermediate",
+    port: 8018,
+    description: "Discover unguessable executive document UUIDs leaked in public audit feeds and bypass ownership checks on private download routes.",
+    tags: ["UUID Discovery", "Vault IDOR", "Information Leakage"]
+  },
+  {
+    id: 19,
+    title: "Scenario 19: RESTful HTTP Verb Tampering & Multi-Tenant IDOR",
+    category: "access",
+    categoryLabel: "Verb Tampering / Multi-Tenant BOLA",
+    difficulty: "hard",
+    difficultyLabel: "Advanced",
+    port: 8019,
+    description: "Bypass 403 Forbidden gateway filters on sovereign tenant endpoints by switching HTTP verbs to PUT/PATCH and extracting master keys.",
+    tags: ["Verb Tampering", "BOLA", "Multi-Tenant", "API Security"]
+  },
+  {
+    id: 20,
+    title: "Scenario 20: BOLA Multi-Step Password Reset ATO",
+    category: "access",
+    categoryLabel: "BOLA / Account Takeover",
+    difficulty: "hard",
+    difficultyLabel: "Expert",
+    port: 8020,
+    description: "Exploit Broken Object Level Authorization during multi-step OTP verification to issue an admin password reset token and achieve full ATO.",
+    tags: ["BOLA", "Password Reset", "Account Takeover", "API1:2023"]
+  },
+  {
+    id: 21,
+    title: "Scenario 21: Web Cache Deception & Poisoning",
     category: "web",
     categoryLabel: "Web Cache Attacks",
     difficulty: "hard",
-    difficultyLabel: "Hard",
-    port: 8017,
-    description: "Trick proxy caching layers using static delimiter extensions and poison shared caches via unkeyed request headers.",
+    difficultyLabel: "In Development",
+    isComingSoon: true,
+    port: 8021,
+    description: "Trick proxy caching layers using static delimiter extensions (.css, .js) and poison multi-tier shared edge caches via unkeyed request headers.",
     tags: ["Cache Deception", "Cache Poisoning", "Edge Caching"]
+  },
+  {
+    id: 22,
+    title: "Scenario 22: Cross-Site Request Forgery (CSRF)",
+    category: "web",
+    categoryLabel: "CSRF / State Change",
+    difficulty: "medium",
+    difficultyLabel: "In Development",
+    isComingSoon: true,
+    port: 8022,
+    description: "Craft cross-site state-changing POST requests against vulnerable account profile endpoints without anti-CSRF tokens and bypass SameSite cookie protections.",
+    tags: ["CSRF", "State Change", "Web Security"]
+  },
+  {
+    id: 23,
+    title: "Scenario 23: Unrestricted File Upload & Stored Execution",
+    category: "web",
+    categoryLabel: "File Upload / Stored XSS",
+    difficulty: "medium",
+    difficultyLabel: "In Development",
+    isComingSoon: true,
+    port: 8023,
+    description: "Bypass server extension blocklists, MIME type validators, and magic byte filters to upload arbitrary HTML files and execute client-side scripts in user context.",
+    tags: ["File Upload", "MIME Bypass", "Polyglot Files"]
+  },
+  {
+    id: 24,
+    title: "Scenario 24: Server-Side Request Forgery (SSRF)",
+    category: "web",
+    categoryLabel: "SSRF / Metadata Retrieval",
+    difficulty: "medium",
+    difficultyLabel: "In Development",
+    isComingSoon: true,
+    port: 8024,
+    description: "Force the remote web backend to fetch loopback internal cloud metadata APIs (169.254.169.254) and bypass IP address access whitelists via DNS rebinding.",
+    tags: ["SSRF", "Internal Metadata", "Cloud Security"]
   }
 ];
 
@@ -217,7 +298,9 @@ function renderCards() {
     return matchesFilter && matchesSearch;
   });
 
-  visibleCounter.textContent = `Showing ${filtered.length} of ${SCENARIOS.length} targets`;
+  if (visibleCounter) {
+    visibleCounter.textContent = `Showing ${filtered.length} of ${SCENARIOS.length} targets`;
+  }
 
   if (filtered.length === 0) {
     scenariosGrid.innerHTML = `
@@ -231,6 +314,24 @@ function renderCards() {
 
   scenariosGrid.innerHTML = filtered.map(s => {
     const targetUrl = `${currentProtocol}//${currentHost}:${s.port}`;
+    if (s.isComingSoon) {
+      return `
+        <div class="scenario-card card-coming-soon" data-category="${s.category}" style="border: 1px dashed rgba(245, 158, 11, 0.4); background: rgba(22, 18, 28, 0.75);">
+          <div class="card-top">
+            <span class="port-tag" style="opacity: 0.7;">PORT ${s.port}</span>
+            <span class="difficulty-badge" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35); font-weight: 700;">🚧 COMING SOON</span>
+          </div>
+          <h4 class="card-title" style="color: #e2e8f0;">${s.title}</h4>
+          <div class="card-cat" style="color: #f59e0b;">${s.categoryLabel}</div>
+          <p class="card-desc" style="color: #94a3b8;">${s.description}</p>
+          <div class="card-action">
+            <button type="button" onclick="openComingSoonModal(${s.id})" class="launch-btn" style="background: #191422; color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35); cursor: pointer; width: 100%;">
+              <span>🚧 Work in Progress</span>
+            </button>
+          </div>
+        </div>
+      `;
+    }
     return `
       <div class="scenario-card" data-category="${s.category}">
         <div class="card-top">
@@ -255,20 +356,46 @@ function renderCards() {
   }).join("");
 }
 
-// Event Listeners
-searchInput.addEventListener("input", (e) => {
-  searchQuery = e.target.value;
-  renderCards();
-});
+function openComingSoonModal(scenarioId) {
+  const s = SCENARIOS.find(item => item.id === scenarioId);
+  if (!s) return;
+  document.getElementById("modalTitle").textContent = s.title;
+  document.getElementById("modalPort").textContent = `PORT ${s.port}`;
+  document.getElementById("modalCategory").textContent = s.categoryLabel;
+  document.getElementById("modalDesc").textContent = s.description;
+  const modal = document.getElementById("comingSoonModal");
+  if (modal) modal.style.display = "flex";
+}
 
-filterPills.addEventListener("click", (e) => {
-  const btn = e.target.closest(".pill");
-  if (!btn) return;
-  filterPills.querySelectorAll(".pill").forEach(p => p.classList.remove("active"));
-  btn.classList.add("active");
-  activeFilter = btn.dataset.category;
-  renderCards();
-});
+function closeComingSoonModal() {
+  const modal = document.getElementById("comingSoonModal");
+  if (modal) modal.style.display = "none";
+}
+
+function handleBackdropClick(e) {
+  if (e.target && e.target.id === "comingSoonModal") {
+    closeComingSoonModal();
+  }
+}
+
+// Event Listeners
+if (searchInput) {
+  searchInput.addEventListener("input", (e) => {
+    searchQuery = e.target.value;
+    renderCards();
+  });
+}
+
+if (filterPills) {
+  filterPills.addEventListener("click", (e) => {
+    const btn = e.target.closest(".pill");
+    if (!btn) return;
+    filterPills.querySelectorAll(".pill").forEach(p => p.classList.remove("active"));
+    btn.classList.add("active");
+    activeFilter = btn.dataset.category;
+    renderCards();
+  });
+}
 
 // Initial Render
 document.addEventListener("DOMContentLoaded", () => {

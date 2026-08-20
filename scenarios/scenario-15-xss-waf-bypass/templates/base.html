@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Cloud Shield WAF — Scenario 15{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script>
+    // Global XSS Detection Hook: Loaded BEFORE body
+    window.__XSS_TRIGGERED = false;
+    const _origAlert = window.alert;
+    window.alert = function(msg) {
+      const isCszone = msg !== undefined && msg !== null && String(msg).toLowerCase().trim() === "cszone";
+      if (isCszone) {
+        window.__XSS_TRIGGERED = true;
+        const reveal = () => {
+          const box = document.getElementById("vault-box");
+          const target = document.getElementById("rule-flag");
+          if (box && target) {
+            fetch("/api/flag")
+              .then(res => res.json())
+              .then(data => {
+                if (data && data.flag) {
+                  target.innerText = data.flag;
+                  box.style.display = "block";
+                }
+              })
+              .catch(() => {});
+          }
+        };
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", reveal);
+        } else {
+          reveal();
+        }
+        setTimeout(reveal, 100);
+      }
+      return _origAlert(msg);
+    };
+  </script>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/" class="brand">
+      🛡️ CSZone CloudShield WAF <span>Scenario 15 (Port 8015)</span>
+    </a>
+    <div style="font-size: 0.85rem; color: var(--text-muted);">Advanced WAF & Filter Bypass XSS</div>
+  </nav>
+
+  <div class="container">
+    {% block content %}{% endblock %}
+  </div>
+</body>
+</html>

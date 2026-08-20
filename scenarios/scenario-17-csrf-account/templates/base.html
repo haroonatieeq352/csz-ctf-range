@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Mass Assignment &amp; Profile Overwrite IDOR — Scenario 17{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <!-- PortSwigger Web Security Academy Style Lab Bar -->
+  <div class="academy-header-strip">
+    <div class="lab-pill-group">
+      <div class="lab-pill-icon">🧪</div>
+      <div class="lab-pill-type">LAB</div>
+    </div>
+    <div class="lab-info-block">
+      <div class="difficulty-tag">PRACTITIONER</div>
+      <h1 class="lab-title-text">Mass Assignment &amp; Object Property-Level IDOR (BOPLA)</h1>
+    </div>
+    <div class="lab-status-wrapper">
+      {% if is_solved or flag %}
+        <span id="lab-status" class="lab-status solved">SOLVED 🎉</span>
+      {% else %}
+        <span id="lab-status" class="lab-status unsolved">UNSOLVED</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <header>
+    <a href="/profile" class="brand-wrapper">
+      <div class="brand-title">🛡️ CloudShield <span>IAM Portal</span></div>
+      <span class="badge-tag">Scenario 17 &bull; Port 8017</span>
+    </a>
+    <nav>
+      <a href="/profile" {% if request.path == '/' or request.path.startswith('/profile') %}class="active"{% endif %}>👤 My Account Settings</a>
+      <a href="/admin/dashboard" {% if request.path.startswith('/admin') %}class="active"{% endif %}>🔐 Executive Security Console</a>
+      <a href="/reset" class="nav-reset-btn" title="Reset all users to clean default state">🔄 Reset Lab</a>
+    </nav>
+  </header>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>
+    CloudShield Identity &amp; Access Management &copy; 2026 &mdash; Scenario 17 (Port 8017)
+  </footer>
+</body>
+</html>

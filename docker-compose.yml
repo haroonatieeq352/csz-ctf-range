@@ -74,37 +74,61 @@ services:
     restart: unless-stopped
 
   scenario-12:
-    build: ./scenarios/scenario-12-admin-stored-xss
+    build: ./scenarios/scenario-12-xss-reflected
     ports:
       - "8012:8012"
     restart: unless-stopped
 
   scenario-13:
-    build: ./scenarios/scenario-13-csrf-account
+    build: ./scenarios/scenario-13-xss-stored-attribute
     ports:
       - "8013:8013"
     restart: unless-stopped
 
   scenario-14:
-    build: ./scenarios/scenario-14-file-upload
+    build: ./scenarios/scenario-14-xss-dom
     ports:
       - "8014:8014"
     restart: unless-stopped
 
   scenario-15:
-    build: ./scenarios/scenario-15-ssrf-metadata
+    build: ./scenarios/scenario-15-xss-waf-bypass
     ports:
       - "8015:8015"
     restart: unless-stopped
 
   scenario-16:
-    build: ./scenarios/scenario-16-backend-idor
+    build: ./scenarios/scenario-16-admin-stored-xss
     ports:
       - "8016:8016"
     restart: unless-stopped
 
   scenario-17:
-    build: ./scenarios/scenario-17-cache-attacks
+    build: ./scenarios/scenario-17-csrf-account
     ports:
       - "8017:8017"
+    restart: unless-stopped
+
+  scenario-18:
+    build: ./scenarios/scenario-18-file-upload
+    ports:
+      - "8018:8018"
+    restart: unless-stopped
+
+  scenario-19:
+    build: ./scenarios/scenario-19-ssrf-metadata
+    ports:
+      - "8019:8019"
+    restart: unless-stopped
+
+  scenario-20:
+    build: ./scenarios/scenario-20-backend-idor
+    ports:
+      - "8020:8020"
+    restart: unless-stopped
+
+  scenario-21:
+    build: ./scenarios/scenario-21-cache-attacks
+    ports:
+      - "8021:8021"
     restart: unless-stopped

@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+  <h2>🛡️ Executive Compliance &amp; High-Priority Triage Queue</h2>
+  <p style="color: var(--muted); font-size: 0.92rem;">
+    Privileged security review console. Only verified infrastructure logs (<code>is_trusted = 1</code>) and escalated emergency incidents (<code>priority = 'CRITICAL'</code>) are pulled for active inspection.
+  </p>
+
+  <!-- Success Solved Flag Box -->
+  <div id="vault-box" class="vault-box" style="display: none;">
+    <div class="vault-header">
+      <span class="vault-icon">🎉</span>
+      <div>
+        <div class="vault-title">Congratulations, you chained INSERT SQLi + Stored XSS!</div>
+        <div class="vault-desc">Stored XSS injected via SQLi successfully executed inside the privileged Compliance Queue.</div>
+      </div>
+    </div>
+    <div class="flag-wrap">
+      <span class="flag-label">Captured CTF Flag:</span>
+      <div id="extracted-vault" class="flag-badge"></div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+    <h2 style="margin-bottom: 0;">Escalated Tickets Awaiting Compliance Review ({{ tickets|length }})</h2>
+    <a href="/reset" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.35); color: #f87171; font-size: 0.8rem; font-weight: 600; padding: 6px 14px; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+      🔄 Reset Queue Data
+    </a>
+  </div>
+
+  {% if tickets|length == 0 %}
+  <div style="padding: 24px; text-align: center; color: var(--muted); background: #120f18; border-radius: 6px; border: 1px dashed var(--border);">
+    No critical compliance tickets found. Standard low-priority tickets are filtered out.
+  </div>
+  {% else %}
+    {% for t in tickets %}
+    <div style="border-bottom: 1px solid var(--border); padding: 18px 0;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <div style="font-weight: 600; color: var(--amber); font-size: 1rem;">
+          📋 Ticket #{{ t[0] }} &mdash; Submitter: <span style="color: #fff;">{{ t[1] }}</span>
+          <span style="font-size: 0.82rem; color: var(--muted); font-weight: normal; margin-left: 10px;">[Dept: {{ t[2] }}]</span>
+        </div>
+        <div>
+          {% if t[4] == 'CRITICAL' %}
+            <span style="background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); padding: 3px 10px; border-radius: 4px; font-weight: 700; font-size: 0.78rem;">CRITICAL ELEVATION</span>
+          {% else %}
+            <span style="background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); padding: 3px 10px; border-radius: 4px; font-weight: 600; font-size: 0.78rem;">VERIFIED TRUSTED</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div style="background: #110e18; border: 1px solid rgba(46, 40, 56, 0.6); padding: 14px 18px; border-radius: 6px; margin-top: 8px;">
+        <div style="font-size: 0.78rem; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Incident Description / Payload:</div>
+        <!-- VULNERABLE: Rendered |safe into admin compliance DOM -->
+        <div style="font-size: 0.95rem; color: #fff;">{{ t[3]|safe }}</div>
+      </div>
+      <div style="font-size: 0.78rem; color: var(--muted); margin-top: 8px;">Submitted Timestamp: {{ t[5] }}</div>
+    </div>
+    {% endfor %}
+  {% endif %}
+</div>
+
+<script>
+  function fetchAndShowFlag() {
+    fetch("/api/flag")
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.flag) {
+          const target = document.getElementById("extracted-vault");
+          const box = document.getElementById("vault-box");
+          const statusBadge = document.getElementById("lab-status");
+          if (target) target.innerText = data.flag;
+          if (box) box.style.display = "block";
+          if (statusBadge) {
+            statusBadge.textContent = "SOLVED 🎉";
+            statusBadge.className = "lab-status solved";
+          }
+        }
+      })
+      .catch(() => {});
+  }
+
+  if (window.__XSS_TRIGGERED) {
+    fetchAndShowFlag();
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    if (window.__XSS_TRIGGERED) {
+      fetchAndShowFlag();
+    }
+  });
+</script>
+{% endblock %}

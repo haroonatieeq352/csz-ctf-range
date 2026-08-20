@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">Vulnerability & Threat Advisory Database</h2>
+    <p class="card-subtitle">Query our internal security knowledgebase for threat definitions, mitigation guidelines, and internal advisory bulletins.</p>
+  </div>
+
+  <form method="GET" action="/search" class="search-box">
+    <input type="text" name="q" value="{{ raw_q }}" placeholder="Search advisories (e.g. Apache, Log4j, OpenSSL)..." class="input-field" autofocus>
+    <button type="submit" class="btn">Search</button>
+  </form>
+
+  {% if q is not none and q != '' %}
+  <div class="results-panel">
+    <div style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 8px;">
+      Active Search Query Buffer:
+    </div>
+
+    <!-- VULN: User query is reflected inside a <textarea> tag without escaping.
+         Direct <script> will not execute because it is trapped inside textarea.
+         User must inspect source, close </textarea>, and then inject <script>! -->
+    <textarea class="query-echo-box" readonly rows="2">{{ q|safe }}</textarea>
+
+    {% if results %}
+      {% for item in results %}
+      <div class="cve-item">
+        <div class="cve-id">{{ item.cve }} — {{ item.title }}</div>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">{{ item.description }}</p>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div style="padding: 20px; color: var(--text-muted); text-align: center;">
+        No public advisories matched your query.
+      </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- Success Flag Box: Automatically displays when XSS executes -->
+  <div id="flag-success-box" class="vault-box" style="display: none;">
+    <div style="color: var(--success); font-weight: 700; font-size: 1.15rem; margin-bottom: 8px;">
+      🎉 Congratulations! XSS Executed & Tag Breakout Successful!
+    </div>
+    <div style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 8px;">Captured CTF Flag:</div>
+    <div id="flag-target" class="flag-text" style="font-family: var(--font-mono); font-size: 1.3rem; color: #00ff88; font-weight: 700; background: rgba(0,255,136,0.1); padding: 10px; border-radius: 6px; border: 1px dashed #00ff88; display: inline-block;"></div>
+  </div>
+</div>
+
+<script>
+  function fetchAndShowFlag() {
+    fetch("/api/flag")
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.flag) {
+          const target = document.getElementById("flag-target");
+          const box = document.getElementById("flag-success-box");
+          if (target) target.innerText = data.flag;
+          if (box) box.style.display = "block";
+        }
+      })
+      .catch(() => {});
+  }
+
+  // Reveal flag box immediately if alert was triggered during HTML parsing
+  if (window.__XSS_TRIGGERED) {
+    fetchAndShowFlag();
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    if (window.__XSS_TRIGGERED) {
+      fetchAndShowFlag();
+    }
+  });
+</script>
+{% endblock %}

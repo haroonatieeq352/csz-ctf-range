@@ -11,7 +11,7 @@ import signal
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PID_FILE = os.path.join(BASE_DIR, ".running_scenarios.json")
-RANGE_PORTS = list(range(8000, 8018))
+RANGE_PORTS = list(range(8000, 8023))
 
 def kill_process(pid):
     try:
@@ -72,7 +72,7 @@ def main():
     cleanup_ports()
 
     print("=" * 70)
-    print(f"[*] Done. All scenario servers (Ports 8000-8017) terminated cleanly.")
+    print(f"[*] Done. All scenario servers (Ports 8000-8021) terminated cleanly.")
     print("=" * 70)
 
 if __name__ == "__main__":

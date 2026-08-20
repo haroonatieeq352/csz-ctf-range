@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Developer Feedback Hub — Scenario 13{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script>
+    // Global XSS Detection Hook: Loaded BEFORE body/stored entries
+    window.__XSS_TRIGGERED = false;
+    const _origAlert = window.alert;
+    window.alert = function(msg) {
+      window.__XSS_TRIGGERED = true;
+      const reveal = () => {
+        const box = document.getElementById("reward-box");
+        const panel = document.getElementById("reward-panel");
+        if (box && panel) {
+          fetch("/api/flag")
+            .then(res => res.json())
+            .then(data => {
+              if (data && data.flag) {
+                panel.innerText = data.flag;
+                box.style.display = "block";
+              }
+            })
+            .catch(() => {});
+        }
+      };
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", reveal);
+      } else {
+        reveal();
+      }
+      setTimeout(reveal, 100);
+      return _origAlert(msg);
+    };
+  </script>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/" class="brand">
+      📋 CSZone Dev Feedback <span>Scenario 13 (Port 8013)</span>
+    </a>
+    <div style="display: flex; align-items: center; gap: 15px;">
+      <a href="/reset" style="color: #f59e0b; font-size: 0.85rem; text-decoration: none; border: 1px solid #f59e0b; padding: 4px 10px; border-radius: 4px;">🔄 Reset Entries</a>
+      <div style="font-size: 0.85rem; color: var(--text-muted);">Stored XSS in Attribute Context</div>
+    </div>
+  </nav>
+
+  <div class="container">
+    {% block content %}{% endblock %}
+  </div>
+</body>
+</html>

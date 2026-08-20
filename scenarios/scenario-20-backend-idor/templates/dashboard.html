@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+  <h2>💼 Institutional Financial Treasury Dashboard</h2>
+  <p style="color: var(--muted); font-size: 0.92rem; margin-bottom: 20px;">
+    Welcome to ApexPay Corporate Core Banking &amp; Liquidity Management.
+  </p>
+
+  {% if is_admin %}
+  <div class="vault-box" style="display: block; margin-top: 0; margin-bottom: 24px;">
+    <div class="vault-header">
+      <span class="vault-icon">🎉</span>
+      <div>
+        <div class="vault-title">Congratulations, you solved the lab!</div>
+        <div class="vault-desc">Executive Account Takeover (ATO) achieved via BOLA multi-step password reset flow.</div>
+      </div>
+    </div>
+    <div class="flag-wrap">
+      <span class="flag-label">Captured CTF Flag:</span>
+      <div id="extracted-vault" class="flag-badge">{{ flag }}</div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+    <div style="background: #110e18; border: 1px solid var(--border); padding: 22px; border-radius: 6px;">
+      <div style="font-size: 0.8rem; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; font-weight: 600;">Active Account Identity</div>
+      <div style="font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 4px;">{{ user[2] }}</div>
+      <div style="font-size: 0.88rem; color: var(--muted); font-family: var(--mono); margin-bottom: 14px;">{{ user[1] }} (Account #{{ user[0] }})</div>
+      
+      <div>
+        {% if is_admin %}
+          <span style="background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); padding: 4px 12px; border-radius: 4px; font-weight: 700; font-size: 0.8rem;">EXECUTIVE ADMINISTRATOR</span>
+        {% else %}
+          <span style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); padding: 4px 12px; border-radius: 4px; font-size: 0.8rem;">STANDARD RETAIL ACCOUNT</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div style="background: #110e18; border: 1px solid var(--border); padding: 22px; border-radius: 6px;">
+      <div style="font-size: 0.8rem; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; font-weight: 600;">Treasury Balance</div>
+      <div style="font-size: 1.6rem; font-weight: 700; color: #34d399; font-family: var(--mono); margin-bottom: 8px;">{{ user[4] }}</div>
+      <div style="font-size: 0.82rem; color: var(--muted);">Real-time settled institutional liquidity &amp; reserves.</div>
+    </div>
+  </div>
+</div>
+{% endblock %}
