@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+  <h2>📁 My Protected Vault Documents</h2>
+  <p style="color: var(--muted); font-size: 0.92rem; margin-bottom: 20px;">
+    All files uploaded to CloudVault are encrypted and assigned unique 128-bit cryptographic UUIDs (Universally Unique Identifiers) to prevent sequential enumeration attacks.
+  </p>
+
+  <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); padding: 14px 18px; border-radius: 6px; margin-bottom: 22px;">
+    <div style="font-size: 0.88rem; color: #fbbf24; font-weight: 600; margin-bottom: 4px;">
+      🎯 <strong>Lab Objective:</strong>
+    </div>
+    <div style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.5;">
+      You are logged in as <strong>Carlos</strong>. The Chief Security Officer recently uploaded a classified audit report using an unpredictable UUID. Find the leaked executive document UUID by inspecting the <strong>Public Activity &amp; Audit Feed</strong>, then exploit an IDOR on the document viewer endpoint to download the classified file and extract the CTF flag.
+    </div>
+  </div>
+
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Document Title</th>
+          <th>Cryptographic System UUID</th>
+          <th>Owner</th>
+          <th>Clearance</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in docs %}
+        <tr>
+          <td style="font-weight: 600; color: #fff;">📄 {{ d[2] }}</td>
+          <td><code>{{ d[1] }}</code></td>
+          <td>{{ d[3] }}</td>
+          <td>
+            <span style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">STANDARD</span>
+          </td>
+          <td>
+            <a href="/vault/view?doc_id={{ d[1] }}" class="btn" style="padding: 6px 14px; font-size: 0.8rem;">View Document</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

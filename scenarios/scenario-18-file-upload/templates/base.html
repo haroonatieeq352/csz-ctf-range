@@ -3,31 +3,50 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}CSZone — Scenario 14{% endblock %}</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <title>{% block title %}Obfuscated &amp; UUID Leakage IDOR — Scenario 18{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-<header>
-  <a href="/" class="brand-wrapper">
-    <div class="brand-title">CS<span>Zone</span></div>
-    <span class="badge-tag">Scenario 14 &bull; Port 8014</span>
-  </a>
-  <nav>
-    <a href="/upload" class="active">File Upload</a>
-    {% if session.get('user_id') %}
-      <span style="color:var(--muted);font-size:0.85rem;margin-left:8px;">({{ session.get('username') }})</span>
-      <a href="/logout" style="color: var(--crimson);">Logout</a>
-    {% else %}
-      <a href="/login">Login</a>
-      <a href="/register" class="btn" style="padding: 5px 14px; font-size: 0.82rem; margin-left: 8px;">Register</a>
-    {% endif %}
-  </nav>
-</header>
-<main>
-{% block content %}{% endblock %}
-</main>
-<footer>
-  CSZone Offensive Security Training Range &copy; 2026 &mdash; Scenario 14 (Port 8014)
-</footer>
+  <!-- PortSwigger Web Security Academy Style Lab Bar -->
+  <div class="academy-header-strip">
+    <div class="lab-pill-group">
+      <div class="lab-pill-icon">🧪</div>
+      <div class="lab-pill-type">LAB</div>
+    </div>
+    <div class="lab-info-block">
+      <div class="difficulty-tag">INTERMEDIATE</div>
+      <h1 class="lab-title-text">Obfuscated &amp; UUID Identifier Leakage IDOR in Document Vault</h1>
+    </div>
+    <div class="lab-status-wrapper">
+      {% if is_flag_revealed or is_solved %}
+        <span id="lab-status" class="lab-status solved">SOLVED 🎉</span>
+      {% else %}
+        <span id="lab-status" class="lab-status unsolved">UNSOLVED</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <header>
+    <a href="/vault" class="brand-wrapper">
+      <div class="brand-title">📂 CloudVault <span>Enterprise Repo</span></div>
+      <span class="badge-tag">Scenario 18 &bull; Port 8018</span>
+    </a>
+    <nav>
+      <a href="/vault" {% if request.path == '/' or request.path.startswith('/vault') %}class="active"{% endif %}>📁 My Vault Documents</a>
+      <a href="/activity" {% if request.path.startswith('/activity') %}class="active"{% endif %}>📡 Public Activity &amp; Audit Feed</a>
+      <a href="/reset" class="nav-reset-btn" title="Reset all vault files to clean default state">🔄 Reset Lab</a>
+    </nav>
+  </header>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>
+    CloudVault Enterprise Storage &copy; 2026 &mdash; Scenario 18 (Port 8018)
+  </footer>
 </body>
 </html>
