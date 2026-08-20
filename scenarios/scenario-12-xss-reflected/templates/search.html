@@ -44,23 +44,33 @@
       🎉 Congratulations! XSS Executed & Tag Breakout Successful!
     </div>
     <div style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 8px;">Captured CTF Flag:</div>
-    <div class="flag-text" style="font-family: var(--font-mono); font-size: 1.3rem; color: #00ff88; font-weight: 700; background: rgba(0,255,136,0.1); padding: 10px; border-radius: 6px; border: 1px dashed #00ff88; display: inline-block;">
-      {{ flag_token }}
-    </div>
+    <div id="flag-target" class="flag-text" style="font-family: var(--font-mono); font-size: 1.3rem; color: #00ff88; font-weight: 700; background: rgba(0,255,136,0.1); padding: 10px; border-radius: 6px; border: 1px dashed #00ff88; display: inline-block;"></div>
   </div>
 </div>
 
 <script>
+  function fetchAndShowFlag() {
+    fetch("/api/flag")
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.flag) {
+          const target = document.getElementById("flag-target");
+          const box = document.getElementById("flag-success-box");
+          if (target) target.innerText = data.flag;
+          if (box) box.style.display = "block";
+        }
+      })
+      .catch(() => {});
+  }
+
   // Reveal flag box immediately if alert was triggered during HTML parsing
   if (window.__XSS_TRIGGERED) {
-    const box = document.getElementById("flag-success-box");
-    if (box) box.style.display = "block";
+    fetchAndShowFlag();
   }
 
   document.addEventListener("DOMContentLoaded", () => {
     if (window.__XSS_TRIGGERED) {
-      const box = document.getElementById("flag-success-box");
-      if (box) box.style.display = "block";
+      fetchAndShowFlag();
     }
   });
 </script>

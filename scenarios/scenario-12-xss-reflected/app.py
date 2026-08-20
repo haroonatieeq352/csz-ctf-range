@@ -32,7 +32,11 @@ def search_view():
         results = [a for a in ADVISORIES if query_lower in a["title"].lower() or query_lower in a["cve"].lower() or query_lower in a["description"].lower()]
 
     # VULN: 'q' is passed unescaped to template and marked |safe inside a <textarea> tag
-    return render_template("search.html", q=q, raw_q=q, results=results, flag_token=FLAG_SECRET)
+    return render_template("search.html", q=q, raw_q=q, results=results)
+
+@app.route("/api/flag")
+def api_flag():
+    return {"success": True, "flag": FLAG_SECRET}
 
 if __name__ == "__main__":
     print(f"[*] Scenario 12 running on http://localhost:{PORT}")

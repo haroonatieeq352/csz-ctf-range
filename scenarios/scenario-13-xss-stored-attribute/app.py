@@ -63,7 +63,11 @@ def feedback_view():
     conn.close()
 
     formatted_entries = [{"author": r[0], "comment": r[1], "created_at": r[2]} for r in entries]
-    return render_template("feedback.html", entries=formatted_entries, flag_secret=FLAG_SECRET)
+    return render_template("feedback.html", entries=formatted_entries)
+
+@app.route("/api/flag")
+def api_flag():
+    return {"success": True, "flag": FLAG_SECRET}
 
 @app.route("/reset", methods=["GET", "POST"])
 def reset_view():

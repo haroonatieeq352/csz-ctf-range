@@ -41,7 +41,11 @@ def preview_view():
     if rule:
         error = check_waf(rule)
 
-    return render_template("preview.html", rule=rule, error=error, flag_secret=FLAG_SECRET)
+    return render_template("preview.html", rule=rule, error=error)
+
+@app.route("/api/flag")
+def api_flag():
+    return {"success": True, "flag": FLAG_SECRET}
 
 if __name__ == "__main__":
     print(f"[*] Scenario 15 running on http://localhost:{PORT}")

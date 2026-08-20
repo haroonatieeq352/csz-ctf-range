@@ -1,79 +1,109 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="card">
-  <h2 style="color: #fff; margin-bottom: 8px;">Real-Time Threat Telemetry Console</h2>
-  <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.92rem;">
-    Single Page Application routing telemetry feeds directly in the client DOM.
-  </p>
-
-  <!-- Client Router Tabs -->
-  <div class="nav-tabs">
-    <a href="/analytics?tab=Overview" class="tab-btn" id="tab-overview">Overview</a>
-    <a href="/analytics?tab=Network+Threats" class="tab-btn" id="tab-threats">Network Threats</a>
-    <a href="/analytics?tab=Audit+Logs" class="tab-btn" id="tab-logs">Audit Logs</a>
-    <a href="/analytics?tab=Endpoints" class="tab-btn" id="tab-endpoints">Endpoints</a>
+<div class="card main-portal-card">
+  <div class="portal-header">
+    <h2 class="portal-heading">Vulnerability Intelligence Research Blog</h2>
+    <p class="portal-sub">
+      Explore vulnerability write-ups, incident response advisories, and client-side security papers. Use the search input below to filter research articles.
+      <br><span style="display: inline-block; margin-top: 8px; font-size: 0.85rem; color: #38bdf8; background: rgba(56, 189, 248, 0.1); padding: 4px 10px; border-radius: 4px; border: 1px solid rgba(56, 189, 248, 0.2);">🎯 <strong>Lab Objective:</strong> Exploit the search DOM sink and execute <code>alert("cszone")</code> to solve the lab.</span>
+    </p>
   </div>
 
-  <div class="telemetry-panel">
-    <!-- Dynamic DOM Sink Target -->
-    <div id="telemetry-content">
-      Loading client analytics...
+  <!-- Real-World Search Form -->
+  <form method="GET" action="/" class="search-form">
+    <div class="search-input-wrap">
+      <svg class="search-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input type="text" name="search" id="search-input" value="{{ search }}" placeholder="Search the blog (e.g. CSP, VPN, Frameworks)..." class="search-input" autofocus>
     </div>
+    <button type="submit" class="btn-search">Search</button>
+  </form>
 
-    <div class="stats-grid">
-      <div class="stat-item">
-        <div style="font-size: 0.8rem; color: var(--text-muted);">Active Sensors</div>
-        <div class="stat-val">128</div>
-      </div>
-      <div class="stat-item">
-        <div style="font-size: 0.8rem; color: var(--text-muted);">Blocked Probes / Hr</div>
-        <div class="stat-val">1,420</div>
-      </div>
-      <div class="stat-item">
-        <div style="font-size: 0.8rem; color: var(--text-muted);">Threat Severity</div>
-        <div class="stat-val" style="color: #10b981;">LOW</div>
+  <!-- Dynamic DOM Search Message Sink -->
+  <div id="searchMessage" class="search-message-container"></div>
+
+  <!-- Success Solved Flag Box -->
+  <div id="vault-box" class="vault-box" style="display: none;">
+    <div class="vault-header">
+      <span class="vault-icon">🎉</span>
+      <div>
+        <div class="vault-title">Congratulations, you solved the lab!</div>
+        <div class="vault-desc">DOM XSS payload executed <code>alert("cszone")</code> in <code>innerHTML</code> sink via <code>location.search</code>.</div>
       </div>
     </div>
-  </div>
-
-  <div id="vault-box" class="vault-box">
-    <div style="color: var(--success); font-weight: 700; margin-bottom: 6px;">🔓 Client JavaScript Secret Disclosed:</div>
-    <div id="extracted-vault" style="font-family: var(--font-mono); font-size: 1.1rem; color: #fff;"></div>
+    <div class="flag-wrap">
+      <span class="flag-label">Captured CTF Flag:</span>
+      <div id="extracted-vault" class="flag-badge"></div>
+    </div>
   </div>
 </div>
 
-<!-- Simulated Client-Side State & Secret -->
-<script>
-  window.__TELEMETRY_KEY = "{{ flag_secret }}";
-  window.__CLIENT_CONFIG = {
-    env: "production-range",
-    telemetry_scope: "global",
-    internal_auth: "{{ flag_secret }}"
-  };
+<!-- Published Articles Feed -->
+<div class="articles-section">
+  <div class="articles-header">
+    <h3 class="articles-title">Recent Research Publications</h3>
+    <span class="articles-count">{{ posts|length }} Publications</span>
+  </div>
 
-  // Client-Side Router Logic:
-  // SOURCE: window.location.search (URL parameter 'tab')
-  // SINK: element.innerHTML without sanitization
+  <div class="posts-grid">
+    {% for post in posts %}
+    <article class="article-card">
+      <div class="article-tag">APPSEC RESEARCH</div>
+      <h4 class="article-title">{{ post.title }}</h4>
+      <div class="article-meta">{{ post.date }} • Threat Analysis & Mitigation</div>
+      <p class="article-summary">{{ post.summary }}</p>
+    </article>
+    {% endfor %}
+  </div>
+</div>
+
+<script>
+  function fetchAndShowFlag() {
+    fetch("/api/flag")
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.flag) {
+          const target = document.getElementById("extracted-vault");
+          const box = document.getElementById("vault-box");
+          const statusBadge = document.getElementById("lab-status");
+          if (target) target.innerText = data.flag;
+          if (box) box.style.display = "block";
+          if (statusBadge) {
+            statusBadge.textContent = "SOLVED 🎉";
+            statusBadge.className = "lab-status solved";
+          }
+        }
+      })
+      .catch(() => {});
+  }
+
+  function doSearchQuery(query) {
+    const msgBox = document.getElementById("searchMessage");
+    if (!msgBox) return;
+
+    // Normalizing unquoted event handler double quotes for clean HTML5 DOM execution
+    let normalized = query.replace(/(on\w+)=alert\("([^"]+)"\)/gi, '$1="alert(\'$2\')"');
+
+    // VULNERABLE DOM XSS SINK (PortSwigger Standard Pattern):
+    // Source: location.search ('search' or 'tab' query param)
+    // Sink: innerHTML assignment without escaping
+    msgBox.innerHTML = '<div class="search-result-banner"><span>Search results for:</span> <span class="search-query">' + normalized + '</span></div>';
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     const params = new URLSearchParams(window.location.search);
-    const tabParam = params.get("tab") || "Overview";
-
-    const contentBox = document.getElementById("telemetry-content");
+    const query = params.get("search") || params.get("tab");
     
-    // VULNERABLE DOM XSS SINK:
-    contentBox.innerHTML = "<h3 style='color: #fff; margin-bottom: 10px;'>Active Telemetry Feed: " + tabParam + "</h3><p style='color: var(--text-muted); font-size: 0.9rem;'>Telemetry stream is operational and aggregating node data in real-time.</p>";
-  });
+    if (query) {
+      doSearchQuery(query);
+    }
 
-  const obs = new MutationObserver(() => {
-    const ev = document.getElementById("extracted-vault");
-    if (ev && ev.innerText.trim() !== "") {
-      document.getElementById("vault-box").style.display = "block";
+    if (window.__XSS_TRIGGERED) {
+      fetchAndShowFlag();
     }
   });
-  const evEl = document.getElementById("extracted-vault");
-  if (evEl) {
-    obs.observe(evEl, { childList: true, subtree: true, characterData: true });
-  }
 </script>
 {% endblock %}

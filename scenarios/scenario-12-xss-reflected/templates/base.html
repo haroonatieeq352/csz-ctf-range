@@ -13,8 +13,17 @@
       window.__XSS_TRIGGERED = true;
       const reveal = () => {
         const box = document.getElementById("flag-success-box");
-        if (box) {
-          box.style.display = "block";
+        const target = document.getElementById("flag-target");
+        if (box && target) {
+          fetch("/api/flag")
+            .then(res => res.json())
+            .then(data => {
+              if (data && data.flag) {
+                target.innerText = data.flag;
+                box.style.display = "block";
+              }
+            })
+            .catch(() => {});
         }
       };
       if (document.readyState === "loading") {

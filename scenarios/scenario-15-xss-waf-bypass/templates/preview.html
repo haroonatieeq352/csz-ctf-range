@@ -21,9 +21,6 @@
     <button type="submit" class="btn">Validate & Preview Rule</button>
   </form>
 
-  <!-- Protected WAF Admin Vault Secret -->
-  <input type="hidden" id="waf-secret" value="{{ flag_secret }}">
-
   {% if rule and not error %}
   <div class="preview-box">
     <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">Rendered Security Banner Output:</div>
@@ -41,15 +38,28 @@
 </div>
 
 <script>
-  const obs = new MutationObserver(() => {
-    const rf = document.getElementById("rule-flag");
-    if (rf && rf.innerText.trim() !== "") {
-      document.getElementById("vault-box").style.display = "block";
+  function fetchAndShowFlag() {
+    fetch("/api/flag")
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.flag) {
+          const target = document.getElementById("rule-flag");
+          const box = document.getElementById("vault-box");
+          if (target) target.innerText = data.flag;
+          if (box) box.style.display = "block";
+        }
+      })
+      .catch(() => {});
+  }
+
+  if (window.__XSS_TRIGGERED) {
+    fetchAndShowFlag();
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    if (window.__XSS_TRIGGERED) {
+      fetchAndShowFlag();
     }
   });
-  const rfEl = document.getElementById("rule-flag");
-  if (rfEl) {
-    obs.observe(rfEl, { childList: true, subtree: true, characterData: true });
-  }
 </script>
 {% endblock %}

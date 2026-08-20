@@ -3,15 +3,77 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}Security Analytics — Scenario 14{% endblock %}</title>
+  <title>{% block title %}DOM XSS in innerHTML sink — Scenario 14{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script>
+    // Global XSS Detection Hook: Loaded in HEAD
+    window.__XSS_TRIGGERED = false;
+    const _origAlert = window.alert;
+    window.alert = function(msg) {
+      // REQUIREMENT: User must pass "cszone" into alert() to solve the lab
+      const isCszone = msg !== undefined && msg !== null && String(msg).toLowerCase().trim() === "cszone";
+      
+      if (isCszone) {
+        window.__XSS_TRIGGERED = true;
+        const reveal = () => {
+          const box = document.getElementById("vault-box");
+          const statusBadge = document.getElementById("lab-status");
+          const target = document.getElementById("extracted-vault");
+          if (statusBadge) {
+            statusBadge.textContent = "SOLVED 🎉";
+            statusBadge.className = "lab-status solved";
+          }
+          if (box && target) {
+            fetch("/api/flag")
+              .then(res => res.json())
+              .then(data => {
+                if (data && data.flag) {
+                  target.innerText = data.flag;
+                  box.style.display = "block";
+                }
+              })
+              .catch(() => {});
+          }
+        };
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", reveal);
+        } else {
+          reveal();
+        }
+        setTimeout(reveal, 100);
+      }
+      return _origAlert(msg);
+    };
+  </script>
 </head>
 <body>
+  <!-- PortSwigger Web Security Academy Style Lab Bar -->
+  <div class="academy-header-strip">
+    <div class="lab-pill-group">
+      <div class="lab-pill-icon">🧪</div>
+      <div class="lab-pill-type">LAB</div>
+    </div>
+    <div class="lab-info-block">
+      <div class="difficulty-tag">APPRENTICE</div>
+      <h1 class="lab-title-text">DOM XSS in <code>innerHTML</code> sink using source <code>location.search</code> — Goal: <code>alert("cszone")</code></h1>
+    </div>
+    <div class="lab-status-wrapper">
+      <span id="lab-status" class="lab-status unsolved">UNSOLVED</span>
+    </div>
+  </div>
+
   <nav class="navbar">
     <a href="/" class="brand">
-      📊 CSZone Live Telemetry <span>Scenario 14 (Port 8014)</span>
+      🛡️ CyberSec Research Blog <span>Scenario 14 (Port 8014)</span>
     </a>
-    <div style="font-size: 0.85rem; color: var(--text-muted);">DOM-based XSS (Source to Sink)</div>
+    <div class="nav-links">
+      <a href="/" class="nav-link active">Home</a>
+      <a href="/?search=frameworks" class="nav-link">Advisories</a>
+      <a href="/?search=vpn" class="nav-link">Threat Feeds</a>
+    </div>
   </nav>
 
   <div class="container">
