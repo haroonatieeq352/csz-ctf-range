@@ -197,6 +197,127 @@ code, pre {
   border-radius: 4px;
 }
 
+/* PortSwigger Academy Strip & Badges */
+.academy-header-strip {
+  background: #0e0a14;
+  border-bottom: 1px solid var(--border);
+  padding: 12px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.lab-pill-group {
+  display: flex;
+  align-items: center;
+  background: #191422;
+  border: 1px solid #352d44;
+  border-radius: 20px;
+  padding: 3px 12px 3px 8px;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.5px;
+}
+.lab-pill-icon { font-size: 1rem; }
+.lab-pill-type { color: #f59e0b; }
+.lab-info-block {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+.difficulty-tag {
+  background: #991b1b;
+  color: #fecaca;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+.lab-title-text {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+}
+.lab-title-text code {
+  font-family: var(--mono);
+  background: #171120;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #fbbf24;
+  font-size: 0.9em;
+}
+.lab-status-wrapper { display: flex; align-items: center; }
+.lab-status {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  padding: 4px 14px;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+}
+.lab-status.unsolved {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+}
+.lab-status.solved {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.25);
+  animation: pulse-glow 2s infinite;
+}
+
+@keyframes pulse-glow {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
+/* Vault Flag Box */
+.vault-box {
+  margin-top: 24px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(5, 150, 105, 0.04));
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  border-radius: 8px;
+  padding: 22px 26px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+  animation: slideUp 0.4s ease-out;
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.vault-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.vault-icon { font-size: 1.8rem; }
+.vault-title { font-size: 1.15rem; font-weight: 700; color: #34d399; }
+.vault-desc { font-size: 0.88rem; color: #94a3b8; margin-top: 2px; }
+.flag-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #09070c;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 12px 18px;
+  border-radius: 6px;
+}
+.flag-label { font-size: 0.85rem; color: #94a3b8; font-weight: 600; }
+.flag-badge {
+  font-family: var(--mono);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #34d399;
+  letter-spacing: 0.5px;
+}
+
 footer {
   text-align: center;
   color: #6d6477;

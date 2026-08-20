@@ -1,13 +1,68 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="card">
-  <h2>Admin Inbox &mdash; Moderation Queue</h2>
-  <p>Internal moderation view. Same guestbook data as the public page.</p>
+  <h2>📥 Admin Inbox &mdash; Moderation Queue</h2>
+  <p style="color: var(--muted); font-size: 0.92rem;">
+    Internal privileged moderation dashboard. All pending guestbook submissions submitted by the public are rendered below for administrator review.
+  </p>
+
+  <!-- Success Solved Flag Box (Revealed upon Stored XSS Execution in Admin Session) -->
+  <div id="vault-box" class="vault-box" style="display: none;">
+    <div class="vault-header">
+      <span class="vault-icon">🎉</span>
+      <div>
+        <div class="vault-title">Congratulations, you chained SQLi + Stored XSS!</div>
+        <div class="vault-desc">Stored XSS successfully executed inside privileged Administrator session.</div>
+      </div>
+    </div>
+    <div class="flag-wrap">
+      <span class="flag-label">Captured Admin Flag:</span>
+      <div id="extracted-vault" class="flag-badge"></div>
+    </div>
+  </div>
 </div>
-{% for e in entries %}
+
 <div class="card">
-  <div style="color: var(--amber); font-weight: 600;">{{ e[0] }} &mdash; {{ e[2] }}</div>
-  <div style="margin-top: 10px;">{{ e[1]|safe }}</div>
+  <h2>Pending Submissions for Moderation</h2>
+  {% for e in entries %}
+  <div style="border-bottom: 1px solid var(--border); padding: 14px 0;">
+    <div style="color: var(--amber); font-weight: 600; font-size: 0.95rem;">
+      👤 {{ e[0] }} <span style="color: var(--muted); font-weight: normal; font-size: 0.82rem; margin-left: 8px;">— {{ e[2] }}</span>
+    </div>
+    <!-- VULN: Stored XSS unescaped rendering in admin session -->
+    <div style="margin-top: 8px; font-size: 0.95rem; color: #fff;">{{ e[1]|safe }}</div>
+  </div>
+  {% endfor %}
 </div>
-{% endfor %}
+
+<script>
+  function fetchAndShowFlag() {
+    fetch("/api/flag")
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.flag) {
+          const target = document.getElementById("extracted-vault");
+          const box = document.getElementById("vault-box");
+          const statusBadge = document.getElementById("lab-status");
+          if (target) target.innerText = data.flag;
+          if (box) box.style.display = "block";
+          if (statusBadge) {
+            statusBadge.textContent = "SOLVED 🎉";
+            statusBadge.className = "lab-status solved";
+          }
+        }
+      })
+      .catch(() => {});
+  }
+
+  if (window.__XSS_TRIGGERED) {
+    fetchAndShowFlag();
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    if (window.__XSS_TRIGGERED) {
+      fetchAndShowFlag();
+    }
+  });
+</script>
 {% endblock %}

@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 """
-CSZone CTF Range — Scenario 12: SQLi Admin Bypass & Stored XSS Chain
-Port: 8012
+CSZone CTF Range — Scenario 16: INSERT SQLi to Second-Order Stored XSS Chain
+Port: 8016
 """
 import os
 import sys
 import sqlite3
-from flask import Flask, request, session, redirect, url_for, render_template, make_response
+from flask import Flask, request, redirect, url_for, render_template
 
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8016
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "scenario16.db")
 
 app = Flask(__name__)
-app.secret_key = "scenario-16-secret-key"
+app.secret_key = "scenario-16-enterprise-secret-key"
+FLAG_SECRET = "CTF{1ns3rt_sqli_t0_st0r3d_xss_ch41n}"
 
 def get_conn():
     return sqlite3.connect(DB_PATH)
@@ -21,104 +22,79 @@ def get_conn():
 def init_db():
     conn = get_conn()
     cur = conn.cursor()
-    cur.execute("DROP TABLE IF EXISTS legacy_admin_creds;")
-    cur.execute("DROP TABLE IF EXISTS guestbook;")
-    cur.execute("DROP TABLE IF EXISTS stolen_cookies;")
+    cur.execute("DROP TABLE IF EXISTS support_tickets;")
     cur.execute("""
-        CREATE TABLE legacy_admin_creds (
+        CREATE TABLE support_tickets (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT NOT NULL,
-            password TEXT NOT NULL
-        );
-    """)
-    cur.execute("""
-        CREATE TABLE guestbook (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            message TEXT NOT NULL,
+            submitter TEXT NOT NULL,
+            department TEXT NOT NULL,
+            issue_desc TEXT NOT NULL,
+            priority TEXT DEFAULT 'LOW',
+            is_trusted INTEGER DEFAULT 0,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
         );
     """)
     cur.execute("""
-        CREATE TABLE stolen_cookies (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            captured_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            source_ip TEXT,
-            cookie_data TEXT
-        );
+        INSERT INTO support_tickets (submitter, department, issue_desc, priority, is_trusted) 
+        VALUES ('Infra SecOps', 'IT-INFRA', 'Routine firewall telemetry validation pass.', 'NORMAL', 1);
     """)
-    cur.execute("INSERT INTO legacy_admin_creds (username, password) VALUES ('admin', 'L3g4cyAdm1n_2023!');")
-    cur.execute("INSERT INTO guestbook (name, message) VALUES ('CSZone Bot', 'Welcome to the range guestbook. Be nice.');")
     conn.commit()
     conn.close()
 
 @app.route("/")
-@app.route("/guestbook", methods=["GET", "POST"])
-def guestbook_view():
+@app.route("/tickets", methods=["GET", "POST"])
+def tickets_view():
     conn = get_conn()
-    if request.method == "POST":
-        name = request.form.get("name", "anonymous").strip() or "anonymous"
-        message = request.form.get("message", "")
-        conn.execute("INSERT INTO guestbook (name, message) VALUES (?, ?)", (name, message))
-        conn.commit()
-        conn.close()
-        return redirect(url_for("guestbook_view"))
-
-    entries = conn.execute("SELECT name, message, created_at FROM guestbook ORDER BY id DESC").fetchall()
-    conn.close()
-    return render_template("guestbook.html", entries=entries)
-
-@app.route("/legacy-admin/login", methods=["GET", "POST"])
-def legacy_admin_login():
     error = None
+    success = None
+
     if request.method == "POST":
-        username = request.form.get("username", "")
-        password = request.form.get("password", "")
-        conn = get_conn()
-        # VULN (SQLi Auth Bypass): raw query concatenation
-        query = f"SELECT * FROM legacy_admin_creds WHERE username = '{username}' AND password = '{password}'"
-        row = None
+        submitter = request.form.get("submitter", "Anonymous").strip() or "Anonymous"
+        department = request.form.get("department", "GENERAL").strip() or "GENERAL"
+        issue_desc = request.form.get("issue_desc", "").strip()
+
+        # VULNERABLE: Direct string interpolation into INSERT query statement
+        # Expected schema: (submitter, department, issue_desc, priority, is_trusted)
+        query = (
+            f"INSERT INTO support_tickets (submitter, department, issue_desc, priority, is_trusted) "
+            f"VALUES ('{submitter}', '{department}', '{issue_desc}', 'LOW', 0)"
+        )
         try:
-            row = conn.execute(query).fetchone()
+            conn.execute(query)
+            conn.commit()
+            success = "Support ticket submitted successfully and queued for priority triage."
         except sqlite3.OperationalError as e:
-            error = f"Query error: {e}"
-        conn.close()
+            error = f"Database Query Error: {e}"
 
-        if row:
-            session["role"] = "admin"
-            session["username"] = "admin (legacy)"
-            resp = make_response(redirect(url_for("admin_inbox")))
-            # VULN: sensitive flag in non-HttpOnly cookie for XSS exfiltration
-            resp.set_cookie("admin_session_flag", "CTF{st0r3d_c00k13_th3ft}", httponly=False)
-            return resp
-        error = error or "Invalid credentials."
-
-    return render_template("legacy_admin_login.html", error=error)
-
-@app.route("/admin/inbox")
-def admin_inbox():
-    if session.get("role") != "admin":
-        return redirect(url_for("legacy_admin_login"))
-    conn = get_conn()
-    entries = conn.execute("SELECT name, message, created_at FROM guestbook ORDER BY id DESC").fetchall()
+    # Public view only shows normal status of tickets
+    tickets = conn.execute("SELECT id, submitter, department, priority, created_at FROM support_tickets ORDER BY id DESC").fetchall()
     conn.close()
-    return render_template("admin_inbox.html", entries=entries)
+    return render_template("tickets.html", tickets=tickets, error=error, success=success)
 
-@app.route("/xss/collect")
-def xss_collect():
-    data = request.args.get("c", "")
+@app.route("/admin/compliance")
+def admin_compliance():
     conn = get_conn()
-    conn.execute("INSERT INTO stolen_cookies (source_ip, cookie_data) VALUES (?, ?)", (request.remote_addr, data))
-    conn.commit()
+    # Internal Admin Queue: Only renders high-priority / verified trusted audit tickets
+    # Untrusted user submissions (is_trusted=0 and priority='LOW') NEVER appear here
+    # UNLESS the user bypassed constraints via INSERT SQL Injection!
+    triaged_tickets = conn.execute(
+        "SELECT id, submitter, department, issue_desc, priority, created_at "
+        "FROM support_tickets "
+        "WHERE is_trusted = 1 OR priority = 'CRITICAL' "
+        "ORDER BY id DESC"
+    ).fetchall()
     conn.close()
-    return "", 204
+    return render_template("compliance.html", tickets=triaged_tickets)
 
-@app.route("/xss/collect/log")
-def xss_collect_log():
-    conn = get_conn()
-    rows = conn.execute("SELECT captured_at, source_ip, cookie_data FROM stolen_cookies ORDER BY id DESC").fetchall()
-    conn.close()
-    return render_template("xss_log.html", rows=rows)
+@app.route("/reset", methods=["GET", "POST"])
+@app.route("/api/reset", methods=["GET", "POST"])
+def reset_view():
+    init_db()
+    return redirect(url_for("tickets_view"))
+
+@app.route("/api/flag")
+def api_flag():
+    return {"success": True, "flag": FLAG_SECRET}
 
 if __name__ == "__main__":
     init_db()
