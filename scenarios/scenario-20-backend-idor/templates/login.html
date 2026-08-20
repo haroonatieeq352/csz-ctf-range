@@ -1,18 +1,55 @@
 {% extends "base.html" %}
+
 {% block content %}
 <div class="card">
-  <h2>Account Login</h2>
-  {% if error %}<div class="alert error">{{ error }}</div>{% endif %}
-  <form method="POST">
-    <div class="form-group">
-      <label>Username</label>
-      <input type="text" name="username" required autofocus>
+  <h2>🔑 ApexPay Corporate Login Portal</h2>
+  <p style="color: var(--muted); font-size: 0.92rem; margin-bottom: 20px;">
+    Enter your institutional email and access credentials to access your financial treasury vault.
+  </p>
+
+  <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); padding: 14px 18px; border-radius: 6px; margin-bottom: 22px;">
+    <div style="font-size: 0.88rem; color: #fbbf24; font-weight: 600; margin-bottom: 4px;">
+      🎯 <strong>Lab Objective:</strong>
     </div>
-    <div class="form-group">
-      <label>Password</label>
-      <input type="password" name="password" required>
+    <div style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.5;">
+      Your goal is to achieve <strong>Full Account Takeover (ATO)</strong> of the executive administrator account (<code>admin@apexpay.io</code>, Account #100). You own account <code>carlos@apexpay.io</code> (Account #101, password: <code>carlos123</code>). Initiate the multi-step password reset flow, intercept the verification step in <strong>Burp Suite</strong> to exploit a <strong>BOLA (Broken Object Level Authorization)</strong> flaw, reset the Admin's password, and log in to capture the flag from the executive treasury vault.
     </div>
-    <button type="submit">Sign In</button>
-  </form>
+  </div>
+
+  {% if error %}
+  <div class="alert error" style="margin-bottom: 18px;">
+    {{ error }}
+  </div>
+  {% endif %}
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+    <form method="POST" action="/login">
+      <div class="form-group" style="margin-bottom: 14px;">
+        <label>Corporate Email</label>
+        <input type="text" name="email" value="carlos@apexpay.io" required>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 18px;">
+        <label>Account Password</label>
+        <input type="password" name="password" value="carlos123" required>
+      </div>
+
+      <button type="submit" class="btn" style="width: 100%;">Sign In to ApexPay</button>
+      
+      <div style="margin-top: 14px; text-align: center;">
+        <a href="/forgot-password" style="color: var(--amber); font-size: 0.85rem; text-decoration: none;">Forgot password or need recovery? →</a>
+      </div>
+    </form>
+
+    <div style="background: #110e18; border: 1px solid var(--border); padding: 20px; border-radius: 6px;">
+      <h3 style="color: #fff; font-size: 0.95rem; margin-bottom: 12px; text-transform: uppercase;">Known Target Accounts</h3>
+      <ul style="list-style: none; font-size: 0.85rem; color: var(--muted); line-height: 1.8;">
+        <li>• <strong>Target Victim:</strong> <code style="color: #fbbf24;">admin@apexpay.io</code> (Account #100)</li>
+        <li>• <strong>Attacker Account:</strong> <code>carlos@apexpay.io</code> (Account #101)</li>
+        <li>• <strong>Attacker Default Password:</strong> <code>carlos123</code></li>
+        <li>• <strong>Carlos Testing OTP:</strong> <code>654321</code></li>
+      </ul>
+    </div>
+  </div>
 </div>
 {% endblock %}

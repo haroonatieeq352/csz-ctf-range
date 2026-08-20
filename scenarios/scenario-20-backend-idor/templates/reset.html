@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+  <h2>🔄 Multi-Step Identity Recovery &amp; Password Reset</h2>
+  <p style="color: var(--muted); font-size: 0.92rem; margin-bottom: 20px;">
+    Institutional password reset requires 3-stage cryptographic verification: Request Session ➔ OTP Verification ➔ Set New Password.
+  </p>
+
+  <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); padding: 14px 18px; border-radius: 6px; margin-bottom: 22px;">
+    <div style="font-size: 0.88rem; color: #fbbf24; font-weight: 600; margin-bottom: 4px;">
+      💡 <strong>BOLA Pentesting Workflow:</strong>
+    </div>
+    <div style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.5;">
+      1. Request a password reset for your account <code>carlos@apexpay.io</code> (Account #101).<br>
+      2. In <strong>Step 2</strong>, enter Carlos's OTP (<code>654321</code>), but tamper with <code>"account_id": 100</code> (Admin) in the JSON request body.<br>
+      3. Use the leaked admin reset token in <strong>Step 3</strong> to set a new admin password, then log in!
+    </div>
+  </div>
+
+  <div id="resetAlert" style="display: none; margin-bottom: 20px; padding: 12px 16px; border-radius: 6px; font-size: 0.9rem;"></div>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+    <!-- Step 1: Request Reset -->
+    <div style="background: #110e18; border: 1px solid var(--border); padding: 20px; border-radius: 6px;">
+      <h3 style="color: #fbbf24; font-size: 1rem; margin-bottom: 12px;">Step 1: Request Reset Session</h3>
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label>Account Email</label>
+        <input type="text" id="step1_email" value="carlos@apexpay.io">
+      </div>
+      <button type="button" onclick="executeStep1()" class="btn" style="width: 100%; padding: 8px;">Request Reset OTP</button>
+    </div>
+
+    <!-- Step 2: Verify OTP & BOLA Parameter -->
+    <div style="background: #110e18; border: 1px solid var(--border); padding: 20px; border-radius: 6px;">
+      <h3 style="color: #fbbf24; font-size: 1rem; margin-bottom: 12px;">Step 2: Verify OTP (BOLA Vector)</h3>
+      <div class="form-group" style="margin-bottom: 8px;">
+        <label>Active Session Token</label>
+        <input type="text" id="step2_sess" placeholder="sess_..." readonly style="opacity: 0.8;">
+      </div>
+      <div class="form-group" style="margin-bottom: 8px;">
+        <label>6-Digit OTP Code</label>
+        <input type="text" id="step2_otp" value="654321">
+      </div>
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label>Target Account ID (BOLA Property)</label>
+        <input type="text" id="step2_account_id" value="101">
+      </div>
+      <button type="button" onclick="executeStep2()" class="btn" style="width: 100%; padding: 8px;">Verify Step 2</button>
+    </div>
+  </div>
+
+  <!-- Step 3: Set New Password -->
+  <div style="background: #110e18; border: 1px solid var(--border); padding: 20px; border-radius: 6px; margin-top: 24px;">
+    <h3 style="color: #fbbf24; font-size: 1rem; margin-bottom: 12px;">Step 3: Confirm New Password with Reset Token</h3>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+      <div class="form-group">
+        <label>Password Reset Token</label>
+        <input type="text" id="step3_token" placeholder="rst_tok_..." readonly style="opacity: 0.8;">
+      </div>
+      <div class="form-group">
+        <label>New Desired Password</label>
+        <input type="text" id="step3_password" value="PwnedAdminPassword123!">
+      </div>
+    </div>
+    <button type="button" onclick="executeStep3()" class="btn" style="width: 100%; padding: 10px; margin-top: 10px;">Apply New Password &amp; Complete ATO</button>
+  </div>
+</div>
+
+<script>
+  function showAlert(msg, isSuccess) {
+    const box = document.getElementById("resetAlert");
+    box.style.display = "block";
+    box.style.background = isSuccess ? "rgba(16, 185, 129, 0.15)" : "rgba(239, 68, 68, 0.15)";
+    box.style.border = isSuccess ? "1px solid rgba(16, 185, 129, 0.4)" : "1px solid rgba(239, 68, 68, 0.4)";
+    box.style.color = isSuccess ? "#34d399" : "#f87171";
+    box.innerText = msg;
+  }
+
+  function executeStep1() {
+    const email = document.getElementById("step1_email").value.trim();
+    fetch("/api/auth/forgot-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        document.getElementById("step2_sess").value = data.session_token;
+        showAlert("✓ Step 1 Success: " + data.message, true);
+      } else {
+        showAlert("✗ Step 1 Error: " + data.error, false);
+      }
+    });
+  }
+
+  function executeStep2() {
+    const sess = document.getElementById("step2_sess").value.trim();
+    const otp = document.getElementById("step2_otp").value.trim();
+    const accId = parseInt(document.getElementById("step2_account_id").value.trim());
+
+    fetch("/api/auth/verify-reset-step", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session_token: sess, otp: otp, account_id: accId })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        document.getElementById("step3_token").value = data.reset_token;
+        showAlert(`✓ Step 2 BOLA Success: Password reset token issued for account #${data.account_id} (${data.email})!`, true);
+      } else {
+        showAlert("✗ Step 2 Error: " + data.error, false);
+      }
+    });
+  }
+
+  function executeStep3() {
+    const tok = document.getElementById("step3_token").value.trim();
+    const pass = document.getElementById("step3_password").value.trim();
+
+    fetch("/api/auth/confirm-new-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reset_token: tok, new_password: pass })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        showAlert("✓ Step 3 Success: " + data.message + " Redirecting to login...", true);
+        setTimeout(() => { window.location.href = "/login"; }, 2000);
+      } else {
+        showAlert("✗ Step 3 Error: " + data.error, false);
+      }
+    });
+  }
+</script>
+{% endblock %}
