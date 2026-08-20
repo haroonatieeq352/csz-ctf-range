@@ -1,22 +1,20 @@
 #!/usr/bin/env python3
 """
-CSZone CTF Range — Scenario 15: Server-Side Request Forgery (SSRF)
-Port: 8015
+CSZone CTF Range — Scenario 19: RESTful HTTP Verb Tampering & Multi-Tenant IDOR
+Port: 8019
 """
 import os
 import sys
 import sqlite3
-import requests
-from functools import wraps
 from flask import Flask, request, session, redirect, url_for, render_template, jsonify
-from werkzeug.security import generate_password_hash, check_password_hash
 
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8019
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "scenario19.db")
 
 app = Flask(__name__)
-app.secret_key = "scenario-19-secret-key"
+app.secret_key = "scenario-19-verb-tamper-secret-key"
+FLAG_SECRET = "CTF{v3rb_t4mp3r1ng_t3n4nt_byp4ss}"
 
 def get_conn():
     return sqlite3.connect(DB_PATH)
@@ -24,102 +22,125 @@ def get_conn():
 def init_db():
     conn = get_conn()
     cur = conn.cursor()
-    cur.execute("DROP TABLE IF EXISTS users;")
+    cur.execute("DROP TABLE IF EXISTS workspaces;")
     cur.execute("""
-        CREATE TABLE users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            email TEXT NOT NULL
+        CREATE TABLE workspaces (
+            tenant_id TEXT PRIMARY KEY,
+            org_name TEXT NOT NULL,
+            owner_email TEXT NOT NULL,
+            tier_plan TEXT NOT NULL,
+            region TEXT NOT NULL,
+            compliance_mode TEXT DEFAULT 'standard',
+            master_secret_key TEXT NOT NULL
         );
+    """)
+    # Tenant 1: Carlos (User's workspace)
+    cur.execute("""
+        INSERT INTO workspaces (tenant_id, org_name, owner_email, tier_plan, region, compliance_mode, master_secret_key)
+        VALUES ('tenant-12-carlos', 'Carlos Personal Workspace', 'carlos@nexatenant.io', 'Free Developer Tier', 'us-east-1', 'standard', 'sec_key_carlos_dev_99182');
+    """)
+    # Tenant 2: Target Enterprise Tenant
+    cur.execute("""
+        INSERT INTO workspaces (tenant_id, org_name, owner_email, tier_plan, region, compliance_mode, master_secret_key)
+        VALUES ('tenant-99-enterprise', 'Apex Financial Global Corp', 'director@apexfinancial.com', 'Tier 1 Enterprise Sovereign', 'eu-central-1', 'strict', 'CTF{v3rb_t4mp3r1ng_t3n4nt_byp4ss}');
     """)
     conn.commit()
     conn.close()
 
-def login_required(view):
-    @wraps(view)
-    def wrapped(*a, **kw):
-        if not session.get("user_id"):
-            return redirect(url_for("login"))
-        return view(*a, **kw)
-    return wrapped
+@app.before_request
+def ensure_session():
+    if "my_tenant" not in session:
+        session["my_tenant"] = "tenant-12-carlos"
+        session["user_email"] = "carlos@nexatenant.io"
 
 @app.route("/")
-def index():
-    if session.get("user_id"):
-        return redirect(url_for("avatar_import"))
-    return redirect(url_for("login"))
+@app.route("/workspaces")
+def workspaces_view():
+    conn = get_conn()
+    my_ws = conn.execute("SELECT tenant_id, org_name, owner_email, tier_plan, region, compliance_mode, master_secret_key FROM workspaces WHERE tenant_id = 'tenant-12-carlos'").fetchone()
+    all_tenants = conn.execute("SELECT tenant_id, org_name, tier_plan, region FROM workspaces ORDER BY tenant_id ASC").fetchall()
+    conn.close()
+    return render_template("workspace.html", workspace=my_ws, tenants=all_tenants)
 
-@app.route("/register", methods=["GET", "POST"])
-def register():
-    error = None
-    if request.method == "POST":
-        username = request.form.get("username", "").strip()
-        email = request.form.get("email", "").strip()
-        password = request.form.get("password", "")
-        if not username or not email or not password:
-            error = "All fields required."
-        else:
-            conn = get_conn()
-            try:
-                conn.execute("INSERT INTO users (username, password_hash, email) VALUES (?, ?, ?)",
-                             (username, generate_password_hash(password), email))
-                conn.commit()
-                conn.close()
-                return redirect(url_for("login"))
-            except sqlite3.IntegrityError:
-                error = "Username already taken."
-            conn.close()
-    return render_template("register.html", error=error)
-
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    error = None
-    if request.method == "POST":
-        username = request.form.get("username", "").strip()
-        password = request.form.get("password", "")
-        conn = get_conn()
-        cur = conn.cursor()
-        cur.execute("SELECT id, username, password_hash FROM users WHERE username = ?", (username,))
-        row = cur.fetchone()
+# RESTful Multi-Tenant API Route
+@app.route("/api/workspaces/<tenant_id>/settings", methods=["GET", "PUT", "PATCH", "POST"])
+def api_workspace_settings(tenant_id):
+    conn = get_conn()
+    ws = conn.execute("SELECT tenant_id, org_name, owner_email, tier_plan, region, compliance_mode, master_secret_key FROM workspaces WHERE tenant_id = ?", (tenant_id,)).fetchone()
+    
+    if not ws:
         conn.close()
-        if row and check_password_hash(row[2], password):
-            session["user_id"] = row[0]
-            session["username"] = row[1]
-            return redirect(url_for("avatar_import"))
-        error = "Invalid credentials."
-    return render_template("login.html", error=error)
+        return jsonify({"success": False, "error": f"Tenant '{tenant_id}' not found"}), 404
 
-@app.route("/logout")
-def logout():
-    session.clear()
-    return redirect(url_for("login"))
+    # GET REQUEST: Strictly checks cross-tenant authorization
+    if request.method == "GET":
+        my_tenant = session.get("my_tenant", "tenant-12-carlos")
+        if tenant_id != my_tenant:
+            conn.close()
+            # 403 Forbidden on GET!
+            return jsonify({
+                "success": False,
+                "error": "403 Forbidden: Cross-tenant read access is strictly denied by the API Gateway Security Filter."
+            }), 403
 
-@app.route("/avatar-import", methods=["GET", "POST"])
-@login_required
-def avatar_import():
-    result = None
-    error = None
-    if request.method == "POST":
-        url = request.form.get("url", "").strip()
-        try:
-            # VULN (SSRF): Arbitrary server-side request without IP restrictions
-            resp = requests.get(url, timeout=3)
-            result = resp.text[:2000]
-        except Exception as e:
-            error = f"Fetch failed: {e}"
-    return render_template("avatar_import.html", result=result, error=error)
+        conn.close()
+        return jsonify({
+            "success": True,
+            "tenant": {
+                "tenant_id": ws[0],
+                "org_name": ws[1],
+                "owner_email": ws[2],
+                "tier_plan": ws[3],
+                "region": ws[4],
+                "compliance_mode": ws[5],
+                "master_secret_key": ws[6]
+            }
+        })
 
-@app.route("/internal/metadata")
-def internal_metadata():
-    if request.remote_addr not in ("127.0.0.1", "::1", "localhost"):
-        return "Forbidden — internal service only.", 403
-    return jsonify({
-        "service": "internal-cloud-metadata",
-        "build": "range-backend-1.0.0",
-        "flag": "CTF{ssrf_1nt3rn4l_m3t4d4t4}",
-        "access_scope": "node-internal"
-    })
+    # VULNERABILITY (HTTP Verb Tampering / BOLA):
+    # Developers forgot to bind the cross-tenant ownership check to PUT / PATCH methods!
+    if request.method in ["PUT", "PATCH"]:
+        data = request.get_json(force=True, silent=True) or request.form.to_dict() or {}
+        new_region = data.get("region", ws[4])
+        new_compliance = data.get("compliance_mode", ws[5])
+        
+        conn.execute("""
+            UPDATE workspaces 
+            SET region = ?, compliance_mode = ? 
+            WHERE tenant_id = ?
+        """, (new_region, new_compliance, tenant_id))
+        conn.commit()
+
+        updated = conn.execute("SELECT tenant_id, org_name, owner_email, tier_plan, region, compliance_mode, master_secret_key FROM workspaces WHERE tenant_id = ?", (tenant_id,)).fetchone()
+        conn.close()
+
+        # Returns updated object including master_secret_key (disclosing the CTF flag for target tenant)
+        return jsonify({
+            "success": True,
+            "message": f"Workspace settings for '{tenant_id}' modified successfully via HTTP {request.method}.",
+            "tenant": {
+                "tenant_id": updated[0],
+                "org_name": updated[1],
+                "owner_email": updated[2],
+                "tier_plan": updated[3],
+                "region": updated[4],
+                "compliance_mode": updated[5],
+                "master_secret_key": updated[6]
+            }
+        })
+
+    conn.close()
+    return jsonify({"success": False, "error": f"Method {request.method} not allowed"}), 405
+
+@app.route("/api/flag")
+def api_flag():
+    return jsonify({"success": True, "flag": FLAG_SECRET})
+
+@app.route("/reset", methods=["GET", "POST"])
+@app.route("/api/reset", methods=["GET", "POST"])
+def reset_view():
+    init_db()
+    return redirect(url_for("workspaces_view"))
 
 if __name__ == "__main__":
     init_db()
