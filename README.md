@@ -88,11 +88,11 @@ sudo ufw reload
 | **`8013`** | Scenario 13: Stored Attribute XSS | Cross-Site Scripting | `CTF{st0r3d_4ttr1but3_br34k0ut}` |
 | **`8014`** | Scenario 14: DOM-based XSS | Cross-Site Scripting | `CTF{d0m_xss_s1nk_m4st3r}` |
 | **`8015`** | Scenario 15: WAF Bypass XSS | Cross-Site Scripting | `CTF{w4f_byp4ss_h5_v3ct0r}` |
-| **`8016`** | Scenario 16: SQLi & Stored XSS | Chained Exploit | `CTF{st0r3d_c00k13_th3ft}` |
-| **`8017`** | Scenario 17: CSRF Account Email | CSRF | `CTF{csrf_n0_t0k3n_pwn3d}` |
-| **`8018`** | Scenario 18: File Upload & XSS | File Upload | Stored Client Script Execution |
-| **`8019`** | Scenario 19: SSRF Metadata | SSRF | `CTF{ssrf_1nt3rn4l_m3t4d4t4}` |
-| **`8020`** | Scenario 20: Backend IDOR Orders | Access Control | `CTF{b4ck3nd_1d0r_r34l}` |
+| **`8016`** | Scenario 16: INSERT SQLi to Stored XSS Chain | Chained Exploit | `CTF{1ns3rt_sqli_t0_st0r3d_xss_ch41n}` |
+| **`8017`** | Scenario 17: Mass Assignment & Profile IDOR | IDOR / BOPLA | `CTF{m4ss_4ss1gnm3nt_pr0f1l3_0v3rwr1t3}` |
+| **`8018`** | Scenario 18: UUID Identifier Leakage IDOR | IDOR / UUID | `CTF{uu1d_l34k_d0cum3nt_v4ult}` |
+| **`8019`** | Scenario 19: HTTP Verb Tampering Multi-Tenant IDOR | IDOR / Verb Tampering | `CTF{v3rb_t4mp3r1ng_t3n4nt_byp4ss}` |
+| **`8020`** | Scenario 20: BOLA Password Reset ATO | API Security / BOLA | `CTF{b0l4_p4ssw0rd_r3s3t_4cc0unt_t4k30v3r}` |
 | **`8021`** | Scenario 21: Web Cache Attacks | Cache Attacks | `CTF{c4ch3_d3c3pt10n_l34k}` |
 
 ---

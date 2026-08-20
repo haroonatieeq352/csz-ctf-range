@@ -46,7 +46,7 @@ Thumbs.db
 *.log
 
 # Dynamic runtime test uploads (preserve directory structure via .gitkeep)
-scenarios/scenario-14-file-upload/static/uploads/*
-!scenarios/scenario-14-file-upload/static/uploads/.gitkeep
+scenarios/scenario-18-file-upload/static/uploads/*
+!scenarios/scenario-18-file-upload/static/uploads/.gitkeep
 backend/static/uploads/*
 !backend/static/uploads/.gitkeep

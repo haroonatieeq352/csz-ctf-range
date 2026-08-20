@@ -35,10 +35,10 @@ SCENARIO_CONFIGS = [
     {"name": "Scenario 14 (DOM-based XSS)", "dir": "scenario-14-xss-dom", "script": "app.py", "port": 8014},
     {"name": "Scenario 15 (WAF Bypass XSS)", "dir": "scenario-15-xss-waf-bypass", "script": "app.py", "port": 8015},
     {"name": "Scenario 16 (SQLi + Stored XSS Chain)", "dir": "scenario-16-admin-stored-xss", "script": "app.py", "port": 8016},
-    {"name": "Scenario 17 (CSRF Account Email)", "dir": "scenario-17-csrf-account", "script": "app.py", "port": 8017},
-    {"name": "Scenario 18 (Unrestricted Upload)", "dir": "scenario-18-file-upload", "script": "app.py", "port": 8018},
-    {"name": "Scenario 19 (SSRF Internal Metadata)", "dir": "scenario-19-ssrf-metadata", "script": "app.py", "port": 8019},
-    {"name": "Scenario 20 (Backend IDOR Orders)", "dir": "scenario-20-backend-idor", "script": "app.py", "port": 8020},
+    {"name": "Scenario 17 (Mass Assignment IDOR)", "dir": "scenario-17-csrf-account", "script": "app.py", "port": 8017},
+    {"name": "Scenario 18 (UUID Leakage IDOR)", "dir": "scenario-18-file-upload", "script": "app.py", "port": 8018},
+    {"name": "Scenario 19 (Verb Tampering IDOR)", "dir": "scenario-19-ssrf-metadata", "script": "app.py", "port": 8019},
+    {"name": "Scenario 20 (BOLA Password Reset ATO)", "dir": "scenario-20-backend-idor", "script": "app.py", "port": 8020},
     {"name": "Scenario 21 (Cache Deception & Poison)", "dir": "scenario-21-cache-attacks", "script": "app.py", "port": 8021},
 ]
 

