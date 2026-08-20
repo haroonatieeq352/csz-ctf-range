@@ -298,6 +298,8 @@ def main():
         # Test 5: Dynamic API Flag Release
         flag_s16 = s16.get(f"http://{HOST}:8016/api/flag", timeout=3).json().get("flag")
         check("S16: Flag verified & released via chained execution", flag_s16 == "CTF{1ns3rt_sqli_t0_st0r3d_xss_ch41n}")
+        # Reset database after test so it leaves clean state for manual user training
+        requests.get(f"http://{HOST}:8016/reset", timeout=3)
         print(f"     -> Flag: {flag_s16}")
     except Exception as e:
         check(f"S16 Connection failed: {e}", False)
@@ -323,6 +325,8 @@ def main():
         r17_admin = s17.get(f"http://{HOST}:8017/admin/dashboard", timeout=3)
         flag_s17 = extract_flag(r17_admin.text)
         check("S17: Executive console accessible and flag released", flag_s17 == "CTF{m4ss_4ss1gnm3nt_pr0f1l3_0v3rwr1t3}")
+        # Reset database after test so it leaves clean state for manual user training
+        requests.get(f"http://{HOST}:8017/reset", timeout=3)
         print(f"     -> Flag: {flag_s17}")
     except Exception as e:
         check(f"S17 Connection failed: {e}", False)
@@ -363,6 +367,8 @@ def main():
         }, timeout=3).json()
         flag_s19 = r19_put.get("tenant", {}).get("master_secret_key")
         check("S19: HTTP Verb Tampering unlocks sovereign tenant master key", flag_s19 == "CTF{v3rb_t4mp3r1ng_t3n4nt_byp4ss}")
+        # Reset database after test so it leaves clean state for manual user training
+        requests.get(f"http://{HOST}:8019/reset", timeout=3)
         print(f"     -> Flag: {flag_s19}")
     except Exception as e:
         check(f"S19 Connection failed: {e}", False)
@@ -398,6 +404,8 @@ def main():
         r20_login = s20_admin.post(f"http://{HOST}:8020/login", data={"email": "admin@apexpay.io", "password": new_pwd}, allow_redirects=True, timeout=3)
         flag_s20 = extract_flag(r20_login.text)
         check("S20: Full Account Takeover (ATO) grants executive vault flag", flag_s20 == "CTF{b0l4_p4ssw0rd_r3s3t_4cc0unt_t4k30v3r}")
+        # Reset database after test so it leaves clean state for manual user training
+        requests.get(f"http://{HOST}:8020/reset", timeout=3)
         print(f"     -> Flag: {flag_s20}")
     except Exception as e:
         check(f"S20 Connection failed: {e}", False)
@@ -418,6 +426,8 @@ def main():
         requests.get(f"http://{HOST}:8021/promo/partner-banner", headers={"X-Forwarded-Host": poison_host}, timeout=3)
         r21_clean = requests.get(f"http://{HOST}:8021/promo/partner-banner", timeout=3)
         check("S21: Unkeyed X-Forwarded-Host poisons shared cache", poison_host in r21_clean.text and r21_clean.headers.get("X-Cache") == "HIT")
+        # Reset cache and database after test
+        requests.get(f"http://{HOST}:8021/reset", timeout=3)
         print(f"     -> Flag: {flag_s21}")
     except Exception as e:
         check(f"S21 Connection failed: {e}", False)
