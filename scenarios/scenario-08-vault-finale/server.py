@@ -139,9 +139,9 @@ class Scenario08Handler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(body)
 
 if __name__ == "__main__":
-    socketserver.TCPServer.allow_reuse_address = True
-    with socketserver.TCPServer(("0.0.0.0", PORT), Scenario08Handler) as httpd:
-        print(f"[*] Scenario 08 running on http://localhost:{PORT}")
+    socketserver.ThreadingTCPServer.allow_reuse_address = True
+    with socketserver.ThreadingTCPServer(("0.0.0.0", PORT), Scenario08Handler) as httpd:
+        print(f"[*] Scenario 08 Central Security Vault running on http://localhost:{PORT}")
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:

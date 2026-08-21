@@ -21,15 +21,27 @@ To solve this lab, discover the leaked executive document UUID from the activity
 
 ## Exploitation Walkthrough (Burp Suite & Browser Methodology)
 
-### 1. Reconnaissance & UUID Discovery
+### 1. Reconnaissance & Telemetry Decoding
 1. Navigate to the Public Activity & Audit Feed:
    ```text
    http://localhost:8018/activity
    ```
-   *(Or via API: `GET http://localhost:8018/api/public/audit-feed`)*
-2. Locate the audit entry created by the **Chief Security Officer**:
-   - **Transaction:** *Encrypted and deposited high-clearance executive audit report*
-   - **Leaked UUID:** `8f9b2c34-91a0-4d5e-88fc-3176d1e49e22`
+   *(Or query the JSON API: `GET http://localhost:8018/api/public/audit-feed`)*
+2. Locate the audit entry created by the **Chief Security Officer** (Transaction Ref: `TX-SEC-9841`).
+3. Click **"🔍 Inspect Telemetry"** (or inspect `telemetry_token` in the API response):
+   ```text
+   eyJkb2NfdXVpZCI6ICI4ZjliMmMzNC05MWEwLTRkNWUtODhmYy0zMTc2ZDFlNDllMjIiLCAiYWN0b3IiOiAiQ2hpZWYgU2VjdXJpdHkgT2ZmaWNlciIsICJyb2xlIjogIkV4ZWN1dGl2ZSBBZG1pbmlzdHJhdG9yIiwgInZhdWx0X3BvbGljeSI6ICJjbGFzc2lmaWVkX2hpZ2hfY2xlYXJhbmNlIiwgInNpZ25hdHVyZSI6ICJzaWdfc2VjXzhmOWIyYzM0In0=
+   ```
+4. Base64-decode the telemetry token (via CyberChef, browser console `atob(...)`, or terminal `echo "<token>" | base64 -d`):
+   ```json
+   {
+     "doc_uuid": "8f9b2c34-91a0-4d5e-88fc-3176d1e49e22",
+     "actor": "Chief Security Officer",
+     "role": "Executive Administrator",
+     "vault_policy": "classified_high_clearance"
+   }
+   ```
+5. Extract the recovered document UUID: `8f9b2c34-91a0-4d5e-88fc-3176d1e49e22`.
 
 ### 2. Exploiting the IDOR Endpoint
 1. Return to your vault and inspect how your standard document is viewed:

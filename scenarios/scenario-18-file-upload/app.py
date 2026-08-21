@@ -8,6 +8,9 @@ import sys
 import sqlite3
 from flask import Flask, request, session, redirect, url_for, render_template, jsonify
 
+import base64
+import json
+
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8018
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "scenario18.db")
@@ -40,7 +43,9 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             actor TEXT NOT NULL,
             action_desc TEXT NOT NULL,
-            object_uuid TEXT,
+            tx_ref TEXT NOT NULL,
+            object_uuid TEXT NOT NULL,
+            telemetry_payload TEXT NOT NULL,
             timestamp TEXT DEFAULT CURRENT_TIMESTAMP
         );
     """)
@@ -59,19 +64,44 @@ def init_db():
         'CONFIDENTIAL EXECUTIVE BRIEFING:\nMaster Encryption Key and Security Token: CTF{uu1d_l34k_d0cum3nt_v4ult}\nAuthorized clearance only.');
     """)
 
-    # Public audit activity feed (Leaks executive document UUID)
+    # Obfuscated Base64 Telemetry Payloads
+    carlos_meta = base64.b64encode(json.dumps({
+        "doc_uuid": "7b1e4a90-3c21-4f88-9d10-8812a4f61e01",
+        "actor": "carlos",
+        "role": "Standard Employee",
+        "vault_policy": "public_read_default",
+        "signature": "sig_usr_7b1e4a90"
+    }).encode("utf-8")).decode("utf-8")
+
+    cso_meta = base64.b64encode(json.dumps({
+        "doc_uuid": "8f9b2c34-91a0-4d5e-88fc-3176d1e49e22",
+        "actor": "Chief Security Officer",
+        "role": "Executive Administrator",
+        "vault_policy": "classified_high_clearance",
+        "signature": "sig_sec_8f9b2c34"
+    }).encode("utf-8")).decode("utf-8")
+
+    daemon_meta = base64.b64encode(json.dumps({
+        "doc_uuid": "7b1e4a90-3c21-4f88-9d10-8812a4f61e01",
+        "actor": "System Daemon",
+        "role": "Vault Storage Worker",
+        "vault_policy": "automated_pass_sync",
+        "signature": "sig_sys_3c214f88"
+    }).encode("utf-8")).decode("utf-8")
+
+    # Public audit activity feed (Contains obfuscated telemetry leaking executive document UUID)
     cur.execute("""
-        INSERT INTO audit_activity (actor, action_desc, object_uuid, timestamp)
-        VALUES ('System Daemon', 'Automated nightly encryption pass on vault storage', '7b1e4a90-3c21-4f88-9d10-8812a4f61e01', '2026-08-19 14:02:11');
-    """)
+        INSERT INTO audit_activity (actor, action_desc, tx_ref, object_uuid, telemetry_payload, timestamp)
+        VALUES ('System Daemon', 'Automated nightly encryption pass on vault storage', 'TX-SYS-1402', '7b1e4a90-3c21-4f88-9d10-8812a4f61e01', ?, '2026-08-19 14:02:11');
+    """, (daemon_meta,))
     cur.execute("""
-        INSERT INTO audit_activity (actor, action_desc, object_uuid, timestamp)
-        VALUES ('Chief Security Officer', 'Encrypted and deposited high-clearance executive audit report', '8f9b2c34-91a0-4d5e-88fc-3176d1e49e22', '2026-08-19 15:45:30');
-    """)
+        INSERT INTO audit_activity (actor, action_desc, tx_ref, object_uuid, telemetry_payload, timestamp)
+        VALUES ('Chief Security Officer', 'Encrypted and deposited high-clearance executive audit report', 'TX-SEC-9841', '8f9b2c34-91a0-4d5e-88fc-3176d1e49e22', ?, '2026-08-19 15:45:30');
+    """, (cso_meta,))
     cur.execute("""
-        INSERT INTO audit_activity (actor, action_desc, object_uuid, timestamp)
-        VALUES ('carlos', 'Downloaded onboarding guidelines', '7b1e4a90-3c21-4f88-9d10-8812a4f61e01', '2026-08-19 16:10:05');
-    """)
+        INSERT INTO audit_activity (actor, action_desc, tx_ref, object_uuid, telemetry_payload, timestamp)
+        VALUES ('carlos', 'Downloaded onboarding guidelines', 'TX-USR-1610', '7b1e4a90-3c21-4f88-9d10-8812a4f61e01', ?, '2026-08-19 16:10:05');
+    """, (carlos_meta,))
 
     conn.commit()
     conn.close()
@@ -92,23 +122,24 @@ def vault_view():
 @app.route("/activity")
 def activity_view():
     conn = get_conn()
-    activities = conn.execute("SELECT actor, action_desc, object_uuid, timestamp FROM audit_activity ORDER BY id DESC").fetchall()
+    activities = conn.execute("SELECT actor, action_desc, tx_ref, telemetry_payload, timestamp FROM audit_activity ORDER BY id DESC").fetchall()
     conn.close()
     return render_template("activity.html", activities=activities)
 
 @app.route("/api/public/audit-feed")
 def api_audit_feed():
     conn = get_conn()
-    activities = conn.execute("SELECT actor, action_desc, object_uuid, timestamp FROM audit_activity ORDER BY id DESC").fetchall()
+    activities = conn.execute("SELECT actor, action_desc, tx_ref, telemetry_payload, timestamp FROM audit_activity ORDER BY id DESC").fetchall()
     conn.close()
     return jsonify({
         "success": True,
         "feed": [
             {
+                "timestamp": a[4],
                 "actor": a[0],
                 "action": a[1],
-                "doc_uuid": a[2],
-                "timestamp": a[3]
+                "tx_ref": a[2],
+                "telemetry_token": a[3]
             } for a in activities
         ]
     })

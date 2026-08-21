@@ -180,9 +180,10 @@ This guide documents the full 21-port modular architecture for the CSZone CTF Ra
 - **URL:** `http://<host>:8018/vault`
 - **Steps:**
   1. Inspect Public Activity & Audit Feed at `http://<host>:8018/activity` (or `GET /api/public/audit-feed`).
-  2. Discover leaked Chief Security Officer document UUID: `8f9b2c34-91a0-4d5e-88fc-3176d1e49e22`.
-  3. Exploit IDOR endpoint: `http://<host>:8018/vault/view?doc_id=8f9b2c34-91a0-4d5e-88fc-3176d1e49e22` (or `GET /api/documents/download?doc_id=...`).
-  4. Download classified document and extract flag: `CTF{uu1d_l34k_d0cum3nt_v4ult}`.
+  2. Click **"🔍 Inspect Telemetry"** on Chief Security Officer's event (`TX-SEC-9841`) to view the raw JSON event.
+  3. Base64-decode the `telemetry_token` payload to recover the leaked document UUID: `8f9b2c34-91a0-4d5e-88fc-3176d1e49e22`.
+  4. Exploit IDOR endpoint: `http://<host>:8018/vault/view?doc_id=8f9b2c34-91a0-4d5e-88fc-3176d1e49e22` (or `GET /api/documents/download?doc_id=...`).
+  5. Download classified document and extract flag: `CTF{uu1d_l34k_d0cum3nt_v4ult}`.
 
 ### Scenario 19 (Port 8019) — RESTful HTTP Verb Tampering & Multi-Tenant IDOR
 - **URL:** `http://<host>:8019/workspaces`

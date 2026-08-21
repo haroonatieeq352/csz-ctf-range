@@ -26,9 +26,9 @@ class CentralHubHandler(http.server.SimpleHTTPRequestHandler):
         super().end_headers()
 
 if __name__ == "__main__":
-    socketserver.TCPServer.allow_reuse_address = True
-    with socketserver.TCPServer(("0.0.0.0", PORT), CentralHubHandler) as httpd:
-        print(f"[*] CSZone Central Operations Hub active on http://localhost:{PORT} (http://127.0.0.1:{PORT})")
+    socketserver.ThreadingTCPServer.allow_reuse_address = True
+    with socketserver.ThreadingTCPServer(("0.0.0.0", PORT), CentralHubHandler) as httpd:
+        print(f"[*] Central Operations Hub running on http://localhost:{PORT}")
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:
