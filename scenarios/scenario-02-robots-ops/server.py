@@ -70,8 +70,8 @@ class Scenario02Handler(http.server.SimpleHTTPRequestHandler):
         super().do_GET()
 
 if __name__ == "__main__":
-    socketserver.TCPServer.allow_reuse_address = True
-    with socketserver.TCPServer(("0.0.0.0", PORT), Scenario02Handler) as httpd:
+    socketserver.ThreadingTCPServer.allow_reuse_address = True
+    with socketserver.ThreadingTCPServer(("0.0.0.0", PORT), Scenario02Handler) as httpd:
         print(f"[*] Scenario 02 running on http://localhost:{PORT}")
         try:
             httpd.serve_forever()

@@ -147,8 +147,8 @@ class Scenario07Handler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(body)
 
 if __name__ == "__main__":
-    socketserver.TCPServer.allow_reuse_address = True
-    with socketserver.TCPServer(("0.0.0.0", PORT), Scenario07Handler) as httpd:
+    socketserver.ThreadingTCPServer.allow_reuse_address = True
+    with socketserver.ThreadingTCPServer(("0.0.0.0", PORT), Scenario07Handler) as httpd:
         print(f"[*] Scenario 07 running on http://localhost:{PORT}")
         try:
             httpd.serve_forever()

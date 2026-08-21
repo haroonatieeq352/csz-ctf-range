@@ -3,32 +3,38 @@
 {% block content %}
 <div class="card">
   <h2>📡 Enterprise Public Activity &amp; Audit Feed</h2>
-  <p style="color: var(--muted); font-size: 0.92rem; margin-bottom: 20px;">
+  <p style="color: var(--muted); font-size: 0.92rem; margin-bottom: 16px;">
     System-wide collaborative audit log and ingestion activity feed. Broadcasts real-time document transactions across departments. Available via REST API at <code>GET /api/public/audit-feed</code>.
   </p>
+
+  <div style="background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.25); padding: 12px 18px; border-radius: 6px; margin-bottom: 20px; font-size: 0.85rem; color: #cbd5e1; line-height: 1.5;">
+    💡 <strong>Reconnaissance Insight:</strong> Audit log transactions contain Base64-encoded ingestion telemetry tokens with internal document metadata. Inspect the raw transaction events or consume the public API feed to discover hidden object parameters.
+  </div>
 
   <div class="table-container">
     <table>
       <thead>
         <tr>
           <th>Timestamp</th>
-          <th>Actor / User</th>
+          <th>Actor / Identity</th>
           <th>Transaction &amp; Activity Details</th>
-          <th>Leaked Reference UUID</th>
+          <th>Tx Reference</th>
+          <th>Telemetry Packet</th>
         </tr>
       </thead>
       <tbody>
         {% for a in activities %}
         <tr>
-          <td style="font-size: 0.82rem; color: var(--muted); white-space: nowrap;">{{ a[3] }}</td>
+          <td style="font-size: 0.82rem; color: var(--muted); white-space: nowrap;">{{ a[4] }}</td>
           <td style="font-weight: 600; color: #fff;">{{ a[0] }}</td>
           <td>{{ a[1] }}</td>
           <td>
-            {% if a[0] == 'Chief Security Officer' %}
-              <code style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35);">{{ a[2] }}</code>
-            {% else %}
-              <code>{{ a[2] }}</code>
-            {% endif %}
+            <span class="tx-badge">{{ a[2] }}</span>
+          </td>
+          <td>
+            <button type="button" class="btn-inspect" onclick="openTelemetry({{ a[2]|tojson }}, {{ a[0]|tojson }}, {{ a[1]|tojson }}, {{ a[4]|tojson }}, {{ a[3]|tojson }})">
+              🔍 Inspect Telemetry
+            </button>
           </td>
         </tr>
         {% endfor %}
@@ -36,4 +42,81 @@
     </table>
   </div>
 </div>
+
+<!-- Telemetry Inspector Modal -->
+<div id="telemetryModal" class="modal-overlay" onclick="closeModalOnBackdrop(event)">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title">
+        <span>📡</span>
+        <span id="modalTxTitle">Transaction Ingestion Telemetry</span>
+      </div>
+      <button type="button" class="modal-close-btn" onclick="closeTelemetryModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size: 0.84rem; color: var(--muted); margin-bottom: 10px;">
+        Ingested event packet captured by CloudVault logging daemon:
+      </div>
+      <pre id="modalJsonDisplay" class="modal-raw-json"></pre>
+    </div>
+    <div class="modal-footer">
+      <button type="button" id="copyTokenBtn" class="btn" style="background: #252030; color: #fff; border: 1px solid #3d344d; font-size: 0.82rem; padding: 8px 14px;" onclick="copyTelemetryToken()">
+        📋 Copy Token
+      </button>
+      <button type="button" class="btn" style="font-size: 0.82rem; padding: 8px 16px;" onclick="closeTelemetryModal()">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentToken = '';
+
+function openTelemetry(txRef, actor, action, timestamp, token) {
+  currentToken = token;
+  document.getElementById('modalTxTitle').innerText = 'Telemetry Inspector — ' + txRef;
+  
+  const payloadObj = {
+    "transaction_ref": txRef,
+    "actor": actor,
+    "action": action,
+    "timestamp": timestamp,
+    "pipeline_status": "COMMITTED",
+    "telemetry_token": token
+  };
+  
+  document.getElementById('modalJsonDisplay').innerText = JSON.stringify(payloadObj, null, 2);
+  document.getElementById('copyTokenBtn').innerText = '📋 Copy Token';
+  document.getElementById('telemetryModal').classList.add('active');
+}
+
+function closeTelemetryModal() {
+  document.getElementById('telemetryModal').classList.remove('active');
+}
+
+function closeModalOnBackdrop(e) {
+  if (e.target.id === 'telemetryModal') {
+    closeTelemetryModal();
+  }
+}
+
+function copyTelemetryToken() {
+  if (currentToken) {
+    navigator.clipboard.writeText(currentToken).then(() => {
+      const btn = document.getElementById('copyTokenBtn');
+      btn.innerText = '✅ Token Copied!';
+      setTimeout(() => {
+        btn.innerText = '📋 Copy Token';
+      }, 2000);
+    });
+  }
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closeTelemetryModal();
+  }
+});
+</script>
 {% endblock %}

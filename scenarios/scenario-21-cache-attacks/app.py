@@ -164,6 +164,15 @@ def promo_partner_banner():
     canonical_url = f"https://{forwarded_host}/promo/partner-banner"
     return render_template("cache_promo.html", canonical_url=canonical_url)
 
+@app.route("/reset", methods=["GET", "POST"])
+@app.route("/api/reset", methods=["GET", "POST"])
+def reset_view():
+    global _CACHE
+    _CACHE.clear()
+    init_db()
+    session.clear()
+    return redirect(url_for("login"))
+
 if __name__ == "__main__":
     init_db()
     print(f"[*] Scenario 21 running on http://localhost:{PORT}")

@@ -150,8 +150,8 @@ def admin_dashboard():
     conn.close()
 
     if user and (user[2] == "admin" or user[3] == 1):
-        return render_template("admin.html", user=user, flag=FLAG_SECRET)
-    return render_template("admin.html", error="Access Denied: Administrator or VIP clearance required.", user=user)
+        return render_template("admin.html", user=user, flag=FLAG_SECRET, is_solved=True)
+    return render_template("admin.html", error="Access Denied: Administrator or VIP clearance required.", user=user, is_solved=False), 403
 
 @app.route("/api/flag")
 def api_flag():

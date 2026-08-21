@@ -387,7 +387,7 @@ class CTFHandler(http.server.SimpleHTTPRequestHandler):
 def main():
     os.chdir(SERVE_DIR)
 
-    socketserver.TCPServer.allow_reuse_address = True
+    socketserver.ThreadingTCPServer.allow_reuse_address = True
 
     with http.server.ThreadingHTTPServer(("", PORT), CTFHandler) as httpd:
         print(f"\n  CSZone CTF Range - Secure Dev Server")

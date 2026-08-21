@@ -12,7 +12,7 @@
       🎯 <strong>Lab Objective:</strong>
     </div>
     <div style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.5;">
-      You are logged in as <strong>Carlos</strong>. The Chief Security Officer recently uploaded a classified audit report using an unpredictable UUID. Find the leaked executive document UUID by inspecting the <strong>Public Activity &amp; Audit Feed</strong>, then exploit an IDOR on the document viewer endpoint to download the classified file and extract the CTF flag.
+      You are logged in as <strong>Carlos</strong>. The Chief Security Officer recently uploaded a classified audit report using an unpredictable UUID. Inspect the <strong>Public Activity &amp; Audit Feed</strong> (or REST API), decode the obfuscated ingestion telemetry token to recover the leaked executive document UUID, and exploit the IDOR vulnerability on the document viewer to capture the CTF flag.
     </div>
   </div>
 
