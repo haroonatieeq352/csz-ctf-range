@@ -1,0 +1,123 @@
+version: '3.8'
+
+services:
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: csz-nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - central-hub
+      - scenario-01
+      - scenario-02
+      - scenario-03
+      - scenario-04
+      - scenario-05
+      - scenario-06
+      - scenario-07
+      - scenario-08
+      - scenario-09
+      - scenario-10
+      - scenario-11
+      - scenario-12
+      - scenario-13
+      - scenario-14
+      - scenario-15
+      - scenario-16
+      - scenario-17
+      - scenario-18
+      - scenario-19
+      - scenario-20
+      - scenario-21
+    restart: unless-stopped
+
+  central-hub:
+    build: ./scenarios/central-hub
+    restart: unless-stopped
+
+  scenario-01:
+    build: ./scenarios/scenario-01-recon-headers
+    restart: unless-stopped
+
+  scenario-02:
+    build: ./scenarios/scenario-02-robots-ops
+    restart: unless-stopped
+
+  scenario-03:
+    build: ./scenarios/scenario-03-js-crypto
+    restart: unless-stopped
+
+  scenario-04:
+    build: ./scenarios/scenario-04-admin-portal
+    restart: unless-stopped
+
+  scenario-05:
+    build: ./scenarios/scenario-05-idor-invoices
+    restart: unless-stopped
+
+  scenario-06:
+    build: ./scenarios/scenario-06-cookie-bypass
+    restart: unless-stopped
+
+  scenario-07:
+    build: ./scenarios/scenario-07-backup-bruteforce
+    restart: unless-stopped
+
+  scenario-08:
+    build: ./scenarios/scenario-08-vault-finale
+    restart: unless-stopped
+
+  scenario-09:
+    build: ./scenarios/scenario-09-sqli-products
+    restart: unless-stopped
+
+  scenario-10:
+    build: ./scenarios/scenario-10-sqli-directory
+    restart: unless-stopped
+
+  scenario-11:
+    build: ./scenarios/scenario-11-sqli-assets
+    restart: unless-stopped
+
+  scenario-12:
+    build: ./scenarios/scenario-12-xss-reflected
+    restart: unless-stopped
+
+  scenario-13:
+    build: ./scenarios/scenario-13-xss-stored-attribute
+    restart: unless-stopped
+
+  scenario-14:
+    build: ./scenarios/scenario-14-xss-dom
+    restart: unless-stopped
+
+  scenario-15:
+    build: ./scenarios/scenario-15-xss-waf-bypass
+    restart: unless-stopped
+
+  scenario-16:
+    build: ./scenarios/scenario-16-admin-stored-xss
+    restart: unless-stopped
+
+  scenario-17:
+    build: ./scenarios/scenario-17-csrf-account
+    restart: unless-stopped
+
+  scenario-18:
+    build: ./scenarios/scenario-18-file-upload
+    restart: unless-stopped
+
+  scenario-19:
+    build: ./scenarios/scenario-19-ssrf-metadata
+    restart: unless-stopped
+
+  scenario-20:
+    build: ./scenarios/scenario-20-backend-idor
+    restart: unless-stopped
+
+  scenario-21:
+    build: ./scenarios/scenario-21-cache-attacks
+    restart: unless-stopped

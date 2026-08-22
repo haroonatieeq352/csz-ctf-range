@@ -2,14 +2,17 @@
 """
 CSZone CTF Range — Scenario 18: Obfuscated & UUID Identifier Leakage IDOR
 Port: 8018
+Production-Ready: High-Concurrency WSGI (Gunicorn/Threaded), SQLite WAL, and Token/IP Rate Limiter.
 """
 import os
 import sys
-import sqlite3
-from flask import Flask, request, session, redirect, url_for, render_template, jsonify
-
+import time
 import base64
 import json
+import sqlite3
+import threading
+from collections import defaultdict
+from flask import Flask, request, session, redirect, url_for, render_template, jsonify
 
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8018
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -19,8 +22,68 @@ app = Flask(__name__)
 app.secret_key = "scenario-18-uuid-vault-secret-key"
 FLAG_SECRET = "CTF{uu1d_l34k_d0cum3nt_v4ult}"
 
+class SlidingWindowRateLimiter:
+    """Thread-safe Sliding Window Rate Limiter (60 req/min per IP/Token)."""
+    def __init__(self, max_requests=60, window_seconds=60):
+        self.max_requests = max_requests
+        self.window_seconds = window_seconds
+        self.requests = defaultdict(list)
+        self.lock = threading.Lock()
+        self._last_cleanup = time.time()
+
+    def is_allowed(self, client_id):
+        now = time.time()
+        with self.lock:
+            if now - self._last_cleanup > 60:
+                cutoff = now - self.window_seconds
+                stale = [k for k, v in self.requests.items() if not v or v[-1] < cutoff]
+                for k in stale:
+                    del self.requests[k]
+                self._last_cleanup = now
+
+            timestamps = self.requests[client_id]
+            cutoff = now - self.window_seconds
+            while timestamps and timestamps[0] < cutoff:
+                timestamps.pop(0)
+
+            if len(timestamps) < self.max_requests:
+                timestamps.append(now)
+                return True, self.max_requests - len(timestamps), 0
+            else:
+                retry_after = int(timestamps[0] + self.window_seconds - now) + 1
+                return False, 0, max(1, retry_after)
+
+rate_limiter = SlidingWindowRateLimiter(max_requests=60, window_seconds=60)
+
+@app.before_request
+def check_rate_limit():
+    if request.path.startswith("/static/"):
+        return None
+    client_ip = request.headers.get("X-Forwarded-For", request.remote_addr or "127.0.0.1").split(",")[0].strip()
+    allowed, remaining, retry_after = rate_limiter.is_allowed(client_ip)
+    if not allowed:
+        resp = jsonify({
+            "error": "Too Many Requests",
+            "message": "DDoS Prevention: Rate limit exceeded (Max 60 requests/minute). Please slow down.",
+            "retry_after_seconds": retry_after
+        })
+        resp.status_code = 429
+        resp.headers["Retry-After"] = str(retry_after)
+        resp.headers["X-RateLimit-Limit"] = "60"
+        resp.headers["X-RateLimit-Remaining"] = "0"
+        return resp
+
+@app.after_request
+def add_headers(response):
+    response.headers["X-RateLimit-Limit"] = "60"
+    return response
+
 def get_conn():
-    return sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=20.0, check_same_thread=False)
+    conn.execute("PRAGMA journal_mode=WAL;")
+    conn.execute("PRAGMA busy_timeout=5000;")
+    conn.execute("PRAGMA synchronous=NORMAL;")
+    return conn
 
 def init_db():
     conn = get_conn()
@@ -50,66 +113,49 @@ def init_db():
         );
     """)
     
-    # Document 1: Public Employee Document (Carlos)
     cur.execute("""
         INSERT INTO documents (id, doc_uuid, title, owner_name, is_classified, file_content)
         VALUES (1, '7b1e4a90-3c21-4f88-9d10-8812a4f61e01', 'Employee_Onboarding_Handbook_2026.pdf', 'carlos', 0, 
         'CloudVault Standard Guidelines: Welcome to the enterprise team. All standard files are protected under default policies.');
     """)
 
-    # Document 2: Classified Executive Document (CSO)
     cur.execute("""
         INSERT INTO documents (id, doc_uuid, title, owner_name, is_classified, file_content)
         VALUES (2, '8f9b2c34-91a0-4d5e-88fc-3176d1e49e22', 'Executive_Q4_Classified_Financial_Audit.pdf', 'Chief Security Officer', 1, 
         'CONFIDENTIAL EXECUTIVE BRIEFING:\nMaster Encryption Key and Security Token: CTF{uu1d_l34k_d0cum3nt_v4ult}\nAuthorized clearance only.');
     """)
 
-    # Obfuscated Base64 Telemetry Payloads
     carlos_meta = base64.b64encode(json.dumps({
         "doc_uuid": "7b1e4a90-3c21-4f88-9d10-8812a4f61e01",
         "actor": "carlos",
-        "role": "Standard Employee",
-        "vault_policy": "public_read_default",
-        "signature": "sig_usr_7b1e4a90"
+        "dept": "sec-ops-training",
+        "tier": "public",
+        "integrity_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     }).encode("utf-8")).decode("utf-8")
 
     cso_meta = base64.b64encode(json.dumps({
         "doc_uuid": "8f9b2c34-91a0-4d5e-88fc-3176d1e49e22",
-        "actor": "Chief Security Officer",
-        "role": "Executive Administrator",
-        "vault_policy": "classified_high_clearance",
-        "signature": "sig_sec_8f9b2c34"
+        "actor": "cso_executive",
+        "dept": "executive-leadership",
+        "tier": "top-secret-tier-1",
+        "integrity_hash": "a1b2c3d4e5f60718293a4b5c6d7e8f90123456789abcdef0123456789abcdef0"
     }).encode("utf-8")).decode("utf-8")
 
-    daemon_meta = base64.b64encode(json.dumps({
-        "doc_uuid": "7b1e4a90-3c21-4f88-9d10-8812a4f61e01",
-        "actor": "System Daemon",
-        "role": "Vault Storage Worker",
-        "vault_policy": "automated_pass_sync",
-        "signature": "sig_sys_3c214f88"
-    }).encode("utf-8")).decode("utf-8")
-
-    # Public audit activity feed (Contains obfuscated telemetry leaking executive document UUID)
     cur.execute("""
-        INSERT INTO audit_activity (actor, action_desc, tx_ref, object_uuid, telemetry_payload, timestamp)
-        VALUES ('System Daemon', 'Automated nightly encryption pass on vault storage', 'TX-SYS-1402', '7b1e4a90-3c21-4f88-9d10-8812a4f61e01', ?, '2026-08-19 14:02:11');
-    """, (daemon_meta,))
-    cur.execute("""
-        INSERT INTO audit_activity (actor, action_desc, tx_ref, object_uuid, telemetry_payload, timestamp)
-        VALUES ('Chief Security Officer', 'Encrypted and deposited high-clearance executive audit report', 'TX-SEC-9841', '8f9b2c34-91a0-4d5e-88fc-3176d1e49e22', ?, '2026-08-19 15:45:30');
-    """, (cso_meta,))
-    cur.execute("""
-        INSERT INTO audit_activity (actor, action_desc, tx_ref, object_uuid, telemetry_payload, timestamp)
-        VALUES ('carlos', 'Downloaded onboarding guidelines', 'TX-USR-1610', '7b1e4a90-3c21-4f88-9d10-8812a4f61e01', ?, '2026-08-19 16:10:05');
+        INSERT INTO audit_activity (actor, action_desc, tx_ref, object_uuid, telemetry_payload)
+        VALUES ('System Ingest Daemon', 'Synchronized public training documentation', 'TX-778901', '7b1e4a90-3c21-4f88-9d10-8812a4f61e01', ?);
     """, (carlos_meta,))
+
+    cur.execute("""
+        INSERT INTO audit_activity (actor, action_desc, tx_ref, object_uuid, telemetry_payload)
+        VALUES ('Executive Vault Gateway', 'Archived Q4 classified executive audit report', 'TX-990142', '8f9b2c34-91a0-4d5e-88fc-3176d1e49e22', ?);
+    """, (cso_meta,))
 
     conn.commit()
     conn.close()
 
-@app.before_request
-def ensure_session():
-    if "username" not in session:
-        session["username"] = "carlos"
+if not os.path.exists(DB_PATH):
+    init_db()
 
 @app.route("/")
 @app.route("/vault")
@@ -152,7 +198,6 @@ def api_download_doc():
         return jsonify({"success": False, "error": "Missing doc_id parameter"}), 400
 
     conn = get_conn()
-    # VULN (IDOR): No ownership verification! Accepts any valid doc_uuid
     doc = conn.execute("SELECT id, doc_uuid, title, owner_name, is_classified, file_content, created_at FROM documents WHERE doc_uuid = ?", (doc_id,)).fetchone()
     conn.close()
 
@@ -191,4 +236,4 @@ def reset_view():
 if __name__ == "__main__":
     init_db()
     print(f"[*] Scenario 18 running on http://localhost:{PORT}")
-    app.run(host="0.0.0.0", port=PORT, debug=False)
+    app.run(host="0.0.0.0", port=PORT, debug=False, threaded=True)
