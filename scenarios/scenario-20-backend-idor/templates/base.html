@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}BOLA Multi-Step Password Reset ATO — Scenario 20{% endblock %}</title>
+  <title>{% block title %}ApexPay Treasury — B2B Financial Services{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
@@ -32,15 +32,17 @@
   <header>
     <a href="/login" class="brand-wrapper">
       <div class="brand-title">💳 ApexPay <span>Fintech Vault</span></div>
-      <span class="badge-tag">Scenario 20 &bull; Port 8020</span>
+      <span class="badge-tag">Scenario 20</span>
     </a>
     <nav>
+      <a href="/directory" {% if request.path == '/directory' %}class="active"{% endif %}>👥 Staff Directory</a>
+      <a href="/mail" {% if request.path == '/mail' %}class="active"{% endif %}>📬 Webmail Inbox</a>
       {% if session.get('user_id') %}
-        <a href="/dashboard" class="active">💼 Account Dashboard</a>
+        <a href="/dashboard" {% if request.path == '/dashboard' %}class="active"{% endif %}>💼 Treasury Vault</a>
         <a href="/logout">🚪 Logout</a>
       {% else %}
-        <a href="/login" {% if request.path == '/login' or request.path == '/' %}class="active"{% endif %}>🔑 Login Portal</a>
-        <a href="/forgot-password" {% if request.path == '/forgot-password' %}class="active"{% endif %}>🔄 Password Reset Flow</a>
+        <a href="/login" {% if request.path == '/login' or request.path == '/' %}class="active"{% endif %}>🔑 Sign In</a>
+        <a href="/forgot-password" {% if request.path == '/forgot-password' %}class="active"{% endif %}>🔄 Password Reset</a>
       {% endif %}
       <a href="/reset" class="nav-reset-btn" title="Reset all users to default passwords">🔄 Reset Lab</a>
     </nav>
@@ -51,7 +53,27 @@
   </main>
 
   <footer>
-    ApexPay Corporate Treasury &copy; 2026 &mdash; Scenario 20 (Port 8020)
+    ApexPay Corporate Treasury &copy; 2026 &mdash; Scenario 20
   </footer>
+
+  <script>
+    function togglePasswordVisibility(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      const isPass = input.type === 'password';
+      input.type = isPass ? 'text' : 'password';
+      const openIcon = btn.querySelector('.eye-open-icon');
+      const closedIcon = btn.querySelector('.eye-closed-icon');
+      if (openIcon && closedIcon) {
+        if (isPass) {
+          openIcon.style.display = 'block';
+          closedIcon.style.display = 'none';
+        } else {
+          openIcon.style.display = 'none';
+          closedIcon.style.display = 'block';
+        }
+      }
+    }
+  </script>
 </body>
 </html>

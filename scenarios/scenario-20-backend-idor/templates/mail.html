@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+    <div>
+      <h2>📬 ApexPay Corporate Webmail Client</h2>
+      <p style="color: var(--muted); font-size: 0.92rem; margin-top: 4px;">
+        Signed in as: <strong style="color: #38bdf8;">Carlos Rivera</strong> &lt;<code>carlos@apexpay.io</code>&gt; &bull; Employee #101
+      </p>
+    </div>
+    <div>
+      <button onclick="location.reload()" class="btn" style="padding: 6px 14px; font-size: 0.85rem;">🔄 Refresh Inbox</button>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 320px 1fr; gap: 20px; min-height: 380px;">
+    <!-- Mail List -->
+    <div style="background: #110e18; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; display: flex; flex-direction: column;">
+      <div style="padding: 12px 16px; background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--border); font-size: 0.85rem; font-weight: bold; color: var(--amber);">
+        📥 Inbox ({% if emails %}{{ emails|length }}{% else %}0{% endif %} Messages)
+      </div>
+      <div style="overflow-y: auto; flex: 1;">
+        {% if emails %}
+          {% for em in emails %}
+          <div onclick="selectEmail({{ loop.index0 }})" class="mail-item" style="padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); cursor: pointer; transition: background 0.15s;" id="mail-tab-{{ loop.index0 }}">
+            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--muted); margin-bottom: 4px;">
+              <span>{{ em[2] }}</span>
+              <span>{{ em[5].split(' ')[1] if ' ' in em[5] else em[5] }}</span>
+            </div>
+            <div style="font-weight: 600; color: #fff; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              {{ em[3] }}
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div style="padding: 30px; text-align: center; color: var(--muted); font-size: 0.85rem;">
+            No incoming mail. Initiate a password recovery to receive a security OTP.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Email Viewer -->
+    <div style="background: #110e18; border: 1px solid var(--border); border-radius: 6px; padding: 22px; display: flex; flex-direction: column;">
+      {% if emails %}
+        <div id="mailSubject" style="font-size: 1.1rem; font-weight: bold; color: #fff; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 14px;">
+          {{ emails[0][3] }}
+        </div>
+        <div id="mailMeta" style="font-size: 0.85rem; color: var(--muted); margin-bottom: 20px;">
+          <strong>From:</strong> {{ emails[0][2] }} &bull; <strong>To:</strong> {{ emails[0][1] }} &bull; <strong>Time:</strong> {{ emails[0][5] }}
+        </div>
+        <div id="mailBody" style="font-size: 0.92rem; color: #cbd5e1; line-height: 1.7; background: #0c0914; padding: 18px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); flex: 1;">
+          {{ emails[0][4]|safe }}
+        </div>
+      {% else %}
+        <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--muted); font-size: 0.9rem;">
+          Select a message to preview its contents.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+  const emailList = [
+    {% for em in emails %}
+      {
+        recipient: {{ em[1]|tojson }},
+        sender: {{ em[2]|tojson }},
+        subject: {{ em[3]|tojson }},
+        body: {{ em[4]|tojson }},
+        time: {{ em[5]|tojson }}
+      }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ];
+
+  function selectEmail(idx) {
+    const mail = emailList[idx];
+    if (!mail) return;
+    document.getElementById('mailSubject').innerText = mail.subject;
+    document.getElementById('mailMeta').innerHTML = `<strong>From:</strong> ${mail.sender} &bull; <strong>To:</strong> ${mail.recipient} &bull; <strong>Time:</strong> ${mail.time}`;
+    document.getElementById('mailBody').innerHTML = mail.body;
+    
+    document.querySelectorAll('.mail-item').forEach((el, i) => {
+      el.style.background = (i === idx) ? 'rgba(245,158,11,0.1)' : 'transparent';
+    });
+  }
+
+  if (emailList.length > 0) {
+    selectEmail(0);
+  }
+</script>
+{% endblock %}

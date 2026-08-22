@@ -340,11 +340,12 @@ function renderCards() {
 
   scenariosGrid.innerHTML = filtered.map(s => {
     const targetUrl = buildScenarioUrl(s);
+    const targetIdLabel = "TARGET " + String(s.id).padStart(2, "0");
     if (s.isComingSoon) {
       return `
         <div class="scenario-card card-coming-soon" data-category="${s.category}" style="border: 1px dashed rgba(245, 158, 11, 0.4); background: rgba(22, 18, 28, 0.75);">
           <div class="card-top">
-            <span class="port-tag" style="opacity: 0.7;">PORT ${s.port}</span>
+            <span class="port-tag" style="opacity: 0.7;">${targetIdLabel}</span>
             <span class="difficulty-badge" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35); font-weight: 700;">🚧 COMING SOON</span>
           </div>
           <h4 class="card-title" style="color: #e2e8f0;">${s.title}</h4>
@@ -361,7 +362,7 @@ function renderCards() {
     return `
       <div class="scenario-card" data-category="${s.category}">
         <div class="card-top">
-          <span class="port-tag">PORT ${s.port}</span>
+          <span class="port-tag">${targetIdLabel}</span>
           <span class="difficulty-badge diff-${s.difficulty}">${s.difficultyLabel}</span>
         </div>
         <h4 class="card-title">${s.title}</h4>
@@ -386,7 +387,7 @@ function openComingSoonModal(scenarioId) {
   const s = SCENARIOS.find(item => item.id === scenarioId);
   if (!s) return;
   document.getElementById("modalTitle").textContent = s.title;
-  document.getElementById("modalPort").textContent = `PORT ${s.port}`;
+  document.getElementById("modalPort").textContent = "TARGET " + String(s.id).padStart(2, "0");
   document.getElementById("modalCategory").textContent = s.categoryLabel;
   document.getElementById("modalDesc").textContent = s.description;
   const modal = document.getElementById("comingSoonModal");

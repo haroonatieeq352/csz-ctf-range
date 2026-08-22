@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-CSZone CTF Range — Scenario 20: BOLA Multi-Step Password Reset Account Takeover
+CSZone CTF Range — Scenario 20: BOLA Multi-Step Password Reset Account Takeover (Realistic Enterprise SaaS)
 Port: 8020
 Production-Ready: High-Concurrency WSGI (Gunicorn/Threaded), SQLite WAL, and Token/IP Rate Limiter.
 """
@@ -9,7 +9,9 @@ import sys
 import time
 import sqlite3
 import secrets
+import random
 import threading
+from datetime import datetime
 from collections import defaultdict
 from flask import Flask, request, session, redirect, url_for, render_template, jsonify
 
@@ -89,17 +91,22 @@ def init_db():
     cur = conn.cursor()
     cur.execute("DROP TABLE IF EXISTS users;")
     cur.execute("DROP TABLE IF EXISTS reset_sessions;")
+    cur.execute("DROP TABLE IF EXISTS mailbox;")
+    
     cur.execute("""
         CREATE TABLE users (
             id INTEGER PRIMARY KEY,
             email TEXT UNIQUE NOT NULL,
             full_name TEXT NOT NULL,
+            title TEXT NOT NULL,
+            department TEXT NOT NULL,
             password TEXT NOT NULL,
             role TEXT DEFAULT 'user',
             account_balance TEXT NOT NULL,
             vault_flag TEXT
         );
     """)
+    
     cur.execute("""
         CREATE TABLE reset_sessions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -110,17 +117,45 @@ def init_db():
             reset_token TEXT
         );
     """)
+
+    cur.execute("""
+        CREATE TABLE mailbox (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            recipient TEXT NOT NULL,
+            sender TEXT NOT NULL,
+            subject TEXT NOT NULL,
+            body TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        );
+    """)
     
     # Target Admin Account (ID 100)
     cur.execute("""
-        INSERT INTO users (id, email, full_name, password, role, account_balance, vault_flag)
-        VALUES (100, 'admin@apexpay.io', 'Executive Administrator', 'SuperSecretApexVault2026!', 'admin', '$2,450,000.00 USD', ?);
+        INSERT INTO users (id, email, full_name, title, department, password, role, account_balance, vault_flag)
+        VALUES (100, 'admin@apexpay.io', 'Alexander Vance', 'Chief Financial Officer & Executive Vault Admin', 'Executive Treasury', 'SuperSecretApexVault2026!', 'admin', '$2,450,000.00 USD', ?);
     """, (FLAG_SECRET,))
 
     # Standard Attacker Account (ID 101)
     cur.execute("""
-        INSERT INTO users (id, email, full_name, password, role, account_balance, vault_flag)
-        VALUES (101, 'carlos@apexpay.io', 'Carlos Rivera', 'carlos123', 'user', '$150.00 USD', NULL);
+        INSERT INTO users (id, email, full_name, title, department, password, role, account_balance, vault_flag)
+        VALUES (101, 'carlos@apexpay.io', 'Carlos Rivera', 'Junior Liquidity Operations Analyst', 'Financial Operations', 'carlos123', 'user', '$150.00 USD', NULL);
+    """)
+
+    # Colleague Accounts for realistic directory
+    cur.execute("""
+        INSERT INTO users (id, email, full_name, title, department, password, role, account_balance, vault_flag)
+        VALUES (102, 'sarah.j@apexpay.io', 'Sarah Jenkins', 'Senior Risk & Compliance Officer', 'Audit & Compliance', 'S@rahRisk2026!', 'user', '$8,400.00 USD', NULL);
+    """)
+
+    cur.execute("""
+        INSERT INTO users (id, email, full_name, title, department, password, role, account_balance, vault_flag)
+        VALUES (103, 'david.k@apexpay.io', 'David Kim', 'Principal Platform Architect', 'Core Infrastructure', 'D@v1dPlatform!', 'user', '$12,900.00 USD', NULL);
+    """)
+
+    # Initial Welcome Email in Carlos's Mailbox
+    cur.execute("""
+        INSERT INTO mailbox (recipient, sender, subject, body, created_at)
+        VALUES ('carlos@apexpay.io', 'it-support@apexpay.io', 'Welcome to ApexPay Treasury Portal', 'Hi Carlos, welcome to the Treasury Operations team. Your employee workstation account (#101) has been provisioned. Contact IT for access assistance.', '2026-08-22 09:00:00');
     """)
 
     conn.commit()
@@ -147,9 +182,34 @@ def login_view():
             session["full_name"] = user[2]
             session["role"] = user[3]
             return redirect(url_for("dashboard_view"))
-        error = "Invalid credentials. Please verify your email and password."
+        error = "Invalid credentials. Please verify your corporate email and password."
 
     return render_template("login.html", error=error)
+
+@app.route("/directory")
+def directory_view():
+    conn = get_conn()
+    members = conn.execute("SELECT id, full_name, title, department, email, role FROM users ORDER BY id ASC").fetchall()
+    conn.close()
+    return render_template("directory.html", members=members)
+
+@app.route("/mail")
+def mail_view():
+    conn = get_conn()
+    emails = conn.execute("SELECT id, recipient, sender, subject, body, created_at FROM mailbox WHERE recipient = 'carlos@apexpay.io' ORDER BY id DESC").fetchall()
+    conn.close()
+    return render_template("mail.html", emails=emails)
+
+@app.route("/api/mail/inbox")
+def api_mail_inbox():
+    conn = get_conn()
+    emails = conn.execute("SELECT id, recipient, sender, subject, body, created_at FROM mailbox WHERE recipient = 'carlos@apexpay.io' ORDER BY id DESC").fetchall()
+    conn.close()
+    return jsonify({
+        "success": True,
+        "count": len(emails),
+        "messages": [{"id": r[0], "recipient": r[1], "sender": r[2], "subject": r[3], "body": r[4], "created_at": r[5]} for r in emails]
+    })
 
 @app.route("/forgot-password")
 def forgot_password_view():
@@ -161,7 +221,7 @@ def dashboard_view():
         return redirect(url_for("login_view"))
 
     conn = get_conn()
-    user = conn.execute("SELECT id, email, full_name, role, account_balance, vault_flag FROM users WHERE id = ?", (session["user_id"],)).fetchone()
+    user = conn.execute("SELECT id, email, full_name, role, account_balance, vault_flag, title, department FROM users WHERE id = ?", (session["user_id"],)).fetchone()
     conn.close()
 
     if not user:
@@ -187,23 +247,31 @@ def api_forgot_password():
         return jsonify({"success": False, "error": "Email is required"}), 400
 
     conn = get_conn()
-    user = conn.execute("SELECT id, email FROM users WHERE email = ?", (email,)).fetchone()
-    conn.close()
-
+    user = conn.execute("SELECT id, email, full_name FROM users WHERE email = ?", (email,)).fetchone()
+    
     if not user:
-        return jsonify({"success": False, "error": "No account found with this email"}), 404
+        conn.close()
+        return jsonify({"success": False, "error": "No account found with this corporate email"}), 404
 
     sess_token = "sess_" + secrets.token_hex(8)
-    otp = "654321" if email == "carlos@apexpay.io" else secrets.token_hex(3).upper()
+    
+    # Realistic dynamic OTP generated and delivered to corporate mailbox
+    otp = "654321" if email == "carlos@apexpay.io" else str(random.randint(100000, 999999))
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    conn = get_conn()
     conn.execute("INSERT INTO reset_sessions (session_token, email, otp_code) VALUES (?, ?, ?)", (sess_token, email, otp))
+    
+    # Deliver OTP message into recipient's Corporate Webmail
+    if email == "carlos@apexpay.io":
+        email_body = f"Hello {user[2]},<br><br>We received a request to reset the password for your ApexPay corporate account (Employee #{user[0]}).<br><br>Your 6-digit one-time security passcode is: <strong style='color:#fbbf24; font-size:1.2rem; letter-spacing:3px;'>{otp}</strong><br><br>This passcode expires in 10 minutes. If you did not initiate this request, contact Security immediately."
+        conn.execute("INSERT INTO mailbox (recipient, sender, subject, body, created_at) VALUES (?, 'security@apexpay.io', 'ApexPay Security Verification Code', ?, ?)", (email, email_body, timestamp))
+
     conn.commit()
     conn.close()
 
     return jsonify({
         "success": True,
-        "message": f"6-digit OTP verification code dispatched to '{email}'. (For Carlos, your inbox OTP is 654321)",
+        "message": f"A 6-digit verification passcode has been dispatched to '{email}'. Check your Corporate Webmail inbox.",
         "session_token": sess_token,
         "account_id": user[0]
     })
@@ -219,7 +287,8 @@ def api_verify_reset_step():
         return jsonify({"success": False, "error": "Missing session_token, otp, or account_id"}), 400
 
     conn = get_conn()
-    sess = conn.execute("SELECT id, session_token, email, otp_code FROM reset_sessions WHERE session_token = ?", (sess_token,)).fetchone()
+    sess = conn.execute("SELECT id, session_token, email, otp_code FROM reset_sessions WHERE session_token = ?", (sess_token,))
+    sess = sess.fetchone()
     
     if not sess:
         conn.close()
@@ -234,6 +303,7 @@ def api_verify_reset_step():
         conn.close()
         return jsonify({"success": False, "error": f"Target account #{target_account_id} not found"}), 404
 
+    # BOLA VULNERABILITY: Session state is bound to client-supplied target_account_id instead of original session email
     reset_token = "rst_tok_" + secrets.token_hex(16)
     conn.execute("UPDATE reset_sessions SET is_verified = 1, reset_token = ?, email = ? WHERE id = ?", (reset_token, target_user[1], sess[0]))
     conn.commit()
@@ -270,7 +340,7 @@ def api_confirm_new_password():
 
     return jsonify({
         "success": True,
-        "message": f"Password for account '{sess[1]}' has been reset successfully. You can now login with your new password."
+        "message": f"Password for account '{sess[1]}' has been reset successfully. You can now login with your new credentials."
     })
 
 @app.route("/api/flag")

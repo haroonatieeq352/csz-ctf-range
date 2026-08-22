@@ -63,7 +63,7 @@ ERROR_TEMPLATE = """<!DOCTYPE html>
 <body>
   <header>
     <h1>CSZone CTF — Scenario 02</h1>
-    <span class="tag">Robots & Hidden Directories &bull; Port 8002</span>
+    <span class="tag">Robots & Hidden Directories</span>
   </header>
   <main>
     <div class="card" style="border-left: 4px solid var(--crimson);">
