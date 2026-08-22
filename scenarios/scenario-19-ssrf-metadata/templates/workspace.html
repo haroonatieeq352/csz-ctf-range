@@ -12,12 +12,13 @@
       🎯 <strong>Lab Objective:</strong>
     </div>
     <div style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.5;">
-      You are assigned to <code>tenant-12-carlos</code>. The high-value sovereign workspace is <code>tenant-99-enterprise</code>. Attempting a standard <code>GET</code> request against <code>/api/workspaces/tenant-99-enterprise/settings</code> results in <strong>403 Forbidden</strong>. Use <strong>Burp Suite</strong> (or the API Console below) to perform <strong>HTTP Verb Tampering</strong> (switch method to <code>PUT</code> or <code>PATCH</code>) to bypass the authorization filter, overwrite settings, and extract the enterprise master secret key containing the CTF flag.
+      You are assigned to <code>tenant-12-carlos</code>. The high-value sovereign workspace is <code>tenant-99-enterprise</code>. Attempting a standard <code>GET</code> request against <code>/api/workspaces/tenant-99-enterprise/settings</code> results in <strong>403 Forbidden</strong>. Intercept workspace API traffic in <strong>Burp Suite</strong> (or use cURL), perform <strong>HTTP Verb Tampering</strong> (switch method to <code>PUT</code> or <code>PATCH</code>) to bypass the authorization filter, overwrite settings, and extract the enterprise master secret key containing the CTF flag.
     </div>
   </div>
 
+  {% if is_solved %}
   <!-- Success Solved Flag Box -->
-  <div id="vault-box" class="vault-box" style="display: none; margin-top: 0; margin-bottom: 24px;">
+  <div id="vault-box" class="vault-box" style="display: block; margin-top: 0; margin-bottom: 24px;">
     <div class="vault-header">
       <span class="vault-icon">🎉</span>
       <div>
@@ -27,60 +28,61 @@
     </div>
     <div class="flag-wrap">
       <span class="flag-label">Captured Master Secret Flag:</span>
-      <div id="extracted-vault" class="flag-badge"></div>
+      <div id="extracted-vault" class="flag-badge">CTF{v3rb_t4mp3r1ng_t3n4nt_byp4ss}</div>
     </div>
   </div>
+  {% endif %}
+
+  <div id="updateStatusAlert" style="display: none; margin-bottom: 20px; padding: 12px 16px; border-radius: 6px; font-size: 0.88rem;"></div>
 
   <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+    <!-- Active Workspace Overview -->
     <div style="background: #110e18; border: 1px solid var(--border); padding: 20px; border-radius: 6px;">
       <h3 style="color: #fff; font-size: 1.05rem; margin-bottom: 12px;">Active Workspace Attributes</h3>
       <div style="font-size: 0.85rem; color: var(--muted); line-height: 1.8;">
         <div>• Tenant ID: <code style="color: #fbbf24;">{{ workspace[0] }}</code></div>
         <div>• Organization: <strong style="color: #fff;">{{ workspace[1] }}</strong></div>
-        <div>• Plan: <span style="color: #60a5fa;">{{ workspace[3] }}</span></div>
-        <div>• Deployment Region: <code>{{ workspace[4] }}</code></div>
-        <div>• Compliance: <code>{{ workspace[5] }}</code></div>
-        <div>• Master Key: <code style="color: #94a3b8;">{{ workspace[6] }}</code></div>
+        <div>• Owner Email: <span style="font-family: var(--mono); color: #cbd5e1;">{{ workspace[2] }}</span></div>
+        <div>• Service Plan: <span style="color: #60a5fa;">{{ workspace[3] }}</span></div>
+        <div>• Deployment Region: <code id="dispRegion">{{ workspace[4] }}</code></div>
+        <div>• Compliance Policy: <code id="dispCompliance">{{ workspace[5] }}</code></div>
+        <div>• Master Secret Key: <code style="color: #94a3b8;">{{ workspace[6] }}</code></div>
       </div>
     </div>
 
-    <!-- Interactive REST API Console -->
+    <!-- Real-World Workspace Settings Form -->
     <div style="background: #110e18; border: 1px solid var(--border); padding: 20px; border-radius: 6px;">
-      <h3 style="color: #fff; font-size: 1.05rem; margin-bottom: 12px;">REST API Inspector &amp; Dispatcher</h3>
-      
-      <div class="form-group" style="margin-bottom: 10px;">
-        <label>HTTP Verb / Method</label>
-        <select id="http_method" style="width: 100%; background: #0f0d14; border: 1px solid var(--border); color: #fff; padding: 8px 12px; border-radius: 6px; font-family: inherit;">
-          <option value="GET">GET (Read Workspace)</option>
-          <option value="PUT" selected>PUT (Modify Workspace)</option>
-          <option value="PATCH">PATCH (Partial Update)</option>
-        </select>
-      </div>
+      <h3 style="color: #fff; font-size: 1.05rem; margin-bottom: 12px;">Workspace Configuration Editor</h3>
+      <form id="workspaceForm" onsubmit="handleWorkspaceSave(event)">
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label>Deployment Region</label>
+          <select id="cfg_region" style="width: 100%; background: #0f0d14; border: 1px solid var(--border); color: #fff; padding: 8px 12px; border-radius: 6px; font-family: inherit;">
+            <option value="us-east-1" {% if workspace[4] == 'us-east-1' %}selected{% endif %}>us-east-1 (N. Virginia)</option>
+            <option value="us-west-2" {% if workspace[4] == 'us-west-2' %}selected{% endif %}>us-west-2 (Oregon)</option>
+            <option value="eu-central-1" {% if workspace[4] == 'eu-central-1' %}selected{% endif %}>eu-central-1 (Frankfurt)</option>
+            <option value="ap-southeast-1" {% if workspace[4] == 'ap-southeast-1' %}selected{% endif %}>ap-southeast-1 (Singapore)</option>
+          </select>
+        </div>
 
-      <div class="form-group" style="margin-bottom: 10px;">
-        <label>Target Tenant ID</label>
-        <input type="text" id="target_tenant" value="tenant-99-enterprise" style="padding: 8px 12px;">
-      </div>
+        <div class="form-group" style="margin-bottom: 18px;">
+          <label>Compliance Mode</label>
+          <select id="cfg_compliance" style="width: 100%; background: #0f0d14; border: 1px solid var(--border); color: #fff; padding: 8px 12px; border-radius: 6px; font-family: inherit;">
+            <option value="standard" {% if workspace[5] == 'standard' %}selected{% endif %}>standard (Default SLA)</option>
+            <option value="strict" {% if workspace[5] == 'strict' %}selected{% endif %}>strict (HIPAA / PCI-DSS Compliant)</option>
+            <option value="isolated" {% if workspace[5] == 'isolated' %}selected{% endif %}>isolated (Air-Gapped Sovereign)</option>
+          </select>
+        </div>
 
-      <div class="form-group" style="margin-bottom: 14px;">
-        <label>JSON Body Payload (for PUT/PATCH)</label>
-        <textarea id="json_body" rows="2" style="width: 100%; font-family: var(--mono); font-size: 0.85rem;">{"region": "us-west-2", "compliance_mode": "disabled"}</textarea>
-      </div>
-
-      <button type="button" onclick="sendApiRequest()" class="btn" style="width: 100%; padding: 8px;">Dispatch API Request</button>
+        <button type="submit" class="btn" style="width: 100%; padding: 9px;">Save Workspace Configuration</button>
+      </form>
     </div>
-  </div>
-
-  <div id="responseBox" style="display: none; background: #09070c; border: 1px solid var(--border); border-radius: 6px; padding: 16px; margin-top: 20px;">
-    <div style="font-size: 0.8rem; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; font-weight: 600;">Live HTTP Response:</div>
-    <pre id="responseContent" style="color: #e2c08d; font-size: 0.88rem; overflow-x: auto;"></pre>
   </div>
 </div>
 
 <div class="card">
   <h2>🌐 Organization Tenant Directory</h2>
   <p style="color: var(--muted); font-size: 0.88rem; margin-bottom: 16px;">
-    Public tenant registry on this cluster.
+    Public tenant registry on this multi-org cluster. Multi-tenant isolation is enforced at the API Gateway level.
   </p>
 
   <div class="table-container">
@@ -90,7 +92,7 @@
           <th>Tenant ID</th>
           <th>Organization Name</th>
           <th>Service Tier</th>
-          <th>Region</th>
+          <th>Deployment Region</th>
         </tr>
       </thead>
       <tbody>
@@ -114,43 +116,44 @@
 </div>
 
 <script>
-  function sendApiRequest() {
-    const method = document.getElementById("http_method").value;
-    const tenant = document.getElementById("target_tenant").value.trim();
-    const bodyStr = document.getElementById("json_body").value.trim();
-    const responseBox = document.getElementById("responseBox");
-    const responseContent = document.getElementById("responseContent");
+  function handleWorkspaceSave(e) {
+    e.preventDefault();
+    const regionVal = document.getElementById("cfg_region").value;
+    const complianceVal = document.getElementById("cfg_compliance").value;
+    const statusAlert = document.getElementById("updateStatusAlert");
 
-    const opts = {
-      method: method,
-      headers: { "Content-Type": "application/json" }
-    };
-    if (method !== "GET" && bodyStr) {
-      opts.body = bodyStr;
-    }
-
-    fetch(`/api/workspaces/${encodeURIComponent(tenant)}/settings`, opts)
-      .then(async res => {
-        const json = await res.json();
-        responseBox.style.display = "block";
-        responseContent.innerText = `HTTP/1.1 ${res.status}\n\n` + JSON.stringify(json, null, 2);
-
-        if (json && json.tenant && json.tenant.master_secret_key && json.tenant.master_secret_key.startsWith("CTF{")) {
-          const vaultBox = document.getElementById("vault-box");
-          const target = document.getElementById("extracted-vault");
-          const statusBadge = document.getElementById("lab-status");
-          if (target) target.innerText = json.tenant.master_secret_key;
-          if (vaultBox) vaultBox.style.display = "block";
-          if (statusBadge) {
-            statusBadge.textContent = "SOLVED 🎉";
-            statusBadge.className = "lab-status solved";
-          }
-        }
+    // Sends standard PUT request to the user's active tenant endpoint
+    fetch("/api/workspaces/tenant-12-carlos/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        region: regionVal,
+        compliance_mode: complianceVal
       })
-      .catch(err => {
-        responseBox.style.display = "block";
-        responseContent.innerText = "Request Error: " + err;
-      });
+    })
+    .then(res => res.json())
+    .then(data => {
+      statusAlert.style.display = "block";
+      if (data.success) {
+        statusAlert.style.background = "rgba(16, 185, 129, 0.15)";
+        statusAlert.style.border = "1px solid rgba(16, 185, 129, 0.4)";
+        statusAlert.style.color = "#34d399";
+        statusAlert.innerText = "✓ " + data.message;
+        document.getElementById("dispRegion").innerText = regionVal;
+        document.getElementById("dispCompliance").innerText = complianceVal;
+      } else {
+        statusAlert.style.background = "rgba(239, 68, 68, 0.15)";
+        statusAlert.style.border = "1px solid rgba(239, 68, 68, 0.4)";
+        statusAlert.style.color = "#f87171";
+        statusAlert.innerText = "✗ " + data.error;
+      }
+    })
+    .catch(err => {
+      statusAlert.style.display = "block";
+      statusAlert.style.background = "rgba(239, 68, 68, 0.15)";
+      statusAlert.style.color = "#f87171";
+      statusAlert.innerText = "Request Failed: " + err;
+    });
   }
 </script>
 {% endblock %}

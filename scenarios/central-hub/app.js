@@ -285,6 +285,32 @@ const visibleCounter = document.getElementById("visibleCounter");
 let activeFilter = "all";
 let searchQuery = "";
 
+function buildScenarioUrl(s) {
+  let hostname = window.location.hostname || "localhost";
+  const protocol = window.location.protocol || "http:";
+  
+  if (hostname === "0.0.0.0" || hostname === "") {
+    hostname = "localhost";
+  }
+
+  const padId = String(s.id).padStart(2, "0"); // 1 -> "01", 20 -> "20"
+
+  // 1. Subdomain routing (e.g. hub.offensivegrid.com, hub.offensgrid.com, or any hub.<domain>)
+  if (hostname.startsWith("hub.")) {
+    const rootDomain = hostname.substring(4); // e.g. offensivegrid.com
+    return `${protocol}//s${padId}.${rootDomain}`;
+  }
+
+  // 2. Direct domain check
+  if (hostname.includes("offensivegrid.com") || hostname.includes("offensgrid.com")) {
+    const baseDomain = hostname.includes("offensivegrid.com") ? "offensivegrid.com" : "offensgrid.com";
+    return `${protocol}//s${padId}.${baseDomain}`;
+  }
+
+  // 3. Localhost / Local IP development fallback
+  return `${protocol}//${hostname}:${s.port}`;
+}
+
 function renderCards() {
   const filtered = SCENARIOS.filter(s => {
     const matchesFilter = activeFilter === "all" || s.category === activeFilter;
@@ -313,7 +339,7 @@ function renderCards() {
   }
 
   scenariosGrid.innerHTML = filtered.map(s => {
-    const targetUrl = `${currentProtocol}//${currentHost}:${s.port}`;
+    const targetUrl = buildScenarioUrl(s);
     if (s.isComingSoon) {
       return `
         <div class="scenario-card card-coming-soon" data-category="${s.category}" style="border: 1px dashed rgba(245, 158, 11, 0.4); background: rgba(22, 18, 28, 0.75);">

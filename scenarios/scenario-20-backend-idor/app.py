@@ -2,11 +2,15 @@
 """
 CSZone CTF Range — Scenario 20: BOLA Multi-Step Password Reset Account Takeover
 Port: 8020
+Production-Ready: High-Concurrency WSGI (Gunicorn/Threaded), SQLite WAL, and Token/IP Rate Limiter.
 """
 import os
 import sys
+import time
 import sqlite3
 import secrets
+import threading
+from collections import defaultdict
 from flask import Flask, request, session, redirect, url_for, render_template, jsonify
 
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8020
@@ -17,8 +21,68 @@ app = Flask(__name__)
 app.secret_key = "scenario-20-bola-reset-secret-key"
 FLAG_SECRET = "CTF{b0l4_p4ssw0rd_r3s3t_4cc0unt_t4k30v3r}"
 
+class SlidingWindowRateLimiter:
+    """Thread-safe Sliding Window Rate Limiter (60 req/min per IP/Token)."""
+    def __init__(self, max_requests=60, window_seconds=60):
+        self.max_requests = max_requests
+        self.window_seconds = window_seconds
+        self.requests = defaultdict(list)
+        self.lock = threading.Lock()
+        self._last_cleanup = time.time()
+
+    def is_allowed(self, client_id):
+        now = time.time()
+        with self.lock:
+            if now - self._last_cleanup > 60:
+                cutoff = now - self.window_seconds
+                stale = [k for k, v in self.requests.items() if not v or v[-1] < cutoff]
+                for k in stale:
+                    del self.requests[k]
+                self._last_cleanup = now
+
+            timestamps = self.requests[client_id]
+            cutoff = now - self.window_seconds
+            while timestamps and timestamps[0] < cutoff:
+                timestamps.pop(0)
+
+            if len(timestamps) < self.max_requests:
+                timestamps.append(now)
+                return True, self.max_requests - len(timestamps), 0
+            else:
+                retry_after = int(timestamps[0] + self.window_seconds - now) + 1
+                return False, 0, max(1, retry_after)
+
+rate_limiter = SlidingWindowRateLimiter(max_requests=60, window_seconds=60)
+
+@app.before_request
+def check_rate_limit():
+    if request.path.startswith("/static/"):
+        return None
+    client_ip = request.headers.get("X-Forwarded-For", request.remote_addr or "127.0.0.1").split(",")[0].strip()
+    allowed, remaining, retry_after = rate_limiter.is_allowed(client_ip)
+    if not allowed:
+        resp = jsonify({
+            "error": "Too Many Requests",
+            "message": "DDoS Prevention: Rate limit exceeded (Max 60 requests/minute). Please slow down.",
+            "retry_after_seconds": retry_after
+        })
+        resp.status_code = 429
+        resp.headers["Retry-After"] = str(retry_after)
+        resp.headers["X-RateLimit-Limit"] = "60"
+        resp.headers["X-RateLimit-Remaining"] = "0"
+        return resp
+
+@app.after_request
+def add_headers(response):
+    response.headers["X-RateLimit-Limit"] = "60"
+    return response
+
 def get_conn():
-    return sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=20.0, check_same_thread=False)
+    conn.execute("PRAGMA journal_mode=WAL;")
+    conn.execute("PRAGMA busy_timeout=5000;")
+    conn.execute("PRAGMA synchronous=NORMAL;")
+    return conn
 
 def init_db():
     conn = get_conn()
@@ -61,6 +125,9 @@ def init_db():
 
     conn.commit()
     conn.close()
+
+if not os.path.exists(DB_PATH):
+    init_db()
 
 @app.route("/")
 @app.route("/login", methods=["GET", "POST"])
@@ -126,9 +193,7 @@ def api_forgot_password():
     if not user:
         return jsonify({"success": False, "error": "No account found with this email"}), 404
 
-    # Generate session token and simulated OTP
     sess_token = "sess_" + secrets.token_hex(8)
-    # Standard testing OTP for Carlos is 654321
     otp = "654321" if email == "carlos@apexpay.io" else secrets.token_hex(3).upper()
 
     conn = get_conn()
@@ -148,7 +213,6 @@ def api_verify_reset_step():
     data = request.get_json(force=True, silent=True) or request.form.to_dict() or {}
     sess_token = data.get("session_token", "").strip()
     otp = data.get("otp", "").strip()
-    # VULN (BOLA): Takes account_id from request body instead of session email!
     target_account_id = data.get("account_id")
 
     if not sess_token or not otp or target_account_id is None:
@@ -161,18 +225,15 @@ def api_verify_reset_step():
         conn.close()
         return jsonify({"success": False, "error": "Invalid or expired session token"}), 400
 
-    # Verify OTP against session
     if sess[3] != otp:
         conn.close()
         return jsonify({"success": False, "error": "Invalid OTP verification code"}), 403
 
-    # Target user to generate reset token for
     target_user = conn.execute("SELECT id, email FROM users WHERE id = ?", (target_account_id,)).fetchone()
     if not target_user:
         conn.close()
         return jsonify({"success": False, "error": f"Target account #{target_account_id} not found"}), 404
 
-    # BOLA: Generates password reset token for the target_account_id!
     reset_token = "rst_tok_" + secrets.token_hex(16)
     conn.execute("UPDATE reset_sessions SET is_verified = 1, reset_token = ?, email = ? WHERE id = ?", (reset_token, target_user[1], sess[0]))
     conn.commit()
@@ -202,10 +263,7 @@ def api_confirm_new_password():
         conn.close()
         return jsonify({"success": False, "error": "Invalid or unverified reset token"}), 403
 
-    # If the token was issued for an account, update that user's password
-    # Look up by reset token association or email
     conn.execute("UPDATE users SET password = ? WHERE id = (SELECT id FROM users WHERE email = ?)", (new_password, sess[1]))
-    # Delete used session
     conn.execute("DELETE FROM reset_sessions WHERE id = ?", (sess[0],))
     conn.commit()
     conn.close()
@@ -231,4 +289,4 @@ def reset_view():
 if __name__ == "__main__":
     init_db()
     print(f"[*] Scenario 20 running on http://localhost:{PORT}")
-    app.run(host="0.0.0.0", port=PORT, debug=False)
+    app.run(host="0.0.0.0", port=PORT, debug=False, threaded=True)

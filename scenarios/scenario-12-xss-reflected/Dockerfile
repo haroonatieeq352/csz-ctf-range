@@ -4,4 +4,4 @@ COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . /app/
 EXPOSE 8012
-CMD ["python", "app.py", "8012"]
+CMD ["gunicorn", "--workers=4", "--threads=4", "--worker-class=gthread", "--bind=0.0.0.0:8012", "--timeout=60", "app:app"]

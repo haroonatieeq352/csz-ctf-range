@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 """
-CSZone CTF Range — Scenario 17: Web Cache Deception & Cache Poisoning
-Port: 8017
+CSZone CTF Range — Scenario 21: Web Cache Deception & Cache Poisoning
+Port: 8021
+Production-Ready: High-Concurrency WSGI (Gunicorn/Threaded), SQLite WAL, and Token/IP Rate Limiter.
 """
 import os
 import sys
 import re
 import time
 import sqlite3
+import threading
+from collections import defaultdict
 from functools import wraps
-from flask import Flask, request, session, redirect, url_for, render_template, make_response
+from flask import Flask, request, session, redirect, url_for, render_template, make_response, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8021
@@ -18,6 +21,39 @@ DB_PATH = os.path.join(BASE_DIR, "scenario21.db")
 
 app = Flask(__name__)
 app.secret_key = "scenario-21-secret-key"
+
+class SlidingWindowRateLimiter:
+    """Thread-safe Sliding Window Rate Limiter (60 req/min per IP/Token)."""
+    def __init__(self, max_requests=60, window_seconds=60):
+        self.max_requests = max_requests
+        self.window_seconds = window_seconds
+        self.requests = defaultdict(list)
+        self.lock = threading.Lock()
+        self._last_cleanup = time.time()
+
+    def is_allowed(self, client_id):
+        now = time.time()
+        with self.lock:
+            if now - self._last_cleanup > 60:
+                cutoff = now - self.window_seconds
+                stale = [k for k, v in self.requests.items() if not v or v[-1] < cutoff]
+                for k in stale:
+                    del self.requests[k]
+                self._last_cleanup = now
+
+            timestamps = self.requests[client_id]
+            cutoff = now - self.window_seconds
+            while timestamps and timestamps[0] < cutoff:
+                timestamps.pop(0)
+
+            if len(timestamps) < self.max_requests:
+                timestamps.append(now)
+                return True, self.max_requests - len(timestamps), 0
+            else:
+                retry_after = int(timestamps[0] + self.window_seconds - now) + 1
+                return False, 0, max(1, retry_after)
+
+rate_limiter = SlidingWindowRateLimiter(max_requests=60, window_seconds=60)
 
 # ── Shared In-Process Cache Layer ────────────────────────────────────────────
 _CACHE = {}
@@ -39,7 +75,24 @@ def _cache_set(path, body, content_type):
     }
 
 @app.before_request
-def cache_layer_check():
+def check_rate_limit_and_cache():
+    # 1. Rate limiter check
+    if not request.path.startswith("/static/"):
+        client_ip = request.headers.get("X-Forwarded-For", request.remote_addr or "127.0.0.1").split(",")[0].strip()
+        allowed, remaining, retry_after = rate_limiter.is_allowed(client_ip)
+        if not allowed:
+            resp = jsonify({
+                "error": "Too Many Requests",
+                "message": "DDoS Prevention: Rate limit exceeded (Max 60 requests/minute). Please slow down.",
+                "retry_after_seconds": retry_after
+            })
+            resp.status_code = 429
+            resp.headers["Retry-After"] = str(retry_after)
+            resp.headers["X-RateLimit-Limit"] = "60"
+            resp.headers["X-RateLimit-Remaining"] = "0"
+            return resp
+
+    # 2. Cache layer check
     if request.method != "GET":
         return None
     path = request.path
@@ -55,7 +108,8 @@ def cache_layer_check():
     return None
 
 @app.after_request
-def cache_layer_store(response):
+def cache_layer_store_and_headers(response):
+    response.headers["X-RateLimit-Limit"] = "60"
     path = request.path
     if request.method != "GET" or path.startswith("/static/"):
         return response
@@ -69,7 +123,11 @@ def cache_layer_store(response):
 
 # ── Database Lifecycle ───────────────────────────────────────────────────────
 def get_conn():
-    return sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=20.0, check_same_thread=False)
+    conn.execute("PRAGMA journal_mode=WAL;")
+    conn.execute("PRAGMA busy_timeout=5000;")
+    conn.execute("PRAGMA synchronous=NORMAL;")
+    return conn
 
 def init_db():
     conn = get_conn()
@@ -92,6 +150,9 @@ def init_db():
     """, (generate_password_hash("Range2024!"),))
     conn.commit()
     conn.close()
+
+if not os.path.exists(DB_PATH):
+    init_db()
 
 def current_user():
     uid = session.get("user_id")
@@ -149,7 +210,6 @@ def account():
     user = current_user()
     return render_template("account.html", user=user)
 
-# VULN (Web Cache Deception): Path wildcard is treated as static lookalike and cached
 @app.route("/account/profile/<path:extra>")
 def account_profile_extra(extra):
     user = current_user()
@@ -157,7 +217,6 @@ def account_profile_extra(extra):
         return redirect(url_for("login"))
     return render_template("account.html", user=user)
 
-# VULN (Web Cache Poisoning): X-Forwarded-Host is unkeyed and reflected into cached page
 @app.route("/promo/partner-banner")
 def promo_partner_banner():
     forwarded_host = request.headers.get("X-Forwarded-Host", request.host)
@@ -176,4 +235,4 @@ def reset_view():
 if __name__ == "__main__":
     init_db()
     print(f"[*] Scenario 21 running on http://localhost:{PORT}")
-    app.run(host="0.0.0.0", port=PORT, debug=False)
+    app.run(host="0.0.0.0", port=PORT, debug=False, threaded=True)

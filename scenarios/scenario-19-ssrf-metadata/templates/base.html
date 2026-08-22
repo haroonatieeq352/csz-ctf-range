@@ -21,7 +21,11 @@
       <h1 class="lab-title-text">RESTful HTTP Verb Tampering &amp; Multi-Tenant BOLA Bypass</h1>
     </div>
     <div class="lab-status-wrapper">
-      <span id="lab-status" class="lab-status unsolved">UNSOLVED</span>
+      {% if is_solved %}
+        <span id="lab-status" class="lab-status solved">SOLVED 🎉</span>
+      {% else %}
+        <span id="lab-status" class="lab-status unsolved">UNSOLVED</span>
+      {% endif %}
     </div>
   </div>
 

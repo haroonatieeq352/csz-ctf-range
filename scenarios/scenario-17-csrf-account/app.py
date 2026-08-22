@@ -2,10 +2,14 @@
 """
 CSZone CTF Range — Scenario 17: Mass Assignment & Profile Overwrite IDOR
 Port: 8017
+Production-Ready: High-Concurrency WSGI (Gunicorn/Threaded), SQLite WAL, and Token/IP Rate Limiter.
 """
 import os
 import sys
+import time
 import sqlite3
+import threading
+from collections import defaultdict
 from flask import Flask, request, session, redirect, url_for, render_template, jsonify
 
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8017
@@ -16,8 +20,68 @@ app = Flask(__name__)
 app.secret_key = "scenario-17-mass-assign-secret-key"
 FLAG_SECRET = "CTF{m4ss_4ss1gnm3nt_pr0f1l3_0v3rwr1t3}"
 
+class SlidingWindowRateLimiter:
+    """Thread-safe Sliding Window Rate Limiter (60 req/min per IP/Token)."""
+    def __init__(self, max_requests=60, window_seconds=60):
+        self.max_requests = max_requests
+        self.window_seconds = window_seconds
+        self.requests = defaultdict(list)
+        self.lock = threading.Lock()
+        self._last_cleanup = time.time()
+
+    def is_allowed(self, client_id):
+        now = time.time()
+        with self.lock:
+            if now - self._last_cleanup > 60:
+                cutoff = now - self.window_seconds
+                stale = [k for k, v in self.requests.items() if not v or v[-1] < cutoff]
+                for k in stale:
+                    del self.requests[k]
+                self._last_cleanup = now
+
+            timestamps = self.requests[client_id]
+            cutoff = now - self.window_seconds
+            while timestamps and timestamps[0] < cutoff:
+                timestamps.pop(0)
+
+            if len(timestamps) < self.max_requests:
+                timestamps.append(now)
+                return True, self.max_requests - len(timestamps), 0
+            else:
+                retry_after = int(timestamps[0] + self.window_seconds - now) + 1
+                return False, 0, max(1, retry_after)
+
+rate_limiter = SlidingWindowRateLimiter(max_requests=60, window_seconds=60)
+
+@app.before_request
+def check_rate_limit():
+    if request.path.startswith("/static/"):
+        return None
+    client_ip = request.headers.get("X-Forwarded-For", request.remote_addr or "127.0.0.1").split(",")[0].strip()
+    allowed, remaining, retry_after = rate_limiter.is_allowed(client_ip)
+    if not allowed:
+        resp = jsonify({
+            "error": "Too Many Requests",
+            "message": "DDoS Prevention: Rate limit exceeded (Max 60 requests/minute). Please slow down.",
+            "retry_after_seconds": retry_after
+        })
+        resp.status_code = 429
+        resp.headers["Retry-After"] = str(retry_after)
+        resp.headers["X-RateLimit-Limit"] = "60"
+        resp.headers["X-RateLimit-Remaining"] = "0"
+        return resp
+
+@app.after_request
+def add_headers(response):
+    response.headers["X-RateLimit-Limit"] = "60"
+    return response
+
 def get_conn():
-    return sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=20.0, check_same_thread=False)
+    conn.execute("PRAGMA journal_mode=WAL;")
+    conn.execute("PRAGMA busy_timeout=5000;")
+    conn.execute("PRAGMA synchronous=NORMAL;")
+    return conn
 
 def init_db():
     conn = get_conn()
@@ -35,7 +99,6 @@ def init_db():
             bio TEXT
         );
     """)
-    # Target Admin User (ID 101) & Standard User Carlos (ID 102)
     cur.execute("""
         INSERT INTO users (id, username, email, full_name, role, is_vip, phone, bio)
         VALUES (101, 'sarah.admin', 'sarah.admin@cloudshield.io', 'Sarah Jenkins', 'admin', 1, '+1-555-0199', 'Lead Security Architect & Cloud Infrastructure Director');
@@ -47,9 +110,11 @@ def init_db():
     conn.commit()
     conn.close()
 
+if not os.path.exists(DB_PATH):
+    init_db()
+
 @app.before_request
 def ensure_session():
-    # By default, student is authenticated as Carlos (User ID 102)
     if "user_id" not in session:
         session["user_id"] = 102
         session["username"] = "carlos"
@@ -60,7 +125,6 @@ def profile_view():
     user_id = session.get("user_id", 102)
     conn = get_conn()
     user = conn.execute("SELECT id, username, email, full_name, role, is_vip, phone, bio FROM users WHERE id = ?", (user_id,)).fetchone()
-    # Also fetch public team members
     team = conn.execute("SELECT id, username, email, full_name, role FROM users ORDER BY id ASC").fetchall()
     conn.close()
 
@@ -99,17 +163,14 @@ def api_update_profile():
     if not data:
         return jsonify({"success": False, "error": "Invalid request payload"}), 400
 
-    # VULN 1 (IDOR): Extracts target user_id from payload instead of enforcing server session user_id
     target_user_id = int(data.get("user_id", session.get("user_id", 102)))
 
     conn = get_conn()
-    # Check if target user exists
     existing = conn.execute("SELECT id, username, email, full_name, role, is_vip, phone, bio FROM users WHERE id = ?", (target_user_id,)).fetchone()
     if not existing:
         conn.close()
         return jsonify({"success": False, "error": "Target user ID not found"}), 404
 
-    # VULN 2 (Mass Assignment / BOPLA): Direct assignment of any keys supplied in JSON body
     full_name = data.get("full_name", existing[3])
     email = data.get("email", existing[2])
     role = data.get("role", existing[4])
@@ -175,4 +236,4 @@ def reset_view():
 if __name__ == "__main__":
     init_db()
     print(f"[*] Scenario 17 running on http://localhost:{PORT}")
-    app.run(host="0.0.0.0", port=PORT, debug=False)
+    app.run(host="0.0.0.0", port=PORT, debug=False, threaded=True)
