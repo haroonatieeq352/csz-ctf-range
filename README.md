@@ -111,27 +111,27 @@ Because CTF platforms intentionally involve brute-forcing (Scenario 07), fuzzing
 | Subdomain Route | Local Port | Scenario Name | Category | Objective / Flag Summary |
 |---|---|---|---|---|
 | `hub.offensivegrid.com` | `8000` | **Central Operations Hub** | Portal Console | Real-time scenario launcher & tracking catalog |
-| `s01.offensivegrid.com` | `8001` | Scenario 01: Recon & Headers | Reconnaissance | `CTF{h34d3r_hunt3r_pr0}` |
-| `s02.offensivegrid.com` | `8002` | Scenario 02: Robots & Ops Archive | Reconnaissance | `CTF{r0b0ts_d1scl0s3_p4ths}` |
-| `s03.offensivegrid.com` | `8003` | Scenario 03: JS & Crypto XOR | Cryptography | `CTF{unus3d_v4r14bl3_l34k}` |
-| `s04.offensivegrid.com` | `8004` | Scenario 04: Admin Portal Leak | Access Control | `CTF{4dm1n_p4n3l_3xp0s3d}` |
-| `s05.offensivegrid.com` | `8005` | Scenario 05: Frontend IDOR | IDOR | `CTF{1d0r_1nv01c3_l34k}` |
-| `s06.offensivegrid.com` | `8006` | Scenario 06: Promo & Cookie Gate | Access / Crypto | `CTF{h34d3r_c00k13_byp4ss}` |
-| `s07.offensivegrid.com` | `8007` | Scenario 07: Backup Service Auth | Authentication | `CTF{h4sh_cr4ck3d_4cc3ss}` |
-| `s08.offensivegrid.com` | `8008` | Scenario 08: Central Vault Finale | Chained Crypto | `CTF{f1n4l_ch41n_c0mpl3t3}` |
-| `s09.offensivegrid.com` | `8009` | Scenario 09: Products SQLi | SQL Injection | `CTF{un10n_b4s1cs_m4st3r}` |
-| `s10.offensivegrid.com` | `8010` | Scenario 10: Directory UNION SQLi | SQL Injection | `CTF{un10n_s3l3ct_m4st3r}` |
-| `s11.offensivegrid.com` | `8011` | Scenario 11: Asset Inventory SQLi | SQL Injection | `CTF{sch3m4_3num_d0ubl3_qu0t3_m4st3r}` |
-| `s12.offensivegrid.com` | `8012` | Scenario 12: Reflected XSS | Cross-Site Scripting | `CTF{r3fl3ct3d_xss_b4s1cs}` |
-| `s13.offensivegrid.com` | `8013` | Scenario 13: Stored Attribute XSS | Cross-Site Scripting | `CTF{st0r3d_4ttr1but3_br34k0ut}` |
-| `s14.offensivegrid.com` | `8014` | Scenario 14: DOM-based XSS | Cross-Site Scripting | `CTF{d0m_xss_s1nk_m4st3r}` |
-| `s15.offensivegrid.com` | `8015` | Scenario 15: WAF Bypass XSS | Cross-Site Scripting | `CTF{w4f_byp4ss_h5_v3ct0r}` |
-| `s16.offensivegrid.com` | `8016` | Scenario 16: INSERT SQLi to Stored XSS | Chained Exploit | `CTF{1ns3rt_sqli_t0_st0r3d_xss_ch41n}` |
-| `s17.offensivegrid.com` | `8017` | Scenario 17: Mass Assignment IDOR | API Security | `CTF{m4ss_4ss1gnm3nt_pr0f1l3_0v3rwr1t3}` |
-| `s18.offensivegrid.com` | `8018` | Scenario 18: UUID Leakage IDOR | IDOR / UUID | `CTF{uu1d_l34k_d0cum3nt_v4ult}` |
-| `s19.offensivegrid.com` | `8019` | Scenario 19: Verb Tampering Multi-Tenant IDOR | API Security | `CTF{v3rb_t4mp3r1ng_t3n4nt_byp4ss}` |
-| `s20.offensivegrid.com` | `8020` | Scenario 20: BOLA Password Reset ATO | API Security / BOLA | `CTF{b0l4_p4ssw0rd_r3s3t_4cc0unt_t4k30v3r}` |
-| `s21.offensivegrid.com` | `8021` | Scenario 21: Web Cache Attacks | Cache Attacks | `CTF{c4ch3_d3c3pt10n_l34k}` |
+| `s01.offensivegrid.com` | `8001` | Scenario 01: Recon & Headers | Reconnaissance
+| `s02.offensivegrid.com` | `8002` | Scenario 02: Robots & Ops Archive | Reconnaissance
+| `s03.offensivegrid.com` | `8003` | Scenario 03: JS & Crypto XOR | Cryptography 
+| `s04.offensivegrid.com` | `8004` | Scenario 04: Admin Portal Leak | Access Control
+| `s05.offensivegrid.com` | `8005` | Scenario 05: Frontend IDOR | IDOR
+| `s06.offensivegrid.com` | `8006` | Scenario 06: Promo & Cookie Gate | Access / Crypto 
+| `s07.offensivegrid.com` | `8007` | Scenario 07: Backup Service Auth | Authentication
+| `s08.offensivegrid.com` | `8008` | Scenario 08: Central Vault Finale | Chained Crypto
+| `s09.offensivegrid.com` | `8009` | Scenario 09: Products SQLi | SQL Injection
+| `s10.offensivegrid.com` | `8010` | Scenario 10: Directory UNION SQLi | SQL Injection
+| `s11.offensivegrid.com` | `8011` | Scenario 11: Asset Inventory SQLi | SQL Injection
+| `s12.offensivegrid.com` | `8012` | Scenario 12: Reflected XSS | Cross-Site Scripting
+| `s13.offensivegrid.com` | `8013` | Scenario 13: Stored Attribute XSS | Cross-Site Scripting
+| `s14.offensivegrid.com` | `8014` | Scenario 14: DOM-based XSS | Cross-Site Scripting
+| `s15.offensivegrid.com` | `8015` | Scenario 15: WAF Bypass XSS | Cross-Site Scripting
+| `s16.offensivegrid.com` | `8016` | Scenario 16: INSERT SQLi to Stored XSS | Chained Exploit
+| `s17.offensivegrid.com` | `8017` | Scenario 17: Mass Assignment IDOR | API Security
+| `s18.offensivegrid.com` | `8018` | Scenario 18: UUID Leakage IDOR | IDOR / UUID
+| `s19.offensivegrid.com` | `8019` | Scenario 19: Verb Tampering Multi-Tenant IDOR | API Security
+| `s20.offensivegrid.com` | `8020` | Scenario 20: BOLA Password Reset ATO | API Security / BOLA
+| `s21.offensivegrid.com` | `8021` | Scenario 21: Web Cache Attacks | Cache Attacks
 
 ---
 
