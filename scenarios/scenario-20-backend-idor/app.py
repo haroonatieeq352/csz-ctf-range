@@ -15,7 +15,10 @@ from datetime import datetime
 from collections import defaultdict
 from flask import Flask, request, session, redirect, url_for, render_template, jsonify
 
-PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8020
+try:
+    PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8020
+except (ValueError, IndexError):
+    PORT = 8020
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "scenario20.db")
 

@@ -11,4 +11,4 @@ COPY . .
 RUN python db.py
 
 EXPOSE 5000
-CMD ["gunicorn", "--workers=4", "--threads=4", "--worker-class=gthread", "--bind=0.0.0.0:5000", "--timeout=60", "app:app"]
+CMD ["gunicorn", "--workers=4", "--threads=4", "--worker-class=gthread", "--bind=0.0.0.0:5000", "--timeout=60", "--preload", "app:app"]
