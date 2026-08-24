@@ -15,7 +15,10 @@ from functools import wraps
 from flask import Flask, request, session, redirect, url_for, render_template, make_response, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 
-PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8021
+try:
+    PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8021
+except (ValueError, IndexError):
+    PORT = 8021
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "scenario21.db")
 

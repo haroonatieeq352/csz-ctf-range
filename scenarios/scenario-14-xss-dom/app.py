@@ -11,7 +11,10 @@ import threading
 from collections import defaultdict
 from flask import Flask, request, render_template, jsonify
 
-PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8014
+try:
+    PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8014
+except (ValueError, IndexError):
+    PORT = 8014
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 app = Flask(__name__)
