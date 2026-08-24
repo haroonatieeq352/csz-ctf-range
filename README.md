@@ -8,14 +8,16 @@ A high-concurrency, production-grade offensive security and web penetration test
 
 The platform supports two distinct operational modes:
 
-| Feature | 🛠️ Local Development Mode (`docker-compose.yml`) | 🌐 Production Deployment Mode (`docker-compose.prod.yml`) |
+| Feature | 🛠️ Local Development Mode | 🌐 Production Deployment Mode |
 |---|---|---|
-| **Primary Domain** | `http://localhost:8000` | `https://hub.offensivegrid.com` |
-| **Scenario Access** | Dedicated Ports (`http://localhost:8001` - `8021`) | Subdomains (`https://s01.offensivegrid.com` - `s21.offensivegrid.com`) |
-| **Reverse Proxy** | None (Direct Host Binding) | Nginx Edge Proxy (Ports 80/443 with SSL/TLS) |
-| **Concurrency Engine** | Threaded Socket / Werkzeug | Gunicorn Multi-Worker / Multi-Threaded WSGI |
-| **Target Audience** | Local Developer / Offline Lab | 100–150 Concurrent Students & Live CTF Competitions |
-| **DDoS Protection** | Active (Sliding Window Token Limiter) | Active (Nginx Buffer Zones + In-App Rate Limiter) |
+| **Configuration** | Native Python / `docker-compose.yml` | `docker-compose.prod.yml` |
+| **Primary Hub URL** | `http://localhost:8000` | `https://hub.offensivegrid.com` |
+| **Scenario Access** | Dedicated Ports (`http://localhost:8001`–`8021`) | Subdomains (`https://s01.offensivegrid.com`–`s21.offensivegrid.com`) |
+| **Reverse Proxy** | None (Direct Process / Port Binding) | Nginx Edge Proxy (Ports 80/443 with SSL/TLS) |
+| **WSGI Engine** | Multi-Threaded TCP / Werkzeug | Gunicorn Multi-Worker / Multi-Threaded WSGI (`--preload`) |
+| **Concurrency Target** | Single Developer / Local Testing | 100–150 Concurrent Students & Live CTF Arena |
+| **DDoS Rate Limiter** | In-App Sliding Window (60–120 req/min) | Dual-Tier: Nginx Zones + In-App Rate Limiter |
+| **Isolation Model** | Independent OS Processes & SQLite DBs | 22 Isolated Docker Microservices & Isolated DBs |
 
 ---
 
@@ -24,93 +26,182 @@ The platform supports two distinct operational modes:
 - **100–150 Concurrent Users:** Flask scenarios (`09` through `21` and `backend`) run under **Gunicorn** with 4 workers and 4 threads per worker (`--worker-class=gthread`), processing up to 16 simultaneous requests per scenario container without blocking or request timeouts.
 - **SQLite WAL Mode:** All database scenarios use `PRAGMA journal_mode=WAL;` and `busy_timeout=5000;` enabling lock-free concurrent reads and writes across simultaneous student actions.
 - **DDoS Mitigation (Sliding Window Token Limiter):**
-  - Standard scenarios: **60 requests/minute** per IP/Token.
-  - Scenario 07 (Brute-Force Auth): **120–200 requests/minute** buffer for legitimate Intruder testing.
-  - Returns `HTTP 429 Too Many Requests` with `Retry-After` headers and automatic 60-second soft reset without kernel-level IP bans.
+  - **Standard scenarios (01–06, 08–21):** `60 requests/minute` per client IP.
+  - **Scenario 07 (Brute-Force Auth):** `120–200 requests/minute` buffer for legitimate Intruder testing.
+  - **HTTP 429 Status:** Returns `HTTP 429 Too Many Requests` with `Retry-After` headers and automatic 60-second soft reset without kernel-level IP bans.
 
 ---
 
-## 🚀 Quick Start Guide
+## 🌐 Production Deployment Guide (For DevOps / VPS Team)
 
-### Prerequisites
-- **Python 3.9+** (for native run) OR **Docker & Docker Compose** (recommended for production).
-- Install Python requirements:
+Follow these exact, step-by-step instructions to deploy or update the platform on a production Linux VPS (Ubuntu/Debian/CentOS).
+
+### 1. VPS Prerequisites
+- **Docker Engine & Docker Compose v2+** installed:
   ```bash
-  pip install -r requirements.txt
+  docker --version && docker compose version
   ```
+- **DNS Records Configured:** Ensure your domain DNS has A records pointing to your VPS IP address:
+  - `hub.offensivegrid.com` -> `YOUR_VPS_IP`
+  - `*.offensivegrid.com` (Wildcard A record) -> `YOUR_VPS_IP`  
+    *(Or individual A records for `s01.offensivegrid.com` through `s21.offensivegrid.com`)*
 
 ---
 
-### Method 1: Production Docker Deployment (DevOps VPS)
+### 2. VPS Firewall & Fail2ban Configuration (Crucial)
 
-To deploy the full production stack with the Nginx subdomain reverse proxy:
+CTF platforms intentionally involve brute-force testing (Scenario 07), directory fuzzing, and security scanners. **Do NOT enable HTTP rate-limit jails in Fail2ban**, as this will ban student IPs during legitimate exercises:
 
 ```bash
-# 1. Clone repository and switch to dev branch
+# 1. Allow Web & SSH Ports in UFW Firewall
+sudo ufw allow 22/tcp
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw enable
+sudo ufw status
+
+# 2. Configure Fail2ban for SSH only:
+# Ensure /etc/fail2ban/jail.local only enables the [sshd] jail,
+# and disables [nginx-http-auth], [nginx-botsearch], and [nginx-limit-req].
+sudo systemctl restart fail2ban
+```
+
+---
+
+### 3. Initial Production Deployment (First Time)
+
+```bash
+# 1. Clone the repository and checkout dev branch
 git clone https://github.com/haroonatieeq352/csz-ctf-range.git
 cd csz-ctf-range
 git checkout dev
 
-# 2. Launch production multi-container cluster
+# 2. Build all 22 scenario containers and launch the production cluster
 docker compose -f docker-compose.prod.yml up -d --build
 
-# 3. Check service health
+# 3. Verify all 22 microservices and Nginx proxy are running
 docker compose -f docker-compose.prod.yml ps
+```
 
-# 4. View real-time logs
+---
+
+### 4. Updating / Redeploying on New Changes
+
+Whenever new code is pushed to GitHub, run this sequence to update the live environment with zero cache issues:
+
+```bash
+# 1. Navigate to project root
+cd csz-ctf-range
+
+# 2. Pull the latest commits
+git pull origin dev
+
+# 3. Stop old containers
+docker compose -f docker-compose.prod.yml down
+
+# 4. Rebuild images with --build (Forces Docker to use updated code)
+docker compose -f docker-compose.prod.yml up -d --build
+
+# 5. Check cluster status
+docker compose -f docker-compose.prod.yml ps
+```
+
+---
+
+### 5. Production Health Check & Monitoring Commands
+
+```bash
+# View real-time aggregated logs across all scenarios
 docker compose -f docker-compose.prod.yml logs -f
+
+# View logs for a specific scenario container (e.g. Scenario 09 or Nginx)
+docker compose -f docker-compose.prod.yml logs -f scenario-09
+docker compose -f docker-compose.prod.yml logs -f nginx-proxy
+
+# Restart a single scenario container without affecting the rest
+docker compose -f docker-compose.prod.yml restart scenario-16
+
+# Check CPU & Memory utilization per container
+docker stats --no-stream
 ```
 
 ---
 
-### Method 2: Local Development Docker Deployment
+## 🛠️ Local Setup Guide (For Developers & Students)
 
-To launch all scenarios mapped to individual ports (`8000`–`8021`) on localhost:
-
-```bash
-docker compose -f docker-compose.yml up -d --build
-```
+You can run the entire platform locally on **Windows**, **macOS**, or **Linux** using either native Python (No Docker needed) or Local Docker Compose.
 
 ---
 
-### Method 3: Standalone Python Deployment (No Docker Required)
+### Method A: Standalone Python (Fastest — No Docker Required)
+
+#### Prerequisites:
+- **Python 3.9+** installed (`python --version`)
+- Git installed
+
+#### Step-by-Step Setup:
 
 ```bash
-# Start all 21 scenarios + Central Hub in parallel
+# 1. Clone the repository
+git clone https://github.com/haroonatieeq352/csz-ctf-range.git
+cd csz-ctf-range
+git checkout dev
+
+# 2. Create and activate a Python virtual environment
+# Windows (PowerShell):
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+
+# Linux / macOS (Bash/Zsh):
+python3 -m venv venv
+source venv/bin/activate
+
+# 3. Install required Python packages
+pip install -r requirements.txt
+
+# 4. Start all 21 scenarios + Central Hub in parallel
 python start_all.py
+```
 
-# Run master automated end-to-end verification suite
+After running `start_all.py`, open your browser and go to:
+👉 **`http://localhost:8000`** (Central Operations Hub)
+
+#### Local Verification & Testing:
+```bash
+# Run the automated end-to-end verification test suite (All 21 scenarios)
 python verify_all_scenarios.py
 
-# Run concurrency and DDoS rate-limiting validation suite
+# Run the 150-user concurrency & DDoS simulation test
 python test_production_concurrency_and_ddos.py
 
-# Stop all background services
+# Stop all background scenario servers
 python stop_all.py
 ```
 
 ---
 
-## 🛡️ VPS Firewall & Fail2ban Configuration (Important for DevOps)
+### Method B: Local Docker Compose (All Ports Mapped)
 
-Because CTF platforms intentionally involve brute-forcing (Scenario 07), fuzzing, and directory discovery, **do NOT enable HTTP/Nginx jails in Fail2ban**, as this will ban student IPs during legitimate exercises:
+If you prefer running in Docker on your local computer with individual port mappings (`8000`–`8021`):
 
-1. **Allow Web Ports on VPS Firewall:**
-   ```bash
-   sudo ufw allow 80/tcp
-   sudo ufw allow 443/tcp
-   ```
+```bash
+# 1. Build and start all containers in local development mode
+docker compose -f docker-compose.yml up -d --build
 
-2. **Configure Fail2ban for SSH only:**
-   Ensure `/etc/fail2ban/jail.local` only enables the `[sshd]` jail, and disables `[nginx-http-auth]`, `[nginx-botsearch]`, and `[nginx-limit-req]`.
+# 2. Check running containers
+docker compose -f docker-compose.yml ps
+
+# 3. Stop all local containers
+docker compose -f docker-compose.yml down
+```
 
 ---
 
 ## 🗺️ Master Target Scenarios & Vulnerability Catalog
 
-| Subdomain Route | Local Port | Scenario Name | Category | Objective / Flag Summary |
+| Subdomain (Production) | Local Port | Scenario Name | Category | Objective / Target Flag |
 |---|---|---|---|---|
-| `hub.offensivegrid.com` | `8000` | **Central Operations Hub** | Portal Console | Real-time scenario launcher & tracking catalog |
+| `hub.offensivegrid.com` | `8000` | **Central Operations Hub** | Portal Console | Interactive Launcher & Target Catalog |
 | `s01.offensivegrid.com` | `8001` | Scenario 01: Recon & Headers | Reconnaissance | `CTF{h34d3r_hunt3r_pr0}` |
 | `s02.offensivegrid.com` | `8002` | Scenario 02: Robots & Ops Archive | Reconnaissance | `CTF{r0b0ts_d1scl0s3_p4ths}` |
 | `s03.offensivegrid.com` | `8003` | Scenario 03: JS & Crypto XOR | Cryptography | `CTF{unus3d_v4r14bl3_l34k}` |
@@ -129,13 +220,15 @@ Because CTF platforms intentionally involve brute-forcing (Scenario 07), fuzzing
 | `s16.offensivegrid.com` | `8016` | Scenario 16: INSERT SQLi to Stored XSS | Chained Exploit | `CTF{1ns3rt_sqli_t0_st0r3d_xss_ch41n}` |
 | `s17.offensivegrid.com` | `8017` | Scenario 17: Mass Assignment IDOR | API Security | `CTF{m4ss_4ss1gnm3nt_pr0f1l3_0v3rwr1t3}` |
 | `s18.offensivegrid.com` | `8018` | Scenario 18: UUID Leakage IDOR | IDOR / UUID | `CTF{uu1d_l34k_d0cum3nt_v4ult}` |
-| `s19.offensivegrid.com` | `8019` | Scenario 19: Verb Tampering Multi-Tenant IDOR | API Security | `CTF{v3rb_t4mp3r1ng_t3n4nt_byp4ss}` |
+| `s19.offensivegrid.com` | `8019` | Scenario 19: Verb Tampering IDOR | API Security | `CTF{v3rb_t4mp3r1ng_t3n4nt_byp4ss}` |
 | `s20.offensivegrid.com` | `8020` | Scenario 20: BOLA Password Reset ATO | API Security / BOLA | `CTF{b0l4_p4ssw0rd_r3s3t_4cc0unt_t4k30v3r}` |
 | `s21.offensivegrid.com` | `8021` | Scenario 21: Web Cache Attacks | Cache Attacks | `CTF{c4ch3_d3c3pt10n_l34k}` |
 
 ---
 
 ## 🔒 Security & Sandbox Guarantees
-- **Port & Origin SOP Isolation:** Browsers maintain complete origin separation across subdomains and ports.
-- **Zero Cross-Contamination:** Exploit payloads in one scenario cannot modify or bleed into adjacent scenarios.
-- **Stateless Dynamic Reset:** Scenarios provide `/reset` endpoints to return database tables to pristine initial states.
+
+- **Port & Origin SOP Isolation:** Web browsers maintain strict Same-Origin Policy (SOP) separation across distinct subdomains and ports.
+- **Zero Cross-Contamination:** Exploit payloads in one scenario cannot modify, leak into, or disrupt adjacent scenarios.
+- **Stateless Dynamic Reset:** Every database scenario provides an isolated `/reset` or `/api/reset` endpoint to return tables to clean initial states instantly.
+- **DDoS Sliding Window Protection:** Protects live VPS infrastructure from automated flooding while granting adequate buffers for legitimate penetration testing exercises.
