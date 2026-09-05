@@ -32,16 +32,6 @@ The platform supports two distinct operational modes:
 
 ---
 
-## 🌐 Production Deployment Guide (For DevOps Team)
-
-> [!IMPORTANT]
-> **Shared VPS Safe Deployment (Zero Port 80/443 Conflict):**  
-> If your VPS is already hosting other client websites or services, use **Deployment Mode A** below. The Docker containers will run on internal ports (`8000`–`8021`) and your existing **Host Nginx** will proxy subdomains without touching or disturbing any existing websites on the server.
-
----
-
-
-
 
 
 ## 🛠️ Local Setup Guide (For Developers & Students)
