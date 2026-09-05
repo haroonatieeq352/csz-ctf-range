@@ -40,94 +40,9 @@ The platform supports two distinct operational modes:
 
 ---
 
-### Deployment Mode A: Shared VPS with Host Nginx (Recommended)
 
-#### Step 1: Clone Repository & Start Containers
-```bash
-git clone https://github.com/haroonatieeq352/csz-ctf-range.git
-cd csz-ctf-range
-git checkout dev
 
-# Build and start all 22 scenarios on internal ports (8000-8021)
-docker compose -f docker-compose.yml up -d --build
 
-# Verify all 22 containers are running
-docker compose -f docker-compose.yml ps
-```
-
-#### Step 2: Configure VPS Host Nginx (One-Time Setup)
-A ready-to-use VirtualHost configuration is provided at `nginx/offensivegrid-host.conf`. It routes all 22 subdomains to `127.0.0.1:8000`–`8021` with DDoS protection rate-limit zones:
-
-```bash
-# 1. Copy the provided config to your VPS Nginx sites-available directory:
-sudo cp nginx/offensivegrid-host.conf /etc/nginx/sites-available/offensivegrid.conf
-
-# 2. Enable the site:
-sudo ln -s /etc/nginx/sites-available/offensivegrid.conf /etc/nginx/sites-enabled/
-
-# 3. Test Nginx syntax:
-sudo nginx -t
-
-# 4. Reload Nginx (Your existing websites will continue running without downtime):
-sudo systemctl reload nginx
-```
-
-#### Step 3: (Optional) SSL / HTTPS with Certbot
-```bash
-sudo certbot --nginx -d hub.offensivegrid.com -d s01.offensivegrid.com -d s02.offensivegrid.com -d s03.offensivegrid.com -d s04.offensivegrid.com -d s05.offensivegrid.com -d s06.offensivegrid.com -d s07.offensivegrid.com -d s08.offensivegrid.com -d s09.offensivegrid.com -d s10.offensivegrid.com -d s11.offensivegrid.com -d s12.offensivegrid.com -d s13.offensivegrid.com -d s14.offensivegrid.com -d s15.offensivegrid.com -d s16.offensivegrid.com -d s17.offensivegrid.com -d s18.offensivegrid.com -d s19.offensivegrid.com -d s20.offensivegrid.com -d s21.offensivegrid.com
-```
-
----
-
-### Deployment Mode B: Dedicated Clean VPS (Bundled Nginx Container)
-
-If you are deploying on a fresh, clean VPS dedicated solely to this CTF (where no other websites run on port 80/443):
-
-```bash
-# Launch full stack with bundled Docker Nginx container
-docker compose -f docker-compose.prod.yml up -d --build
-```
-
----
-
-### Updating / Redeploying on New Changes
-
-Whenever new code is pushed to GitHub, run this sequence to update with zero cache issues:
-
-```bash
-cd csz-ctf-range
-git pull origin dev
-
-# Stop old containers
-docker compose -f docker-compose.yml down
-
-# Rebuild images with --build (Forces Docker to use updated code)
-docker compose -f docker-compose.yml up -d --build
-
-# Check cluster status
-docker compose -f docker-compose.yml ps
-```
-
----
-
-### 🛡️ VPS Firewall & Fail2ban Best Practices for CTF
-
-Because CTF platforms intentionally involve brute-forcing (Scenario 07), fuzzing, and directory discovery, **do NOT enable HTTP/Nginx jails in Fail2ban**, as this will ban student IPs during legitimate exercises:
-
-```bash
-# Allow Web & SSH Ports in UFW Firewall:
-sudo ufw allow 22/tcp
-sudo ufw allow 80/tcp
-sudo ufw allow 443/tcp
-sudo ufw enable
-
-# Configure Fail2ban for SSH only:
-# Ensure /etc/fail2ban/jail.local only enables the [sshd] jail,
-# and disables [nginx-http-auth], [nginx-botsearch], and [nginx-limit-req].
-sudo systemctl restart fail2ban
-```
-
----
 
 ## 🛠️ Local Setup Guide (For Developers & Students)
 
@@ -180,20 +95,6 @@ python test_production_concurrency_and_ddos.py
 python stop_all.py
 ```
 
----
-
-### Method B: Local Docker Compose
-
-```bash
-# 1. Build and start all containers in local development mode
-docker compose -f docker-compose.yml up -d --build
-
-# 2. Check running containers
-docker compose -f docker-compose.yml ps
-
-# 3. Stop all local containers
-docker compose -f docker-compose.yml down
-```
 
 ---
 
